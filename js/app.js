@@ -15,7 +15,15 @@ class AIContentConverter {
         this.currentContentType = 'auto';
         this.currentTemplate = 'professional';
         this.isProcessing = false;
-        
+
+        // 简单的日志系统
+        this.logger = {
+            info: (msg) => APP_CONFIG.debug && console.log(`[INFO] ${msg}`),
+            error: (msg) => console.error(`[ERROR] ${msg}`),
+            warn: (msg) => console.warn(`[WARN] ${msg}`),
+            debug: (msg) => APP_CONFIG.debug && console.log(`[DEBUG] ${msg}`)
+        };
+
         this.init();
     }
 
@@ -143,7 +151,7 @@ class AIContentConverter {
             this.updateUsageStats();
             
         } catch (error) {
-            console.error('转换失败:', error);
+            this.logger.error('转换失败: ' + error.message);
             this.showMessage('转换失败：' + error.message, 'error');
         } finally {
             this.isProcessing = false;
@@ -340,7 +348,7 @@ class AIContentConverter {
      */
     async handleFileUpload(event) {
         if (!event || !event.target || !event.target.files) {
-            console.error('无效的文件上传事件');
+            this.logger.error('无效的文件上传事件');
             return;
         }
 
@@ -369,7 +377,7 @@ class AIContentConverter {
             }
 
         } catch (error) {
-            console.error('文件上传错误:', error);
+            this.logger.error('文件上传错误: ' + error.message);
             this.showMessage('文件读取失败：' + error.message, 'error');
         } finally {
             // 清空文件输入，允许重复上传同一文件
@@ -394,9 +402,9 @@ class AIContentConverter {
      * 显示消息
      */
     showMessage(message, type = 'info') {
-        // 简单的消息显示实现
-        console.log(`[${type.toUpperCase()}] ${message}`);
-        
+        // 使用日志系统记录消息
+        this.logger.info(`${type.toUpperCase()}: ${message}`);
+
         // 可以在这里添加更复杂的消息显示逻辑
         if (type === 'error') {
             alert('错误: ' + message);
@@ -420,7 +428,7 @@ class AIContentConverter {
      */
     downloadFile(blob, fileName) {
         if (!blob || !fileName) {
-            console.error('下载文件参数无效');
+            this.logger.error('下载文件参数无效');
             return;
         }
 
@@ -435,7 +443,7 @@ class AIContentConverter {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } catch (error) {
-            console.error('文件下载失败:', error);
+            this.logger.error('文件下载失败: ' + error.message);
             this.showMessage('文件下载失败', 'error');
         }
     }
@@ -482,13 +490,15 @@ class AIContentConverter {
      * 显示欢迎消息
      */
     showWelcomeMessage() {
-        console.log(`%c🚀 AI内容格式转换工具 v${APP_CONFIG.version} 已启动`, 'color: #6366f1; font-size: 16px; font-weight: bold;');
-        console.log('GitHub: ' + APP_CONFIG.github.url);
+        if (APP_CONFIG.debug) {
+            console.log(`%c🚀 AI内容格式转换工具 v${APP_CONFIG.version} 已启动`, 'color: #6366f1; font-size: 16px; font-weight: bold;');
+            console.log('GitHub: ' + APP_CONFIG.github.url);
+        }
     }
 
     // 其他方法的简化实现...
     handleClear() { document.getElementById('ai-content').value = ''; this.handleContentChange(''); }
-    handlePreview() { console.log('预览功能开发中...'); }
+    handlePreview() { this.logger.info('预览功能开发中...'); }
     updatePreview() { /* 预览更新逻辑 */ }
     handleDragOver(e) { e.preventDefault(); }
     handleDrop(e) { e.preventDefault(); /* 拖拽处理逻辑 */ }
