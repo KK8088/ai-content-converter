@@ -721,6 +721,10 @@ pre {
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     background: #f8fafc;
+    /* 确保内容可见 */
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .detection-info {

@@ -538,72 +538,131 @@ class AIContentConverter {
      * 生成预览内容
      */
     generatePreview(content) {
-        const contentType = this.detectContentType(content);
-        const previewContent = document.getElementById('preview-content');
+        console.log('🔍 开始生成预览:', content.length, '字符');
 
-        if (!previewContent) return;
+        try {
+            const detector = new ContentDetector();
+            const contentType = detector.detectContentType(content);
+            console.log('📊 检测到内容类型:', contentType);
 
-        // 生成结构预览
-        this.generateStructurePreview(content, contentType);
+            const previewContent = document.getElementById('preview-content');
+            console.log('📋 预览容器:', previewContent ? '存在' : '不存在');
 
-        // 设置默认标签为激活状态
-        this.switchPreviewTab('structure');
+            if (!previewContent) {
+                console.error('❌ 预览容器不存在!');
+                this.showMessage('预览容器初始化失败', 'error');
+                return;
+            }
+
+            // 生成结构预览
+            this.generateStructurePreview(content, contentType);
+            console.log('✅ 结构预览生成完成');
+
+            // 设置默认标签为激活状态
+            this.switchPreviewTab('structure');
+            console.log('✅ 预览标签切换完成');
+
+        } catch (error) {
+            console.error('❌ 预览生成失败:', error);
+            this.showMessage('预览生成失败: ' + error.message, 'error');
+
+            // 显示错误信息给用户
+            const previewContent = document.getElementById('preview-content');
+            if (previewContent) {
+                previewContent.innerHTML = `
+                    <div class="error-message" style="padding: 2rem; text-align: center; color: #dc2626; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca;">
+                        <h4 style="margin: 0 0 1rem 0;">⚠️ 预览生成失败</h4>
+                        <p style="margin: 0 0 0.5rem 0;"><strong>错误信息:</strong> ${error.message}</p>
+                        <p style="margin: 0; font-size: 0.9rem; color: #991b1b;">请检查输入内容格式是否正确，或刷新页面重试</p>
+                    </div>
+                `;
+            }
+        }
     }
 
     /**
      * 生成结构预览
      */
     generateStructurePreview(content, contentType) {
-        const detector = new ContentDetector();
-        const parser = new MarkdownParser();
+        console.log('🏗️ 开始生成结构预览, 内容类型:', contentType);
 
-        let previewHtml = '<div class="preview-structure">';
+        try {
+            const detector = new ContentDetector();
+            const parser = new MarkdownParser();
 
-        previewHtml += `<div class="detection-info">
-            <h4>🤖 智能检测结果</h4>
-            <p><strong>内容类型:</strong> ${this.getContentTypeLabel(contentType)}</p>
-            <p><strong>字符数:</strong> ${content.length}</p>
-        </div>`;
+            let previewHtml = '<div class="preview-structure">';
 
-        if (contentType === 'table') {
-            const tables = parser.parseMarkdownTable(content);
-            previewHtml += '<div class="table-preview">';
-            previewHtml += '<h4>📊 表格预览</h4>';
+            previewHtml += `<div class="detection-info">
+                <h4>🤖 智能检测结果</h4>
+                <p><strong>内容类型:</strong> ${this.getContentTypeLabel(contentType)}</p>
+                <p><strong>字符数:</strong> ${content.length}</p>
+                <p><strong>生成时间:</strong> ${new Date().toLocaleTimeString()}</p>
+            </div>`;
 
-            tables.forEach((table, index) => {
-                previewHtml += `<div class="table-item">
-                    <h5>表格 ${index + 1}</h5>
-                    <table class="preview-table">
-                        <thead><tr>`;
+            if (contentType === 'table') {
+                console.log('📊 处理表格内容');
+                const tables = parser.extractTables(content);
+                console.log('📊 解析到表格数量:', tables.length);
 
-                table.headers.forEach(header => {
-                    previewHtml += `<th>${header}</th>`;
-                });
+                previewHtml += '<div class="table-preview">';
+                previewHtml += '<h4>📊 表格预览</h4>';
 
-                previewHtml += '</tr></thead><tbody>';
+                if (tables.length > 0) {
+                    tables.forEach((table, index) => {
+                        const tableData = table.data || [];
+                        const headers = tableData.length > 0 ? tableData[0] : [];
+                        const rows = tableData.slice(1);
 
-                table.rows.forEach(row => {
-                    previewHtml += '<tr>';
-                    row.forEach(cell => {
-                        previewHtml += `<td>${cell}</td>`;
+                        console.log(`📊 处理表格 ${index + 1}, 列数:`, headers.length, '行数:', rows.length);
+
+                        previewHtml += `<div class="table-item">
+                            <h5>${table.title || `表格 ${index + 1}`} (${headers.length}列 × ${rows.length}行)</h5>
+                            <table class="preview-table">
+                                <thead><tr>`;
+
+                        headers.forEach(header => {
+                            previewHtml += `<th>${this.escapeHtml(header)}</th>`;
+                        });
+
+                        previewHtml += '</tr></thead><tbody>';
+
+                        rows.forEach(row => {
+                            previewHtml += '<tr>';
+                            row.forEach(cell => {
+                                previewHtml += `<td>${this.escapeHtml(cell)}</td>`;
+                            });
+                            previewHtml += '</tr>';
+                        });
+
+                        previewHtml += '</tbody></table></div>';
                     });
-                    previewHtml += '</tr>';
-                });
+                } else {
+                    previewHtml += '<p class="no-tables">未检测到有效的表格数据</p>';
+                }
 
-                previewHtml += '</tbody></table></div>';
-            });
+                previewHtml += '</div>';
+            } else {
+                console.log('📄 处理非表格内容');
+                previewHtml += `<div class="content-preview">
+                    <h4>📄 内容预览</h4>
+                    <div class="preview-text">${this.formatPreviewText(content)}</div>
+                </div>`;
+            }
 
             previewHtml += '</div>';
-        } else {
-            previewHtml += `<div class="content-preview">
-                <h4>📄 内容预览</h4>
-                <div class="preview-text">${this.formatPreviewText(content)}</div>
-            </div>`;
+
+            const previewContainer = document.getElementById('preview-content');
+            if (previewContainer) {
+                previewContainer.innerHTML = previewHtml;
+                console.log('✅ 结构预览HTML已插入到容器');
+            } else {
+                throw new Error('预览容器不存在');
+            }
+
+        } catch (error) {
+            console.error('❌ 结构预览生成失败:', error);
+            throw error; // 重新抛出错误，让上层处理
         }
-
-        previewHtml += '</div>';
-
-        document.getElementById('preview-content').innerHTML = previewHtml;
     }
 
     /**
@@ -620,9 +679,11 @@ class AIContentConverter {
         const content = document.getElementById('ai-content').value.trim();
         if (!content) return;
 
+        const detector = new ContentDetector();
+
         switch (tabName) {
             case 'structure':
-                this.generateStructurePreview(content, this.detectContentType(content));
+                this.generateStructurePreview(content, detector.detectContentType(content));
                 break;
             case 'word':
                 this.generateWordPreview(content);
@@ -659,36 +720,40 @@ class AIContentConverter {
      */
     generateExcelPreview(content) {
         const parser = new MarkdownParser();
-        const tables = parser.parseMarkdownTable(content);
+        const tables = parser.extractTables(content);
 
         let previewHtml = '<div class="excel-preview">';
         previewHtml += '<h4>📊 Excel工作表预览</h4>';
 
         if (tables.length > 0) {
             tables.forEach((table, index) => {
+                const tableData = table.data || [];
+                const headers = tableData.length > 0 ? tableData[0] : [];
+                const rows = tableData.slice(1);
+
                 previewHtml += `
                     <div class="worksheet-preview">
-                        <div class="sheet-tab">工作表${index + 1}</div>
+                        <div class="sheet-tab">${table.title || `工作表${index + 1}`}</div>
                         <div class="excel-table">
                             <table class="excel-grid">
                                 <thead><tr>`;
 
-                table.headers.forEach((header, colIndex) => {
+                headers.forEach((header, colIndex) => {
                     previewHtml += `<th class="excel-header">${String.fromCharCode(65 + colIndex)}</th>`;
                 });
 
                 previewHtml += '</tr><tr>';
 
-                table.headers.forEach(header => {
-                    previewHtml += `<td class="excel-cell header-cell">${header}</td>`;
+                headers.forEach(header => {
+                    previewHtml += `<td class="excel-cell header-cell">${this.escapeHtml(header)}</td>`;
                 });
 
                 previewHtml += '</tr></thead><tbody>';
 
-                table.rows.forEach((row, rowIndex) => {
+                rows.forEach((row, rowIndex) => {
                     previewHtml += '<tr>';
                     row.forEach(cell => {
-                        previewHtml += `<td class="excel-cell">${cell}</td>`;
+                        previewHtml += `<td class="excel-cell">${this.escapeHtml(cell)}</td>`;
                     });
                     previewHtml += '</tr>';
                 });
@@ -730,6 +795,15 @@ class AIContentConverter {
             'code': '💻 代码块'
         };
         return labels[type] || '📄 文本内容';
+    }
+
+    /**
+     * HTML转义函数，防止XSS攻击
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     updatePreview() { /* 预览更新逻辑 */ }
     handleDragOver(e) { e.preventDefault(); }

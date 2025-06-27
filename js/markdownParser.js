@@ -46,8 +46,14 @@ class MarkdownParser {
             
             // 解析表格
             if (line.includes('|') && i + 1 < lines.length && this.isSeparatorLine(lines[i + 1])) {
-                const table = this.parseMarkdownTable(lines, i);
-                this.elements.push(table.element);
+                const table = this.parseTable(lines, i, `表格${this.elements.length + 1}`);
+                // 创建表格元素
+                const tableElement = {
+                    type: 'table',
+                    title: table.title,
+                    data: table.data
+                };
+                this.elements.push(tableElement);
                 i = table.nextIndex;
                 continue;
             }
