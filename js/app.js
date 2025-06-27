@@ -339,6 +339,11 @@ class AIContentConverter {
      * 处理文件上传
      */
     async handleFileUpload(event) {
+        if (!event || !event.target || !event.target.files) {
+            console.error('无效的文件上传事件');
+            return;
+        }
+
         const file = event.target.files[0];
         if (!file) return;
 
@@ -354,12 +359,23 @@ class AIContentConverter {
             }
 
             const content = await Utils.file.readFileContent(file);
-            document.getElementById('ai-content').value = content;
-            this.handleContentChange(content);
-            this.showMessage('文件上传成功', 'success');
+            const textarea = document.getElementById('ai-content');
+            if (textarea) {
+                textarea.value = content;
+                this.handleContentChange(content);
+                this.showMessage('文件上传成功', 'success');
+            } else {
+                throw new Error('找不到文本输入区域');
+            }
 
         } catch (error) {
+            console.error('文件上传错误:', error);
             this.showMessage('文件读取失败：' + error.message, 'error');
+        } finally {
+            // 清空文件输入，允许重复上传同一文件
+            if (event.target) {
+                event.target.value = '';
+            }
         }
     }
 
@@ -403,14 +419,25 @@ class AIContentConverter {
      * 下载文件
      */
     downloadFile(blob, fileName) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        if (!blob || !fileName) {
+            console.error('下载文件参数无效');
+            return;
+        }
+
+        try {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.style.display = 'none'; // 隐藏元素
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('文件下载失败:', error);
+            this.showMessage('文件下载失败', 'error');
+        }
     }
 
     /**

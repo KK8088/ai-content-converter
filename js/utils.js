@@ -22,9 +22,15 @@ const Utils = {
          */
         cleanCellContent(content) {
             if (!content) return '';
-            
-            let cleaned = content.toString().trim();
-            
+
+            // 确保输入是字符串
+            let cleaned = String(content).trim();
+
+            // 防止XSS攻击 - 移除潜在的脚本标签
+            cleaned = cleaned.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+            cleaned = cleaned.replace(/javascript:/gi, '');
+            cleaned = cleaned.replace(/on\w+\s*=/gi, '');
+
             // 移除Markdown格式标记
             cleaned = cleaned
                 .replace(/\*\*(.*?)\*\*/g, '$1')     // 移除加粗标记
@@ -33,21 +39,32 @@ const Utils = {
                 .replace(/~~(.*?)~~/g, '$1')         // 移除删除线标记
                 .replace(/__(.*?)__/g, '$1')         // 移除下划线加粗
                 .replace(/_(.*?)_/g, '$1');          // 移除下划线斜体
-            
-            // 移除HTML标记
+
+            // 移除HTML标记（保留安全的实体）
             cleaned = cleaned.replace(/<[^>]*>/g, '');
-            
-            // 处理特殊字符
-            cleaned = cleaned
-                .replace(/&nbsp;/g, ' ')             // 替换非断行空格
-                .replace(/&amp;/g, '&')              // 替换HTML实体
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&quot;/g, '"');
-            
+
+            // 处理HTML实体
+            const entityMap = {
+                '&nbsp;': ' ',
+                '&amp;': '&',
+                '&lt;': '<',
+                '&gt;': '>',
+                '&quot;': '"',
+                '&#39;': "'"
+            };
+
+            Object.keys(entityMap).forEach(entity => {
+                cleaned = cleaned.replace(new RegExp(entity, 'g'), entityMap[entity]);
+            });
+
             // 移除多余的空白字符
             cleaned = cleaned.replace(/\s+/g, ' ').trim();
-            
+
+            // 限制长度防止过长内容
+            if (cleaned.length > 10000) {
+                cleaned = cleaned.substring(0, 10000) + '...';
+            }
+
             return cleaned;
         },
 
@@ -320,9 +337,20 @@ const Utils = {
          */
         readFileContent(file) {
             return new Promise((resolve, reject) => {
+                if (!file || !(file instanceof File)) {
+                    reject(new Error('无效的文件对象'));
+                    return;
+                }
+
                 const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = (e) => reject(new Error('文件读取失败'));
+                reader.onload = (e) => {
+                    if (e.target && e.target.result) {
+                        resolve(e.target.result);
+                    } else {
+                        reject(new Error('文件内容为空'));
+                    }
+                };
+                reader.onerror = () => reject(new Error('文件读取失败'));
                 reader.readAsText(file, 'UTF-8');
             });
         }
