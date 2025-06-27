@@ -1,0 +1,352 @@
+/**
+ * AI内容格式转换工具 - 主题样式文件
+ * 
+ * @description 多主题支持，包括亮色、暗色和高对比度主题
+ * @version 1.0.0
+ * @author AI Content Converter Team
+ */
+
+/* 默认主题（亮色） */
+[data-theme="light"] {
+    --primary-color: #6366f1;
+    --primary-dark: #4f46e5;
+    --primary-light: #a5b4fc;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: #f3f4f6;
+    --border-color: #e5e7eb;
+}
+
+/* 暗色主题 */
+[data-theme="dark"] {
+    --primary-color: #818cf8;
+    --primary-dark: #6366f1;
+    --primary-light: #c7d2fe;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --text-white: #1f2937;
+    --bg-primary: #1f2937;
+    --bg-secondary: #374151;
+    --bg-tertiary: #4b5563;
+    --bg-dark: #111827;
+    --border-color: #4b5563;
+    --bg-gradient: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+/* 高对比度主题 */
+[data-theme="high-contrast"] {
+    --primary-color: #0066cc;
+    --primary-dark: #004499;
+    --primary-light: #3399ff;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f0f0f0;
+    --bg-tertiary: #e0e0e0;
+    --border-color: #000000;
+}
+
+/* 护眼主题 */
+[data-theme="eye-care"] {
+    --primary-color: #059669;
+    --primary-dark: #047857;
+    --primary-light: #34d399;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --bg-primary: #f0fdf4;
+    --bg-secondary: #dcfce7;
+    --bg-tertiary: #bbf7d0;
+    --border-color: #d1fae5;
+    --bg-gradient: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+/* 主题切换器 */
+.theme-switcher {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-sm);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.theme-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    background: transparent;
+}
+
+.theme-btn:hover {
+    background: var(--bg-secondary);
+    transform: scale(1.1);
+}
+
+.theme-btn.active {
+    background: var(--primary-color);
+    color: var(--text-white);
+}
+
+.theme-btn[data-theme="light"] {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.theme-btn[data-theme="dark"] {
+    background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);
+}
+
+.theme-btn[data-theme="high-contrast"] {
+    background: linear-gradient(135deg, #000000 0%, #333333 100%);
+}
+
+.theme-btn[data-theme="eye-care"] {
+    background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+}
+
+/* 暗色主题特殊样式 */
+[data-theme="dark"] .header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+}
+
+[data-theme="dark"] .card {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] textarea {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] select,
+[data-theme="dark"] input[type="text"] {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] pre {
+    background: var(--bg-dark);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .footer {
+    background: var(--bg-dark);
+}
+
+/* 高对比度主题特殊样式 */
+[data-theme="high-contrast"] .card {
+    border: 2px solid var(--border-color);
+}
+
+[data-theme="high-contrast"] button {
+    border: 2px solid var(--border-color);
+}
+
+[data-theme="high-contrast"] .btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="high-contrast"] .btn-secondary {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="high-contrast"] textarea,
+[data-theme="high-contrast"] select,
+[data-theme="high-contrast"] input[type="text"] {
+    border: 2px solid var(--border-color);
+}
+
+/* 护眼主题特殊样式 */
+[data-theme="eye-care"] .header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+}
+
+[data-theme="eye-care"] .card {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+/* 主题过渡动画 */
+* {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* 打印样式 */
+@media print {
+    .theme-switcher,
+    .btn-group,
+    .loading,
+    .footer {
+        display: none !important;
+    }
+    
+    .container {
+        box-shadow: none;
+        border: none;
+        background: white;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        break-inside: avoid;
+    }
+    
+    .header {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .section-title {
+        color: black !important;
+    }
+    
+    pre {
+        background: #f5f5f5 !important;
+        border: 1px solid #ccc !important;
+        color: black !important;
+    }
+}
+
+/* 减少动画（用户偏好） */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* 高对比度（用户偏好） */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-primary: #000000;
+        --bg-primary: #ffffff;
+    }
+}
+
+/* 暗色模式（用户偏好） */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --primary-color: #818cf8;
+        --primary-dark: #6366f1;
+        --primary-light: #c7d2fe;
+        --text-primary: #f9fafb;
+        --text-secondary: #d1d5db;
+        --text-muted: #9ca3af;
+        --text-white: #1f2937;
+        --bg-primary: #1f2937;
+        --bg-secondary: #374151;
+        --bg-tertiary: #4b5563;
+        --bg-dark: #111827;
+        --border-color: #4b5563;
+        --bg-gradient: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    }
+}
+
+/* 主题切换动画 */
+.theme-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 主题指示器 */
+.theme-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: var(--transition);
+    pointer-events: none;
+    z-index: 999;
+}
+
+.theme-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 主题预设 */
+.theme-presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+}
+
+.theme-preset {
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.theme-preset:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.theme-preset.active {
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.theme-preset-name {
+    font-weight: 500;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.theme-preset-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.theme-preset-colors {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.theme-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+}

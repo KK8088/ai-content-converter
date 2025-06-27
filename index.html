@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容格式转换工具 - 开源版</title>
+    <meta name="description" content="将AI对话内容完美转换为专业的Word和Excel文档，支持Markdown表格、代码块、列表等复杂格式">
+    <meta name="keywords" content="AI,内容转换,Markdown,Word,Excel,格式转换,开源工具">
+    
+    <!-- 外部依赖 -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/themes.css">
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 头部区域 -->
+        <div class="header">
+            <h1>AI内容格式转换工具</h1>
+            <p class="subtitle">将AI对话内容完美转换为专业的Word和Excel文档</p>
+            <div class="version-badge">开源版 v1.0.0</div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 输入区域 -->
+            <div class="card input-section">
+                <h2 class="section-title">内容输入</h2>
+                <div class="textarea-container">
+                    <textarea id="ai-content" placeholder="请在此粘贴从ChatGPT、DeepSeek等AI对话中复制的内容...
+
+支持的格式包括：
+• Markdown表格 (| 列1 | 列2 |)
+• 代码块 (```代码```)
+• 列表项目 (- 项目 或 1. 项目)
+• 引用内容 (> 引用)
+• 标题格式 (# 标题)
+• 格式化文本 (**加粗** *斜体* `代码`)
+
+智能识别各种数据类型：货币、日期、百分比等"></textarea>
+                    <div class="file-drop-zone" id="file-drop-zone">
+                        <div class="drop-icon">📁</div>
+                        <div class="drop-text">拖拽文件到此处或点击上传</div>
+                        <input type="file" id="file-input" accept=".md,.txt" style="display: none;">
+                    </div>
+                </div>
+                <div class="format-hint">
+                    支持格式：Markdown表格、代码块、引用、列表、链接、加粗斜体等
+                </div>
+                <div class="input-stats">
+                    <span id="char-count">字符数: 0</span>
+                    <span id="word-count">单词数: 0</span>
+                    <span id="table-count">表格数: 0</span>
+                </div>
+            </div>
+            
+            <!-- 预览区域 -->
+            <div class="card preview-section" id="preview-section" style="display: none;">
+                <h2 class="section-title">实时预览</h2>
+                <div class="preview-tabs">
+                    <button class="tab-btn active" data-tab="structure">结构预览</button>
+                    <button class="tab-btn" data-tab="word">Word预览</button>
+                    <button class="tab-btn" data-tab="excel">Excel预览</button>
+                </div>
+                <div class="preview-content" id="preview-content">
+                    <!-- 预览内容将在这里动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 选项区域 -->
+            <div class="card">
+                <h2 class="section-title">转换选项</h2>
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label class="option-label" for="content-type">内容类型</label>
+                        <select id="content-type">
+                            <option value="auto">🤖 智能检测</option>
+                            <option value="table">📊 表格数据</option>
+                            <option value="list">📋 列表/项目</option>
+                            <option value="article">📄 文章/报告</option>
+                            <option value="markdown">📝 Markdown格式</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label class="option-label" for="output-format">输出格式</label>
+                        <select id="output-format">
+                            <option value="docx">📄 Microsoft Word (.docx)</option>
+                            <option value="xlsx">📊 Microsoft Excel (.xlsx)</option>
+                            <option value="both">📄📊 Word和Excel</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label class="option-label" for="template-style">文档模板</label>
+                        <select id="template-style">
+                            <option value="professional">💼 专业商务</option>
+                            <option value="academic">🎓 学术论文</option>
+                            <option value="simple">📝 简洁清爽</option>
+                            <option value="colorful">🎨 彩色活泼</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label class="option-label" for="file-name">文件名</label>
+                        <input type="text" id="file-name" placeholder="自动生成" />
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="btn-group">
+                <button id="preview-btn" class="btn-secondary">
+                    👁️ 实时预览
+                </button>
+                <button id="convert-btn" class="btn-primary">
+                    🚀 开始转换
+                </button>
+                <button id="clear-btn" class="btn-secondary">
+                    🗑️ 清空内容
+                </button>
+            </div>
+            
+            <!-- 加载状态 -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="loading-text">正在智能处理中，请稍候...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+            
+            <!-- 结果展示 -->
+            <div class="card result-section" id="result-section" style="display: none;">
+                <h2 class="section-title">转换结果</h2>
+                <div class="result-stats" id="result-stats">
+                    <!-- 转换统计信息 -->
+                </div>
+                <div class="download-links" id="download-links">
+                    <!-- 下载链接 -->
+                </div>
+            </div>
+            
+            <!-- 示例区域 -->
+            <div class="examples">
+                <h3>格式示例与使用指南</h3>
+                
+                <div class="example-tabs">
+                    <button class="example-tab active" data-example="table">📊 表格</button>
+                    <button class="example-tab" data-example="code">💻 代码</button>
+                    <button class="example-tab" data-example="list">📋 列表</button>
+                    <button class="example-tab" data-example="format">🎨 格式</button>
+                </div>
+                
+                <div class="example-content" id="example-content">
+                    <!-- 示例内容将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>开源项目</h4>
+                <p>本项目基于MIT协议开源</p>
+                <a href="https://github.com/your-username/ai-content-converter" target="_blank">
+                    <img src="https://img.shields.io/github/stars/your-username/ai-content-converter?style=social" alt="GitHub Stars">
+                </a>
+            </div>
+            <div class="footer-section">
+                <h4>技术支持</h4>
+                <ul>
+                    <li><a href="#docs">使用文档</a></li>
+                    <li><a href="#api">API文档</a></li>
+                    <li><a href="#community">社区支持</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>关于我们</h4>
+                <p>致力于提供最好的AI内容处理工具</p>
+                <div class="social-links">
+                    <a href="#" title="GitHub">🐙</a>
+                    <a href="#" title="Twitter">🐦</a>
+                    <a href="#" title="微信">💬</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 AI内容格式转换工具. 保留所有权利.</p>
+        </div>
+    </footer>
+    
+    <!-- JavaScript模块 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/contentDetector.js"></script>
+    <script src="js/markdownParser.js"></script>
+    <script src="js/wordGenerator.js"></script>
+    <script src="js/excelGenerator.js"></script>
+    <script src="js/previewGenerator.js"></script>
+    <script src="js/fileHandler.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
