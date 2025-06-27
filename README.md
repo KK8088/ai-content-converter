@@ -243,6 +243,6 @@ npm run build
 
 **如果这个项目对您有帮助，请给我们一个 ⭐️**
 
-Made with ❤️ by [AI Content Converter Team](https://github.com/KK8088)
+Made with ❤️ by [zk0x01](https://github.com/KK8088)
 
 </div>

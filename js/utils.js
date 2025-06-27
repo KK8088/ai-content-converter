@@ -3,7 +3,7 @@
  * 
  * @description 通用工具函数和辅助方法
  * @version 1.0.0
- * @author AI Content Converter Team
+ * @author zk0x01
  */
 
 /**

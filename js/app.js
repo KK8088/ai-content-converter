@@ -3,7 +3,7 @@
  * 
  * @description 应用程序主入口和控制器
  * @version 1.0.0
- * @author AI Content Converter Team
+ * @author zk0x01
  */
 
 /**

@@ -12,7 +12,7 @@ const APP_CONFIG = {
     name: 'AI内容格式转换工具',
     version: '1.0.0',
     description: '将AI对话内容完美转换为专业的Word和Excel文档',
-    author: 'AI Content Converter Team',
+    author: 'zk0x01',
     license: 'MIT',
     
     // GitHub信息

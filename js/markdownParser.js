@@ -3,7 +3,7 @@
  * 
  * @description 解析Markdown内容为结构化数据
  * @version 1.0.0
- * @author AI Content Converter Team
+ * @author zk0x01
  */
 
 /**

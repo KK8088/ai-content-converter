@@ -257,7 +257,7 @@ jobs:
     "ai", "content", "converter", "markdown", 
     "word", "excel", "docx", "xlsx"
   ],
-  "author": "AI Content Converter Team",
+  "author": "zk0x01",
   "license": "MIT"
 }
 ```

@@ -3,7 +3,7 @@
  * 
  * @description 智能检测内容类型和格式
  * @version 1.0.0
- * @author AI Content Converter Team
+ * @author zk0x01
  */
 
 /**
