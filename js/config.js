@@ -17,9 +17,9 @@ const APP_CONFIG = {
     
     // GitHub信息
     github: {
-        owner: 'your-username',
+        owner: 'KK8088',
         repo: 'ai-content-converter',
-        url: 'https://github.com/your-username/ai-content-converter'
+        url: 'https://github.com/KK8088/ai-content-converter'
     },
     
     // 功能限制（开源版）

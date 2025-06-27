@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/ai-content-converter.git"
+    "url": "git+https://github.com/KK8088/ai-content-converter.git"
   },
   "keywords": [
     "ai",
@@ -35,9 +35,9 @@
   "author": "AI Content Converter Team",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/your-username/ai-content-converter/issues"
+    "url": "https://github.com/KK8088/ai-content-converter/issues"
   },
-  "homepage": "https://your-username.github.io/ai-content-converter",
+  "homepage": "https://KK8088.github.io/ai-content-converter",
   "devDependencies": {},
   "dependencies": {},
   "browserslist": [

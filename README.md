@@ -6,12 +6,12 @@
 
 **将AI对话内容完美转换为专业的Word和Excel文档**
 
-[![GitHub Stars](https://img.shields.io/github/stars/your-username/ai-content-converter?style=social)](https://github.com/your-username/ai-content-converter)
+[![GitHub Stars](https://img.shields.io/github/stars/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/your-username/ai-content-converter/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/KK8088/ai-content-converter/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-[🚀 在线体验](https://your-username.github.io/ai-content-converter) | [📖 文档](https://docs.aiconverter.com) | [🐛 报告问题](https://github.com/your-username/ai-content-converter/issues) | [💬 讨论](https://github.com/your-username/ai-content-converter/discussions)
+[🚀 在线体验](https://KK8088.github.io/ai-content-converter) | [📖 文档](https://docs.aiconverter.com) | [🐛 报告问题](https://github.com/KK8088/ai-content-converter/issues) | [💬 讨论](https://github.com/KK8088/ai-content-converter/discussions)
 
 </div>
 
@@ -47,13 +47,13 @@
 
 ### 在线使用
 
-访问 [在线版本](https://your-username.github.io/ai-content-converter)，无需安装即可使用。
+访问 [在线版本](https://KK8088.github.io/ai-content-converter)，无需安装即可使用。
 
 ### 本地部署
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/ai-content-converter.git
+git clone https://github.com/KK8088/ai-content-converter.git
 
 # 进入项目目录
 cd ai-content-converter
@@ -229,8 +229,8 @@ npm run build
 
 ## 📞 联系我们
 
-- **GitHub Issues**: [报告问题](https://github.com/your-username/ai-content-converter/issues)
-- **GitHub Discussions**: [参与讨论](https://github.com/your-username/ai-content-converter/discussions)
+- **GitHub Issues**: [报告问题](https://github.com/KK8088/ai-content-converter/issues)
+- **GitHub Discussions**: [参与讨论](https://github.com/KK8088/ai-content-converter/discussions)
 - **Email**: support@aiconverter.com
 - **Twitter**: [@AIConverter](https://twitter.com/AIConverter)
 
@@ -240,6 +240,6 @@ npm run build
 
 **如果这个项目对您有帮助，请给我们一个 ⭐️**
 
-Made with ❤️ by [AI Content Converter Team](https://github.com/your-username)
+Made with ❤️ by [AI Content Converter Team](https://github.com/KK8088)
 
 </div>
