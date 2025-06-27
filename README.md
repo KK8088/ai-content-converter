@@ -9,6 +9,9 @@
 [![GitHub Stars](https://img.shields.io/github/stars/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/KK8088/ai-content-converter/releases)
+[![CI/CD](https://github.com/KK8088/ai-content-converter/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/KK8088/ai-content-converter/actions)
+[![GitHub Issues](https://img.shields.io/github/issues/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/issues)
+[![GitHub Forks](https://img.shields.io/github/forks/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/network)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
 [🚀 在线体验](https://KK8088.github.io/ai-content-converter) | [📖 文档](https://docs.aiconverter.com) | [🐛 报告问题](https://github.com/KK8088/ai-content-converter/issues) | [💬 讨论](https://github.com/KK8088/ai-content-converter/discussions)

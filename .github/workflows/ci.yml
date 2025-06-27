@@ -10,6 +10,8 @@ permissions:
   contents: read
   security-events: write
   actions: read
+  pages: write
+  id-token: write
 
 jobs:
   # 基础检查

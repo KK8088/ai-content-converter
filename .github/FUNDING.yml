@@ -1,0 +1,16 @@
+# 资助配置
+# 这些是支持的资助平台
+
+github: [KK8088]
+patreon: # 您的Patreon用户名
+open_collective: # 您的Open Collective项目名
+ko_fi: # 您的Ko-fi用户名
+tidelift: # 您的Tidelift包名
+community_bridge: # 您的Community Bridge项目名
+liberapay: # 您的Liberapay用户名
+issuehunt: # 您的IssueHunt用户名
+otechie: # 您的Otechie用户名
+lfx_crowdfunding: # 您的LFX Crowdfunding项目名
+custom: # 自定义资助链接的数组，最多4个
+  # - "https://paypal.me/username"
+  # - "https://www.buymeacoffee.com/username"

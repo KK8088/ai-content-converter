@@ -1,0 +1,62 @@
+labels: ["enhancement", "discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您分享想法！我们重视每一个建议。
+
+  - type: input
+    id: idea-title
+    attributes:
+      label: 💡 想法标题
+      description: 用一句话描述您的想法
+      placeholder: 例如：添加PDF导出功能
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea-description
+    attributes:
+      label: 📝 详细描述
+      description: 详细描述您的想法和建议
+      placeholder: 请详细描述您的想法...
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: 🎯 使用场景
+      description: 这个功能在什么情况下会被使用？
+      placeholder: 描述具体的使用场景...
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: ✨ 预期收益
+      description: 这个功能会带来什么好处？
+      placeholder: 描述预期的好处和价值...
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 📊 优先级
+      description: 您认为这个功能的优先级如何？
+      options:
+        - 低 - 有了更好
+        - 中 - 比较重要
+        - 高 - 非常需要
+        - 紧急 - 必须要有
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: 🛠️ 实现意愿
+      description: 您是否愿意参与实现？
+      options:
+        - label: 我愿意参与讨论设计
+        - label: 我可以提供测试
+        - label: 我可以编写代码
+        - label: 我可以编写文档
