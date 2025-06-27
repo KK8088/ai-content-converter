@@ -581,17 +581,15 @@ class AIContentConverter {
     }
 
     /**
-     * 生成结构预览
+     * 生成结构预览 - 简化版本
      */
     generateStructurePreview(content, contentType) {
         console.log('🏗️ 开始生成结构预览, 内容类型:', contentType);
 
         try {
-            const detector = new ContentDetector();
-            const parser = new MarkdownParser();
-
             let previewHtml = '<div class="preview-structure">';
 
+            // 基本信息显示
             previewHtml += `<div class="detection-info">
                 <h4>🤖 智能检测结果</h4>
                 <p><strong>内容类型:</strong> ${this.getContentTypeLabel(contentType)}</p>
@@ -599,34 +597,32 @@ class AIContentConverter {
                 <p><strong>生成时间:</strong> ${new Date().toLocaleTimeString()}</p>
             </div>`;
 
+            // 简化的表格处理
             if (contentType === 'table') {
                 console.log('📊 处理表格内容');
-                const tables = parser.extractTables(content);
-                console.log('📊 解析到表格数量:', tables.length);
-
                 previewHtml += '<div class="table-preview">';
                 previewHtml += '<h4>📊 表格预览</h4>';
 
+                // 简单的表格解析
+                const tables = this.parseSimpleTable(content);
+                console.log('📊 解析到表格数量:', tables.length);
+
                 if (tables.length > 0) {
                     tables.forEach((table, index) => {
-                        const tableData = table.data || [];
-                        const headers = tableData.length > 0 ? tableData[0] : [];
-                        const rows = tableData.slice(1);
-
-                        console.log(`📊 处理表格 ${index + 1}, 列数:`, headers.length, '行数:', rows.length);
+                        console.log(`📊 处理表格 ${index + 1}, 列数:`, table.headers.length, '行数:', table.rows.length);
 
                         previewHtml += `<div class="table-item">
-                            <h5>${table.title || `表格 ${index + 1}`} (${headers.length}列 × ${rows.length}行)</h5>
+                            <h5>表格 ${index + 1} (${table.headers.length}列 × ${table.rows.length}行)</h5>
                             <table class="preview-table">
                                 <thead><tr>`;
 
-                        headers.forEach(header => {
+                        table.headers.forEach(header => {
                             previewHtml += `<th>${this.escapeHtml(header)}</th>`;
                         });
 
                         previewHtml += '</tr></thead><tbody>';
 
-                        rows.forEach(row => {
+                        table.rows.forEach(row => {
                             previewHtml += '<tr>';
                             row.forEach(cell => {
                                 previewHtml += `<td>${this.escapeHtml(cell)}</td>`;
@@ -716,57 +712,72 @@ class AIContentConverter {
     }
 
     /**
-     * 生成Excel预览
+     * 生成Excel预览 - 简化版本
      */
     generateExcelPreview(content) {
-        const parser = new MarkdownParser();
-        const tables = parser.extractTables(content);
+        console.log('📊 开始生成Excel预览');
 
-        let previewHtml = '<div class="excel-preview">';
-        previewHtml += '<h4>📊 Excel工作表预览</h4>';
+        try {
+            const tables = this.parseSimpleTable(content);
 
-        if (tables.length > 0) {
-            tables.forEach((table, index) => {
-                const tableData = table.data || [];
-                const headers = tableData.length > 0 ? tableData[0] : [];
-                const rows = tableData.slice(1);
+            let previewHtml = '<div class="excel-preview">';
+            previewHtml += '<h4>📊 Excel工作表预览</h4>';
 
-                previewHtml += `
-                    <div class="worksheet-preview">
-                        <div class="sheet-tab">${table.title || `工作表${index + 1}`}</div>
-                        <div class="excel-table">
-                            <table class="excel-grid">
-                                <thead><tr>`;
+            if (tables.length > 0) {
+                tables.forEach((table, index) => {
+                    previewHtml += `
+                        <div class="worksheet-preview">
+                            <div class="sheet-tab">工作表${index + 1}</div>
+                            <div class="excel-table">
+                                <table class="excel-grid">
+                                    <thead><tr>`;
 
-                headers.forEach((header, colIndex) => {
-                    previewHtml += `<th class="excel-header">${String.fromCharCode(65 + colIndex)}</th>`;
-                });
-
-                previewHtml += '</tr><tr>';
-
-                headers.forEach(header => {
-                    previewHtml += `<td class="excel-cell header-cell">${this.escapeHtml(header)}</td>`;
-                });
-
-                previewHtml += '</tr></thead><tbody>';
-
-                rows.forEach((row, rowIndex) => {
-                    previewHtml += '<tr>';
-                    row.forEach(cell => {
-                        previewHtml += `<td class="excel-cell">${this.escapeHtml(cell)}</td>`;
+                    table.headers.forEach((header, colIndex) => {
+                        previewHtml += `<th class="excel-header">${String.fromCharCode(65 + colIndex)}</th>`;
                     });
-                    previewHtml += '</tr>';
+
+                    previewHtml += '</tr><tr>';
+
+                    table.headers.forEach(header => {
+                        previewHtml += `<td class="excel-cell header-cell">${this.escapeHtml(header)}</td>`;
+                    });
+
+                    previewHtml += '</tr></thead><tbody>';
+
+                    table.rows.forEach((row, rowIndex) => {
+                        previewHtml += '<tr>';
+                        row.forEach(cell => {
+                            previewHtml += `<td class="excel-cell">${this.escapeHtml(cell)}</td>`;
+                        });
+                        previewHtml += '</tr>';
+                    });
+
+                    previewHtml += '</tbody></table></div></div>';
                 });
+            } else {
+                previewHtml += '<p class="no-tables">未检测到表格数据</p>';
+            }
 
-                previewHtml += '</tbody></table></div></div>';
-            });
-        } else {
-            previewHtml += '<p class="no-tables">未检测到表格数据</p>';
+            previewHtml += '</div>';
+
+            const previewContainer = document.getElementById('preview-content');
+            if (previewContainer) {
+                previewContainer.innerHTML = previewHtml;
+                console.log('✅ Excel预览生成成功');
+            }
+
+        } catch (error) {
+            console.error('❌ Excel预览生成失败:', error);
+            const previewContainer = document.getElementById('preview-content');
+            if (previewContainer) {
+                previewContainer.innerHTML = `
+                    <div class="error-message" style="padding: 2rem; text-align: center; color: #dc2626;">
+                        <h4>Excel预览生成失败</h4>
+                        <p>错误: ${error.message}</p>
+                    </div>
+                `;
+            }
         }
-
-        previewHtml += '</div>';
-
-        document.getElementById('preview-content').innerHTML = previewHtml;
     }
 
     /**
@@ -804,6 +815,59 @@ class AIContentConverter {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /**
+     * 简化的表格解析方法
+     */
+    parseSimpleTable(content) {
+        const lines = content.split('\n').filter(line => line.trim());
+        const tables = [];
+        let currentTable = null;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            // 检测表格行
+            if (line.includes('|') && line.split('|').length > 2) {
+                const cells = line.split('|')
+                    .map(cell => cell.trim())
+                    .filter(cell => cell.length > 0);
+
+                if (!currentTable) {
+                    // 开始新表格
+                    currentTable = {
+                        headers: cells,
+                        rows: []
+                    };
+                } else if (this.isSimpleSeparatorLine(line)) {
+                    // 跳过分隔行
+                    continue;
+                } else {
+                    // 添加数据行
+                    currentTable.rows.push(cells);
+                }
+            } else if (currentTable) {
+                // 表格结束
+                tables.push(currentTable);
+                currentTable = null;
+            }
+        }
+
+        // 处理最后一个表格
+        if (currentTable) {
+            tables.push(currentTable);
+        }
+
+        return tables;
+    }
+
+    /**
+     * 检查是否为简单分隔行
+     */
+    isSimpleSeparatorLine(line) {
+        return line.includes('---') || line.includes('===') ||
+               (line.includes('|') && line.includes('-'));
     }
     updatePreview() { /* 预览更新逻辑 */ }
     handleDragOver(e) { e.preventDefault(); }
