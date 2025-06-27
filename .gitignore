@@ -1,0 +1,111 @@
+# AI内容格式转换工具 - Git忽略文件
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+*.cache
+*~
+.DS_Store
+Thumbs.db
+
+# 开发过程文件
+fix-*.bat
+fix-*.ps1
+fix-*.sh
+temp-*.bat
+temp-*.ps1
+temp-*.sh
+cleanup-*.bat
+setup-*.bat
+test-*.bat
+debug-*.bat
+
+# 编辑器和IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Node.js (如果将来使用)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# 构建输出
+dist/
+build/
+*.tgz
+*.tar.gz
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 测试覆盖率
+coverage/
+.nyc_output
+
+# 运行时数据
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 部署相关
+.vercel
+.netlify
+
+# 备份文件
+*.bak
+*.backup
+*.old
+
+# 压缩文件
+*.zip
+*.rar
+*.7z
+
+# 文档生成
+docs/build/
+docs/.vuepress/dist/
+
+# 本地配置
+config.local.js
+config.local.json
+
+# 开发工具
+.vscode/settings.json
+.idea/workspace.xml
+
+# 测试文件
+test-output/
+test-results/
+*.test.html
+*.test.js.map
+
+# 性能分析
+*.cpuprofile
+*.heapprofile
+
+# 错误日志
+error.log
+debug.log
+access.log
