@@ -67,6 +67,14 @@ class AIContentConverter {
             previewBtn.addEventListener('click', () => this.handlePreview());
         }
 
+        // 预览标签切换
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchPreviewTab(e.target.dataset.tab);
+            });
+        });
+
         // 文件上传
         const fileInput = document.getElementById('file-input');
         if (fileInput) {
@@ -498,7 +506,231 @@ class AIContentConverter {
 
     // 其他方法的简化实现...
     handleClear() { document.getElementById('ai-content').value = ''; this.handleContentChange(''); }
-    handlePreview() { this.logger.info('预览功能开发中...'); }
+    /**
+     * 处理预览功能
+     */
+    handlePreview() {
+        const content = document.getElementById('ai-content').value.trim();
+        if (!content) {
+            this.showMessage('请先输入内容', 'warning');
+            return;
+        }
+
+        this.logger.info('显示预览...');
+        this.showPreviewSection(content);
+    }
+
+    /**
+     * 显示预览区域
+     */
+    showPreviewSection(content) {
+        const previewSection = document.getElementById('preview-section');
+        if (previewSection) {
+            previewSection.style.display = 'block';
+            this.generatePreview(content);
+
+            // 滚动到预览区域
+            previewSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    /**
+     * 生成预览内容
+     */
+    generatePreview(content) {
+        const contentType = this.detectContentType(content);
+        const previewContent = document.getElementById('preview-content');
+
+        if (!previewContent) return;
+
+        // 生成结构预览
+        this.generateStructurePreview(content, contentType);
+
+        // 设置默认标签为激活状态
+        this.switchPreviewTab('structure');
+    }
+
+    /**
+     * 生成结构预览
+     */
+    generateStructurePreview(content, contentType) {
+        const detector = new ContentDetector();
+        const parser = new MarkdownParser();
+
+        let previewHtml = '<div class="preview-structure">';
+
+        previewHtml += `<div class="detection-info">
+            <h4>🤖 智能检测结果</h4>
+            <p><strong>内容类型:</strong> ${this.getContentTypeLabel(contentType)}</p>
+            <p><strong>字符数:</strong> ${content.length}</p>
+        </div>`;
+
+        if (contentType === 'table') {
+            const tables = parser.parseMarkdownTable(content);
+            previewHtml += '<div class="table-preview">';
+            previewHtml += '<h4>📊 表格预览</h4>';
+
+            tables.forEach((table, index) => {
+                previewHtml += `<div class="table-item">
+                    <h5>表格 ${index + 1}</h5>
+                    <table class="preview-table">
+                        <thead><tr>`;
+
+                table.headers.forEach(header => {
+                    previewHtml += `<th>${header}</th>`;
+                });
+
+                previewHtml += '</tr></thead><tbody>';
+
+                table.rows.forEach(row => {
+                    previewHtml += '<tr>';
+                    row.forEach(cell => {
+                        previewHtml += `<td>${cell}</td>`;
+                    });
+                    previewHtml += '</tr>';
+                });
+
+                previewHtml += '</tbody></table></div>';
+            });
+
+            previewHtml += '</div>';
+        } else {
+            previewHtml += `<div class="content-preview">
+                <h4>📄 内容预览</h4>
+                <div class="preview-text">${this.formatPreviewText(content)}</div>
+            </div>`;
+        }
+
+        previewHtml += '</div>';
+
+        document.getElementById('preview-content').innerHTML = previewHtml;
+    }
+
+    /**
+     * 切换预览标签
+     */
+    switchPreviewTab(tabName) {
+        // 更新标签状态
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+        // 显示对应内容
+        const content = document.getElementById('ai-content').value.trim();
+        if (!content) return;
+
+        switch (tabName) {
+            case 'structure':
+                this.generateStructurePreview(content, this.detectContentType(content));
+                break;
+            case 'word':
+                this.generateWordPreview(content);
+                break;
+            case 'excel':
+                this.generateExcelPreview(content);
+                break;
+        }
+    }
+
+    /**
+     * 生成Word预览
+     */
+    generateWordPreview(content) {
+        const previewContent = document.getElementById('preview-content');
+        previewContent.innerHTML = `
+            <div class="word-preview">
+                <h4>📄 Word文档预览</h4>
+                <div class="document-preview">
+                    <div class="doc-header">
+                        <h3>AI转换文档</h3>
+                        <p class="doc-meta">生成时间: ${new Date().toLocaleString()}</p>
+                    </div>
+                    <div class="doc-content">
+                        ${this.formatPreviewText(content)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * 生成Excel预览
+     */
+    generateExcelPreview(content) {
+        const parser = new MarkdownParser();
+        const tables = parser.parseMarkdownTable(content);
+
+        let previewHtml = '<div class="excel-preview">';
+        previewHtml += '<h4>📊 Excel工作表预览</h4>';
+
+        if (tables.length > 0) {
+            tables.forEach((table, index) => {
+                previewHtml += `
+                    <div class="worksheet-preview">
+                        <div class="sheet-tab">工作表${index + 1}</div>
+                        <div class="excel-table">
+                            <table class="excel-grid">
+                                <thead><tr>`;
+
+                table.headers.forEach((header, colIndex) => {
+                    previewHtml += `<th class="excel-header">${String.fromCharCode(65 + colIndex)}</th>`;
+                });
+
+                previewHtml += '</tr><tr>';
+
+                table.headers.forEach(header => {
+                    previewHtml += `<td class="excel-cell header-cell">${header}</td>`;
+                });
+
+                previewHtml += '</tr></thead><tbody>';
+
+                table.rows.forEach((row, rowIndex) => {
+                    previewHtml += '<tr>';
+                    row.forEach(cell => {
+                        previewHtml += `<td class="excel-cell">${cell}</td>`;
+                    });
+                    previewHtml += '</tr>';
+                });
+
+                previewHtml += '</tbody></table></div></div>';
+            });
+        } else {
+            previewHtml += '<p class="no-tables">未检测到表格数据</p>';
+        }
+
+        previewHtml += '</div>';
+
+        document.getElementById('preview-content').innerHTML = previewHtml;
+    }
+
+    /**
+     * 格式化预览文本
+     */
+    formatPreviewText(content) {
+        return content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+            .replace(/\n/g, '<br>');
+    }
+
+    /**
+     * 获取内容类型标签
+     */
+    getContentTypeLabel(type) {
+        const labels = {
+            'table': '📊 表格数据',
+            'list': '📋 列表项目',
+            'article': '📄 文章内容',
+            'markdown': '📝 Markdown格式',
+            'code': '💻 代码块'
+        };
+        return labels[type] || '📄 文本内容';
+    }
     updatePreview() { /* 预览更新逻辑 */ }
     handleDragOver(e) { e.preventDefault(); }
     handleDrop(e) { e.preventDefault(); /* 拖拽处理逻辑 */ }

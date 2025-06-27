@@ -682,6 +682,207 @@ pre {
     font-size: 0.875rem;
 }
 
+/* 预览功能样式 */
+.preview-section {
+    margin-top: 2rem;
+}
+
+.preview-tabs {
+    display: flex;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 1rem;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.tab-btn.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.preview-content {
+    min-height: 200px;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.detection-info {
+    background: #e0f2fe;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #0284c7;
+}
+
+.detection-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: #0284c7;
+}
+
+.detection-info p {
+    margin: 0.25rem 0;
+    color: #0369a1;
+}
+
+.table-preview {
+    margin-top: 1rem;
+}
+
+.table-item {
+    margin-bottom: 1.5rem;
+}
+
+.table-item h5 {
+    margin: 0 0 0.5rem 0;
+    color: #374151;
+}
+
+.preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.preview-table th,
+.preview-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.preview-table th {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: #374151;
+}
+
+.preview-table tr:hover {
+    background: #f8fafc;
+}
+
+.word-preview .document-preview {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: 'Times New Roman', serif;
+}
+
+.doc-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.doc-header h3 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.5rem;
+}
+
+.doc-meta {
+    margin: 0.5rem 0 0 0;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.excel-preview .worksheet-preview {
+    margin-bottom: 1.5rem;
+}
+
+.sheet-tab {
+    background: #f1f5f9;
+    padding: 0.5rem 1rem;
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+    color: #374151;
+    border: 1px solid #e2e8f0;
+    border-bottom: none;
+    display: inline-block;
+}
+
+.excel-table {
+    border: 1px solid #e2e8f0;
+    border-radius: 0 8px 8px 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.excel-grid {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.excel-header {
+    background: #f1f5f9;
+    padding: 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    min-width: 60px;
+}
+
+.excel-cell {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    background: white;
+}
+
+.header-cell {
+    background: #f9fafb;
+    font-weight: 600;
+}
+
+.no-tables {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 2rem;
+}
+
+.preview-text {
+    line-height: 1.6;
+    color: #374151;
+}
+
+.preview-text h1,
+.preview-text h2,
+.preview-text h3 {
+    color: #1f2937;
+    margin: 1rem 0 0.5rem 0;
+}
+
+.preview-text code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: #dc2626;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     body {
