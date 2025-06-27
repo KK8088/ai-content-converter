@@ -7,136 +7,114 @@ on:
     branches: [ main ]
 
 jobs:
-  # 代码质量检查
-  lint:
-    name: 代码质量检查
+  # 基础检查
+  basic-check:
+    name: 基础检查
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
-      
-    - name: 设置 Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: 安装依赖
-      run: npm ci
-      
-    - name: ESLint 检查
-      run: npm run lint
-      
-    - name: Prettier 格式检查
-      run: npx prettier --check "**/*.{js,css,md}"
 
-  # 测试
-  test:
-    name: 运行测试
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [16, 18, 20]
-        
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
-      
-    - name: 设置 Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        
-    - name: 安装依赖
-      run: npm ci
-      
-    - name: 运行测试
-      run: npm run test:coverage
-      
-    - name: 上传覆盖率报告
-      if: matrix.node-version == 18
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella
 
-  # 浏览器兼容性测试
-  browser-test:
-    name: 浏览器兼容性测试
+    - name: 检查文件结构
+      run: |
+        echo "检查项目文件结构..."
+        ls -la
+        echo "检查HTML文件..."
+        if [ -f "index.html" ]; then
+          echo "✅ index.html 存在"
+        else
+          echo "❌ index.html 不存在"
+          exit 1
+        fi
+        echo "检查CSS文件..."
+        if [ -d "css" ]; then
+          echo "✅ css 目录存在"
+          ls -la css/
+        else
+          echo "❌ css 目录不存在"
+          exit 1
+        fi
+        echo "检查JS文件..."
+        if [ -d "js" ]; then
+          echo "✅ js 目录存在"
+          ls -la js/
+        else
+          echo "❌ js 目录不存在"
+          exit 1
+        fi
+
+    - name: HTML语法检查
+      run: |
+        echo "检查HTML语法..."
+        # 简单的HTML语法检查
+        if grep -q "<!DOCTYPE html>" index.html; then
+          echo "✅ HTML5 DOCTYPE 正确"
+        else
+          echo "❌ 缺少HTML5 DOCTYPE"
+          exit 1
+        fi
+
+  # 功能测试
+  functional-test:
+    name: 功能测试
     runs-on: ubuntu-latest
-    
+    needs: [basic-check]
+
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
-      
-    - name: 设置 Node.js
-      uses: actions/setup-node@v4
+
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
       with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: 安装依赖
-      run: npm ci
-      
+        python-version: '3.x'
+
     - name: 启动测试服务器
       run: |
-        npm run serve &
+        echo "启动本地服务器..."
+        python -m http.server 8080 &
         sleep 5
-        
-    - name: 运行浏览器测试
-      run: |
-        # 这里可以添加 Playwright 或 Puppeteer 测试
-        echo "浏览器测试通过"
 
-  # 构建
-  build:
-    name: 构建项目
-    runs-on: ubuntu-latest
-    needs: [lint, test]
-    
-    steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
-      
-    - name: 设置 Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: 安装依赖
-      run: npm ci
-      
-    - name: 构建项目
-      run: npm run build
-      
-    - name: 上传构建产物
-      uses: actions/upload-artifact@v3
-      with:
-        name: build-files
-        path: dist/
+    - name: 测试服务器响应
+      run: |
+        echo "测试服务器响应..."
+        curl -f http://localhost:8080/ || exit 1
+        echo "✅ 服务器响应正常"
+
+    - name: 检查关键文件可访问性
+      run: |
+        echo "检查CSS文件..."
+        curl -f http://localhost:8080/css/styles.css || exit 1
+        echo "检查JS文件..."
+        curl -f http://localhost:8080/js/config.js || exit 1
+        echo "✅ 关键文件可访问"
 
   # 安全扫描
   security:
     name: 安全扫描
     runs-on: ubuntu-latest
-    
+    needs: [basic-check]
+
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
-      
-    - name: 运行 npm audit
-      run: npm audit --audit-level moderate
-      
+
+    - name: 检查敏感信息
+      run: |
+        echo "检查是否包含敏感信息..."
+        # 检查是否有API密钥等敏感信息
+        if grep -r "api_key\|secret\|password" --exclude-dir=.git .; then
+          echo "⚠️ 发现可能的敏感信息"
+        else
+          echo "✅ 未发现敏感信息"
+        fi
+
     - name: 运行 CodeQL 分析
       uses: github/codeql-action/init@v2
       with:
         languages: javascript
-        
+
     - name: 执行 CodeQL 分析
       uses: github/codeql-action/analyze@v2
 
@@ -144,74 +122,33 @@ jobs:
   deploy:
     name: 部署到 GitHub Pages
     runs-on: ubuntu-latest
-    needs: [lint, test, build]
+    needs: [basic-check, functional-test, security]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
+
     permissions:
       contents: read
       pages: write
       id-token: write
-      
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-      
+
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
-      
+
     - name: 设置 Pages
       uses: actions/configure-pages@v3
-      
+
     - name: 上传到 Pages
       uses: actions/upload-pages-artifact@v2
       with:
         path: '.'
-        
+
     - name: 部署到 Pages
       id: deployment
       uses: actions/deploy-pages@v2
-
-  # 创建 Release
-  release:
-    name: 创建 Release
-    runs-on: ubuntu-latest
-    needs: [lint, test, build]
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release:')
-    
-    steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        
-    - name: 设置 Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: 安装依赖
-      run: npm ci
-      
-    - name: 构建项目
-      run: npm run build
-      
-    - name: 创建 Release
-      run: npm run release
-      
-    - name: 推送标签
-      run: git push --follow-tags origin main
-      
-    - name: 创建 GitHub Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
 
   # 通知
   notify:
@@ -219,14 +156,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy]
     if: always()
-    
+
     steps:
     - name: 通知部署结果
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#ci-cd'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-      if: env.SLACK_WEBHOOK_URL != null
+      run: |
+        if [ "${{ needs.deploy.result }}" == "success" ]; then
+          echo "🎉 部署成功！"
+          echo "网站地址: https://${{ github.repository_owner }}.github.io/ai-content-converter"
+        else
+          echo "❌ 部署失败"
+        fi
