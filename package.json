@@ -4,13 +4,8 @@
   "description": "将AI对话内容完美转换为专业的Word和Excel文档",
   "main": "index.html",
   "scripts": {
-    "dev": "python -m http.server 8080",
-    "serve": "python -m http.server 8080",
     "start": "python -m http.server 8080",
-    "test": "echo \"暂无测试\" && exit 0",
-    "lint": "echo \"代码检查通过\" && exit 0",
-    "build": "echo \"构建完成\" && exit 0",
-    "deploy": "echo \"部署完成\" && exit 0"
+    "serve": "python -m http.server 8080"
   },
   "repository": {
     "type": "git",
@@ -38,8 +33,7 @@
     "url": "https://github.com/KK8088/ai-content-converter/issues"
   },
   "homepage": "https://KK8088.github.io/ai-content-converter",
-  "devDependencies": {},
-  "dependencies": {},
+
   "browserslist": [
     "> 1%",
     "last 2 versions",
@@ -50,8 +44,8 @@
     "index.html",
     "css/",
     "js/",
-    "docs/",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "README_EN.md"
   ]
 }
