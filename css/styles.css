@@ -411,6 +411,140 @@ textarea::placeholder {
     transition: all var(--transition-normal);
 }
 
+/* 智能检测结果面板 */
+.detection-result-panel {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    animation: slideInDown 0.5s ease-out;
+}
+
+.detection-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.detection-icon {
+    font-size: 1.2rem;
+    animation: pulse 2s infinite;
+}
+
+.detection-title {
+    font-weight: 600;
+    color: var(--primary-color);
+    flex: 1;
+}
+
+.detection-confidence {
+    background: var(--success-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.detection-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.detected-type {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.detection-features {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* 高级选项 */
+.advanced-options {
+    grid-column: 1 / -1;
+}
+
+.advanced-toggle {
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.advanced-toggle:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+.toggle-icon {
+    font-size: 1rem;
+}
+
+.toggle-text {
+    flex: 1;
+    text-align: left;
+}
+
+.toggle-arrow {
+    transition: transform var(--transition-normal);
+}
+
+.advanced-toggle.active .toggle-arrow {
+    transform: rotate(180deg);
+}
+
+.advanced-content {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+}
+
+.advanced-option {
+    margin-bottom: var(--spacing-md);
+}
+
+.advanced-option:last-child {
+    margin-bottom: 0;
+}
+
+/* 动画效果 */
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
 /* 选项网格 */
 .options-grid {
     display: grid;

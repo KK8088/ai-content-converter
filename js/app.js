@@ -149,6 +149,9 @@ class AIContentConverter {
         // 快捷操作按钮事件
         this.bindQuickActions();
 
+        // 高级选项切换事件
+        this.bindAdvancedOptions();
+
         // 转换按钮
         const convertBtn = document.getElementById('convert-btn');
         if (convertBtn) {
@@ -211,13 +214,377 @@ class AIContentConverter {
     }
 
     /**
-     * 处理内容变化
+     * 处理内容变化 - 增强版智能识别
      */
     handleContentChange(content) {
         this.currentContent = content;
         this.updateStats(content);
+
+        // 智能检测内容类型 - 使用增强算法
+        const detectionResult = this.intelligentContentDetection(content);
+        this.currentContentType = detectionResult.type;
+        this.detectionConfidence = detectionResult.confidence;
+        this.detectionDetails = detectionResult.details;
+
+        // 更新UI显示
+        this.updateContentTypeDisplay();
+        this.updateDetectionResultDisplay(detectionResult);
         this.updatePreview();
         this.saveToStorage();
+    }
+
+    /**
+     * 智能内容检测 - 增强版算法
+     */
+    intelligentContentDetection(content) {
+        if (!content || !content.trim()) {
+            return {
+                type: 'auto',
+                confidence: 0,
+                details: { reason: '内容为空' }
+            };
+        }
+
+        const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+        const totalLines = lines.length;
+
+        // 计算各种格式的权重分数
+        const scores = {
+            markdown: 0,
+            table: 0,
+            list: 0,
+            code: 0,
+            article: 0
+        };
+
+        const details = {
+            features: [],
+            patterns: [],
+            confidence_factors: []
+        };
+
+        // 1. 检测Markdown表格 - 更严格的检测
+        const tableLines = lines.filter(line => line.includes('|'));
+        const separatorLines = lines.filter(line =>
+            /^\|?[\s]*:?-+:?[\s]*\|/.test(line) ||
+            /^[\s]*:?-+:?[\s]*\|/.test(line)
+        );
+
+        if (tableLines.length >= 2 && separatorLines.length >= 1) {
+            // 检查表格结构的一致性
+            const tableLinesWithPipes = tableLines.filter(line => {
+                const pipeCount = (line.match(/\|/g) || []).length;
+                return pipeCount >= 2; // 至少需要2个管道符形成表格
+            });
+
+            if (tableLinesWithPipes.length >= 2) {
+                scores.table += 50;
+                scores.markdown += 30;
+                details.features.push('Markdown表格结构');
+                details.patterns.push(`${tableLinesWithPipes.length}行表格数据`);
+            }
+        }
+
+        // 2. 检测代码块
+        const codeBlockMatches = content.match(/```[\s\S]*?```/g);
+        if (codeBlockMatches) {
+            scores.code += codeBlockMatches.length * 20;
+            scores.markdown += 25;
+            details.features.push('代码块');
+            details.patterns.push(`${codeBlockMatches.length}个代码块`);
+        }
+
+        // 检测单行代码块（没有结束标记的）
+        if (content.includes('```')) {
+            scores.markdown += 15;
+            details.features.push('代码标记');
+        }
+
+        // 3. 检测引用块
+        const quoteLines = lines.filter(line => /^>\s/.test(line));
+        if (quoteLines.length > 0) {
+            scores.markdown += quoteLines.length * 5;
+            details.features.push('引用块');
+            details.patterns.push(`${quoteLines.length}行引用`);
+        }
+
+        // 4. 检测Markdown标题
+        const headingLines = lines.filter(line => /^#{1,6}\s/.test(line));
+        if (headingLines.length > 0) {
+            scores.markdown += headingLines.length * 10;
+            details.features.push('Markdown标题');
+            details.patterns.push(`${headingLines.length}个标题`);
+        }
+
+        // 5. 检测列表
+        const unorderedListLines = lines.filter(line => /^[-*+]\s/.test(line));
+        const orderedListLines = lines.filter(line => /^\d+\.\s/.test(line));
+        const totalListLines = unorderedListLines.length + orderedListLines.length;
+
+        if (totalListLines > 0) {
+            scores.list += totalListLines * 8;
+            scores.markdown += totalListLines * 5;
+            details.features.push('列表项');
+            details.patterns.push(`${totalListLines}个列表项`);
+        }
+
+        // 6. 检测Markdown链接和格式
+        const linkMatches = content.match(/\[([^\]]+)\]\(([^)]+)\)/g);
+        if (linkMatches) {
+            scores.markdown += linkMatches.length * 3;
+            details.features.push('Markdown链接');
+        }
+
+        const boldMatches = content.match(/\*\*([^*]+)\*\*/g);
+        if (boldMatches) {
+            scores.markdown += boldMatches.length * 2;
+            details.features.push('加粗文本');
+        }
+
+        const italicMatches = content.match(/\*([^*]+)\*/g);
+        if (italicMatches) {
+            scores.markdown += italicMatches.length * 1;
+            details.features.push('斜体文本');
+        }
+
+        // 7. 检测简单CSV
+        if (this.isSimpleCSV(content)) {
+            scores.table += 40;
+            details.features.push('CSV格式');
+        }
+
+        // 8. 检测分隔线
+        const separatorCount = lines.filter(line => /^-{3,}$/.test(line)).length;
+        if (separatorCount > 0) {
+            scores.markdown += separatorCount * 5;
+            details.features.push('分隔线');
+        }
+
+        // 9. 检测AI对话特征
+        const aiPatterns = [
+            /^(用户|User|Human)[:：]/i,
+            /^(助手|Assistant|AI|ChatGPT|Claude|DeepSeek)[:：]/i,
+            /^Q[:：]/i,
+            /^A[:：]/i
+        ];
+
+        let aiDialogScore = 0;
+        for (const line of lines) {
+            for (const pattern of aiPatterns) {
+                if (pattern.test(line)) {
+                    aiDialogScore += 5;
+                    break;
+                }
+            }
+        }
+
+        if (aiDialogScore > 0) {
+            scores.article += aiDialogScore;
+            details.features.push('AI对话格式');
+        }
+
+        // 计算最终结果
+        const maxScore = Math.max(...Object.values(scores));
+        const detectedType = Object.keys(scores).find(key => scores[key] === maxScore);
+
+        // 计算置信度
+        const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+        const confidence = totalScore > 0 ? Math.round((maxScore / totalScore) * 100) : 0;
+
+        // 决定最终类型
+        let finalType = 'auto';
+        if (scores.table >= 30 && scores.table === maxScore) {
+            finalType = 'table';
+        } else if (scores.markdown >= 15) {
+            finalType = 'markdown';
+        } else if (scores.list >= 20 && totalListLines / totalLines > 0.5) {
+            finalType = 'list';
+        } else if (scores.code >= 20) {
+            finalType = 'code';
+        } else {
+            finalType = 'article';
+        }
+
+        details.confidence_factors = [
+            `总分: ${totalScore}`,
+            `最高分: ${maxScore} (${detectedType})`,
+            `特征数: ${details.features.length}`
+        ];
+
+        return {
+            type: finalType,
+            confidence: confidence,
+            details: details,
+            scores: scores
+        };
+    }
+
+    /**
+     * 智能内容检测 - 增强版算法
+     */
+    intelligentContentDetection(content) {
+        if (!content || !content.trim()) {
+            return {
+                type: 'auto',
+                confidence: 0,
+                details: { reason: '内容为空' }
+            };
+        }
+
+        const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+        const totalLines = lines.length;
+
+        // 计算各种格式的权重分数
+        const scores = {
+            markdown: 0,
+            table: 0,
+            list: 0,
+            code: 0,
+            article: 0
+        };
+
+        const details = {
+            features: [],
+            patterns: [],
+            confidence_factors: []
+        };
+
+        // 1. 检测Markdown表格
+        const tableLines = lines.filter(line => line.includes('|'));
+        const separatorLines = lines.filter(line =>
+            /^\|?[\s]*:?-+:?[\s]*\|/.test(line) ||
+            /^[\s]*:?-+:?[\s]*\|/.test(line)
+        );
+
+        if (tableLines.length >= 2 && separatorLines.length >= 1) {
+            const tableLinesWithPipes = tableLines.filter(line => {
+                const pipeCount = (line.match(/\|/g) || []).length;
+                return pipeCount >= 2;
+            });
+
+            if (tableLinesWithPipes.length >= 2) {
+                scores.table += 50;
+                scores.markdown += 30;
+                details.features.push('Markdown表格结构');
+                details.patterns.push(`${tableLinesWithPipes.length}行表格数据`);
+            }
+        }
+
+        // 2. 检测代码块
+        const codeBlockMatches = content.match(/```[\s\S]*?```/g);
+        if (codeBlockMatches) {
+            scores.code += codeBlockMatches.length * 20;
+            scores.markdown += 25;
+            details.features.push('代码块');
+            details.patterns.push(`${codeBlockMatches.length}个代码块`);
+        }
+
+        if (content.includes('```')) {
+            scores.markdown += 15;
+            details.features.push('代码标记');
+        }
+
+        // 3. 检测引用块
+        const quoteLines = lines.filter(line => /^>\s/.test(line));
+        if (quoteLines.length > 0) {
+            scores.markdown += quoteLines.length * 5;
+            details.features.push('引用块');
+            details.patterns.push(`${quoteLines.length}行引用`);
+        }
+
+        // 4. 检测Markdown标题
+        const headingLines = lines.filter(line => /^#{1,6}\s/.test(line));
+        if (headingLines.length > 0) {
+            scores.markdown += headingLines.length * 10;
+            details.features.push('Markdown标题');
+            details.patterns.push(`${headingLines.length}个标题`);
+        }
+
+        // 5. 检测列表
+        const unorderedListLines = lines.filter(line => /^[-*+]\s/.test(line));
+        const orderedListLines = lines.filter(line => /^\d+\.\s/.test(line));
+        const totalListLines = unorderedListLines.length + orderedListLines.length;
+
+        if (totalListLines > 0) {
+            scores.list += totalListLines * 8;
+            scores.markdown += totalListLines * 5;
+            details.features.push('列表项');
+            details.patterns.push(`${totalListLines}个列表项`);
+        }
+
+        // 6. 检测Markdown格式
+        const linkMatches = content.match(/\[([^\]]+)\]\(([^)]+)\)/g);
+        if (linkMatches) {
+            scores.markdown += linkMatches.length * 3;
+            details.features.push('Markdown链接');
+        }
+
+        const boldMatches = content.match(/\*\*([^*]+)\*\*/g);
+        if (boldMatches) {
+            scores.markdown += boldMatches.length * 2;
+            details.features.push('加粗文本');
+        }
+
+        // 7. 检测简单CSV
+        if (this.isSimpleCSV(content)) {
+            scores.table += 40;
+            details.features.push('CSV格式');
+        }
+
+        // 8. 检测AI对话特征
+        const aiPatterns = [
+            /^(用户|User|Human)[:：]/i,
+            /^(助手|Assistant|AI|ChatGPT|Claude|DeepSeek)[:：]/i,
+            /^Q[:：]/i,
+            /^A[:：]/i
+        ];
+
+        let aiDialogScore = 0;
+        for (const line of lines) {
+            for (const pattern of aiPatterns) {
+                if (pattern.test(line)) {
+                    aiDialogScore += 5;
+                    break;
+                }
+            }
+        }
+
+        if (aiDialogScore > 0) {
+            scores.article += aiDialogScore;
+            details.features.push('AI对话格式');
+        }
+
+        // 计算最终结果
+        const maxScore = Math.max(...Object.values(scores));
+        const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+        const confidence = totalScore > 0 ? Math.round((maxScore / totalScore) * 100) : 0;
+
+        // 决定最终类型
+        let finalType = 'auto';
+        if (scores.table >= 30 && scores.table === maxScore) {
+            finalType = 'table';
+        } else if (scores.markdown >= 15) {
+            finalType = 'markdown';
+        } else if (scores.list >= 20 && totalListLines / totalLines > 0.5) {
+            finalType = 'list';
+        } else if (scores.code >= 20) {
+            finalType = 'code';
+        } else {
+            finalType = 'article';
+        }
+
+        details.confidence_factors = [
+            `总分: ${totalScore}`,
+            `最高分: ${maxScore}`,
+            `特征数: ${details.features.length}`
+        ];
+
+        return {
+            type: finalType,
+            confidence: confidence,
+            details: details,
+            scores: scores
+        };
     }
 
     /**
@@ -324,9 +691,26 @@ class AIContentConverter {
                 alignment: AlignmentType.CENTER
             }));
 
-            if (contentType === 'markdown' || this.containsMarkdownElements(cleanedContent)) {
+            // 使用智能检测结果选择转换策略
+            const detectionResult = this.intelligentContentDetection(cleanedContent);
+            console.log('🤖 智能检测结果:', detectionResult);
+
+            if (detectionResult.type === 'markdown' || this.containsMarkdownElements(cleanedContent)) {
+                // Markdown内容处理
                 const elements = markdownParser.parseMarkdown(cleanedContent);
                 children.push(...this.convertElementsToWord(elements));
+            } else if (detectionResult.type === 'table') {
+                // 表格数据专门处理
+                const tableElements = this.parseTableContent(cleanedContent);
+                children.push(...this.convertElementsToWord(tableElements));
+            } else if (detectionResult.type === 'list') {
+                // 列表内容专门处理
+                const listElements = this.parseListContent(cleanedContent);
+                children.push(...this.convertElementsToWord(listElements));
+            } else if (detectionResult.type === 'code') {
+                // 代码内容专门处理
+                const codeElements = this.parseCodeContent(cleanedContent);
+                children.push(...this.convertElementsToWord(codeElements));
             } else {
                 // 智能文本处理
                 const processedElements = this.parseTextContent(cleanedContent);
@@ -1064,6 +1448,364 @@ class AIContentConverter {
         }
 
         return elements;
+    }
+
+    /**
+     * 解析表格内容
+     */
+    parseTableContent(content) {
+        const elements = [];
+        const lines = content.split('\n').filter(line => line.trim());
+
+        if (this.isSimpleCSV(content)) {
+            // CSV格式处理
+            const rows = lines.map(line => line.split(',').map(cell => cell.trim()));
+            if (rows.length > 0) {
+                elements.push({
+                    type: 'table',
+                    headers: rows[0],
+                    rows: rows.slice(1)
+                });
+            }
+        } else {
+            // Markdown表格处理
+            const tableLines = lines.filter(line => line.includes('|'));
+            if (tableLines.length >= 2) {
+                const rows = tableLines.map(line =>
+                    line.split('|')
+                        .map(cell => cell.trim())
+                        .filter(cell => cell.length > 0)
+                );
+
+                if (rows.length > 0) {
+                    elements.push({
+                        type: 'table',
+                        headers: rows[0],
+                        rows: rows.slice(1).filter(row => !row.every(cell => /^:?-+:?$/.test(cell)))
+                    });
+                }
+            }
+        }
+
+        return elements;
+    }
+
+    /**
+     * 解析列表内容
+     */
+    parseListContent(content) {
+        const elements = [];
+        const lines = content.split('\n');
+        let currentList = null;
+
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+
+            if (!trimmedLine) {
+                if (currentList) {
+                    elements.push(currentList);
+                    currentList = null;
+                }
+                continue;
+            }
+
+            // 无序列表
+            const unorderedMatch = trimmedLine.match(/^[-*+]\s+(.+)$/);
+            if (unorderedMatch) {
+                if (!currentList || currentList.type !== 'list') {
+                    if (currentList) elements.push(currentList);
+                    currentList = { type: 'list', items: [] };
+                }
+                currentList.items.push({ text: unorderedMatch[1] });
+                continue;
+            }
+
+            // 有序列表
+            const orderedMatch = trimmedLine.match(/^\d+\.\s+(.+)$/);
+            if (orderedMatch) {
+                if (!currentList || currentList.type !== 'orderedList') {
+                    if (currentList) elements.push(currentList);
+                    currentList = { type: 'orderedList', items: [] };
+                }
+                currentList.items.push({ text: orderedMatch[1] });
+                continue;
+            }
+
+            // 普通文本
+            if (currentList) {
+                elements.push(currentList);
+                currentList = null;
+            }
+            elements.push({
+                type: 'paragraph',
+                text: trimmedLine,
+                formatted: [{ type: 'text', text: trimmedLine }]
+            });
+        }
+
+        if (currentList) {
+            elements.push(currentList);
+        }
+
+        return elements;
+    }
+
+    /**
+     * 解析代码内容
+     */
+    parseCodeContent(content) {
+        const elements = [];
+        const lines = content.split('\n');
+        let i = 0;
+
+        while (i < lines.length) {
+            const line = lines[i];
+
+            // 检测代码块
+            if (line.trim().startsWith('```')) {
+                let codeContent = '';
+                let language = line.trim().substring(3).trim();
+                i++;
+
+                while (i < lines.length && !lines[i].trim().startsWith('```')) {
+                    codeContent += lines[i] + '\n';
+                    i++;
+                }
+
+                elements.push({
+                    type: 'codeBlock',
+                    content: codeContent.trim(),
+                    language: language
+                });
+                i++;
+            } else if (line.trim()) {
+                // 普通文本行
+                elements.push({
+                    type: 'paragraph',
+                    text: line.trim(),
+                    formatted: [{ type: 'text', text: line.trim() }]
+                });
+                i++;
+            } else {
+                i++;
+            }
+        }
+
+        return elements;
+    }
+
+    /**
+     * 检测简单CSV格式
+     */
+    isSimpleCSV(content) {
+        const lines = content.split('\n').filter(line => line.trim());
+        if (lines.length < 2) return false;
+
+        // 检查是否包含Markdown表格标记
+        if (content.includes('|') || content.includes('---')) {
+            return false;
+        }
+
+        // 检查每行是否有相同数量的逗号
+        const firstLineCommas = (lines[0].match(/,/g) || []).length;
+        if (firstLineCommas === 0) return false;
+
+        const consistentCommas = lines.slice(0, Math.min(5, lines.length)).every(line => {
+            const commas = (line.match(/,/g) || []).length;
+            return commas === firstLineCommas;
+        });
+
+        return consistentCommas && firstLineCommas >= 1;
+    }
+
+    /**
+     * 更新内容类型显示
+     */
+    updateContentTypeDisplay() {
+        const contentTypeSelect = document.getElementById('content-type');
+        if (contentTypeSelect && this.currentContentType !== 'auto') {
+            // 自动设置检测到的类型
+            const typeMapping = {
+                'markdown': '📝 Markdown格式',
+                'table': '📊 表格数据',
+                'list': '📋 列表/项目',
+                'article': '📄 文章/报告',
+                'code': '💻 代码内容'
+            };
+
+            const options = Array.from(contentTypeSelect.options);
+            const targetOption = options.find(option =>
+                option.textContent.includes(typeMapping[this.currentContentType]?.split(' ')[1] || '')
+            );
+
+            if (targetOption) {
+                contentTypeSelect.value = targetOption.value;
+            }
+        }
+    }
+
+    /**
+     * 更新检测结果显示
+     */
+    updateDetectionResultDisplay(detectionResult) {
+        // 在统计信息区域显示检测结果
+        const statsGroup = document.querySelector('.stats-group');
+        if (statsGroup && detectionResult.confidence > 0) {
+            // 移除旧的检测结果显示
+            const oldDetection = statsGroup.querySelector('.detection-result');
+            if (oldDetection) {
+                oldDetection.remove();
+            }
+
+            // 创建新的检测结果显示
+            const detectionElement = document.createElement('span');
+            detectionElement.className = 'stat-item detection-result';
+            detectionElement.innerHTML = `
+                <span class="stat-icon">🤖</span>
+                <span class="stat-value">${detectionResult.confidence}%</span>
+                <span class="stat-label">${this.getTypeDisplayName(detectionResult.type)}</span>
+            `;
+            detectionElement.title = `检测特征: ${detectionResult.details.features.join(', ')}`;
+
+            statsGroup.appendChild(detectionElement);
+
+            // 添加动画效果
+            detectionElement.style.transform = 'scale(0.8)';
+            detectionElement.style.opacity = '0';
+            setTimeout(() => {
+                detectionElement.style.transform = 'scale(1)';
+                detectionElement.style.opacity = '1';
+                detectionElement.style.transition = 'all 0.3s ease-out';
+            }, 100);
+        }
+    }
+
+    /**
+     * 获取类型显示名称
+     */
+    getTypeDisplayName(type) {
+        const typeNames = {
+            'markdown': 'Markdown',
+            'table': '表格',
+            'list': '列表',
+            'article': '文章',
+            'code': '代码',
+            'auto': '自动'
+        };
+        return typeNames[type] || '未知';
+    }
+
+    /**
+     * 绑定高级选项事件
+     */
+    bindAdvancedOptions() {
+        const advancedToggle = document.getElementById('advanced-toggle');
+        const advancedContent = document.getElementById('advanced-content');
+
+        if (advancedToggle && advancedContent) {
+            advancedToggle.addEventListener('click', () => {
+                const isVisible = advancedContent.style.display !== 'none';
+
+                if (isVisible) {
+                    advancedContent.style.display = 'none';
+                    advancedToggle.classList.remove('active');
+                } else {
+                    advancedContent.style.display = 'block';
+                    advancedToggle.classList.add('active');
+                }
+            });
+        }
+    }
+
+    /**
+     * 更新检测结果显示 - 增强版
+     */
+    updateDetectionResultDisplay(detectionResult) {
+        const detectionPanel = document.getElementById('detection-panel');
+        const detectionConfidence = document.getElementById('detection-confidence');
+        const detectedType = document.getElementById('detected-type');
+        const detectionFeatures = document.getElementById('detection-features');
+
+        if (detectionPanel && detectionResult.confidence > 0) {
+            // 显示检测面板
+            detectionPanel.style.display = 'block';
+
+            // 更新置信度
+            if (detectionConfidence) {
+                detectionConfidence.textContent = `${detectionResult.confidence}%`;
+                detectionConfidence.className = 'detection-confidence';
+
+                // 根据置信度设置颜色
+                if (detectionResult.confidence >= 80) {
+                    detectionConfidence.style.background = 'var(--success-color)';
+                } else if (detectionResult.confidence >= 60) {
+                    detectionConfidence.style.background = 'var(--warning-color)';
+                } else {
+                    detectionConfidence.style.background = 'var(--danger-color)';
+                }
+            }
+
+            // 更新检测类型
+            if (detectedType) {
+                const typeIcons = {
+                    'markdown': '📝',
+                    'table': '📊',
+                    'list': '📋',
+                    'article': '📄',
+                    'code': '💻',
+                    'auto': '🤖'
+                };
+
+                const icon = typeIcons[detectionResult.type] || '📄';
+                const typeName = this.getTypeDisplayName(detectionResult.type);
+                detectedType.textContent = `${icon} ${typeName}格式`;
+            }
+
+            // 更新检测特征
+            if (detectionFeatures && detectionResult.details.features) {
+                const features = detectionResult.details.features.slice(0, 3); // 只显示前3个特征
+                detectionFeatures.textContent = `检测到：${features.join('、')}`;
+            }
+
+            // 添加动画效果
+            detectionPanel.style.animation = 'slideInDown 0.5s ease-out';
+        } else {
+            // 隐藏检测面板
+            if (detectionPanel) {
+                detectionPanel.style.display = 'none';
+            }
+        }
+
+        // 同时更新统计区域的检测结果
+        const statsGroup = document.querySelector('.stats-group');
+        if (statsGroup && detectionResult.confidence > 0) {
+            // 移除旧的检测结果显示
+            const oldDetection = statsGroup.querySelector('.detection-result');
+            if (oldDetection) {
+                oldDetection.remove();
+            }
+
+            // 创建新的检测结果显示
+            const detectionElement = document.createElement('span');
+            detectionElement.className = 'stat-item detection-result';
+            detectionElement.innerHTML = `
+                <span class="stat-icon">🤖</span>
+                <span class="stat-value">${detectionResult.confidence}%</span>
+                <span class="stat-label">${this.getTypeDisplayName(detectionResult.type)}</span>
+            `;
+            detectionElement.title = `检测特征: ${detectionResult.details.features.join(', ')}`;
+
+            statsGroup.appendChild(detectionElement);
+
+            // 添加动画效果
+            detectionElement.style.transform = 'scale(0.8)';
+            detectionElement.style.opacity = '0';
+            setTimeout(() => {
+                detectionElement.style.transform = 'scale(1)';
+                detectionElement.style.opacity = '1';
+                detectionElement.style.transition = 'all 0.3s ease-out';
+            }, 100);
+        }
     }
 
     /**

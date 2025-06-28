@@ -102,21 +102,26 @@
                 </div>
             </div>
             
-            <!-- 选项区域 -->
+            <!-- 智能转换选项区域 -->
             <div class="card">
-                <h2 class="section-title">转换选项</h2>
-                <div class="options-grid">
-                    <div class="option-group">
-                        <label class="option-label" for="content-type">内容类型</label>
-                        <select id="content-type">
-                            <option value="auto">🤖 智能检测</option>
-                            <option value="table">📊 表格数据</option>
-                            <option value="list">📋 列表/项目</option>
-                            <option value="article">📄 文章/报告</option>
-                            <option value="markdown">📝 Markdown格式</option>
-                        </select>
+                <h2 class="section-title">🤖 智能转换选项</h2>
+
+                <!-- 智能检测结果显示 -->
+                <div class="detection-result-panel" id="detection-panel" style="display: none;">
+                    <div class="detection-header">
+                        <span class="detection-icon">🤖</span>
+                        <span class="detection-title">智能检测结果</span>
+                        <span class="detection-confidence" id="detection-confidence">95%</span>
                     </div>
-                    
+                    <div class="detection-details">
+                        <div class="detected-type" id="detected-type">📝 Markdown格式</div>
+                        <div class="detection-features" id="detection-features">
+                            检测到：表格、标题、列表
+                        </div>
+                    </div>
+                </div>
+
+                <div class="options-grid">
                     <div class="option-group">
                         <label class="option-label" for="output-format">输出格式</label>
                         <select id="output-format">
@@ -125,7 +130,7 @@
                             <option value="both">📄📊 Word和Excel</option>
                         </select>
                     </div>
-                    
+
                     <div class="option-group">
                         <label class="option-label" for="template-style">文档模板</label>
                         <select id="template-style">
@@ -135,10 +140,31 @@
                             <option value="colorful">🎨 彩色活泼</option>
                         </select>
                     </div>
-                    
+
                     <div class="option-group">
                         <label class="option-label" for="file-name">文件名</label>
                         <input type="text" id="file-name" placeholder="自动生成" />
+                    </div>
+
+                    <!-- 高级选项（可折叠） -->
+                    <div class="option-group advanced-options">
+                        <button type="button" class="advanced-toggle" id="advanced-toggle">
+                            <span class="toggle-icon">⚙️</span>
+                            <span class="toggle-text">高级选项</span>
+                            <span class="toggle-arrow">▼</span>
+                        </button>
+                        <div class="advanced-content" id="advanced-content" style="display: none;">
+                            <div class="advanced-option">
+                                <label class="option-label" for="content-type">内容类型覆盖</label>
+                                <select id="content-type">
+                                    <option value="auto">🤖 使用智能检测</option>
+                                    <option value="table">📊 强制表格模式</option>
+                                    <option value="list">📋 强制列表模式</option>
+                                    <option value="article">📄 强制文章模式</option>
+                                    <option value="markdown">📝 强制Markdown模式</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
