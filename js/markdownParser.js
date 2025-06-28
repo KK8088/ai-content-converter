@@ -44,14 +44,15 @@ class MarkdownParser {
                 continue;
             }
             
-            // 解析表格
-            if (line.includes('|') && i + 1 < lines.length && this.isSeparatorLine(lines[i + 1])) {
+            // 解析表格（增强版）
+            if (this.isTableStart(lines, i)) {
                 const table = this.parseTable(lines, i, `表格${this.elements.length + 1}`);
-                // 创建表格元素
+                // 创建表格元素，使用新的格式
                 const tableElement = {
                     type: 'table',
                     title: table.title,
-                    data: table.data
+                    headers: table.data.length > 0 ? table.data[0] : [],
+                    rows: table.data.length > 1 ? table.data.slice(1) : []
                 };
                 this.elements.push(tableElement);
                 i = table.nextIndex;

@@ -171,44 +171,96 @@ class AIContentConverter {
     }
 
     /**
-     * 生成Word文档
+     * 生成Word文档 - 增强版
      */
     async generateWord(content, contentType, fileName) {
-        // 这里将集成原有的Word生成逻辑
-        const { Document, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle, convertInchesToTwip, Packer } = docx;
-        
-        const children = [];
-        
-        if (contentType === 'markdown') {
-            const elements = markdownParser.parseMarkdown(content);
-            children.push(...this.convertElementsToWord(elements));
-        } else {
-            // 简单文本处理
-            const lines = content.split('\n').filter(line => line.trim());
-            lines.forEach(line => {
-                children.push(new Paragraph({
-                    children: [new TextRun({
-                        text: line,
-                        font: "微软雅黑",
-                        size: 22
-                    })],
-                    spacing: { after: 120 }
-                }));
+        try {
+            // 预处理内容，支持多源AI内容
+            const cleanedContent = this.preprocessAIContent(content);
+
+            // 验证内容完整性
+            const originalStats = Utils.string.getTextStats(content);
+            const cleanedStats = Utils.string.getTextStats(cleanedContent);
+
+            console.log('📊 内容完整性验证:', {
+                original: originalStats,
+                cleaned: cleanedStats,
+                charLoss: originalStats.chars - cleanedStats.chars
             });
+
+            const { Document, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle, convertInchesToTwip, Packer } = docx;
+
+            const children = [];
+
+            // 添加文档头部信息
+            children.push(new Paragraph({
+                children: [new TextRun({
+                    text: fileName.replace(/\.[^/.]+$/, ""),
+                    font: "微软雅黑",
+                    size: 32,
+                    bold: true,
+                    color: "2E5BBA"
+                })],
+                heading: HeadingLevel.TITLE,
+                spacing: { after: 240 },
+                alignment: AlignmentType.CENTER
+            }));
+
+            children.push(new Paragraph({
+                children: [new TextRun({
+                    text: `生成时间: ${new Date().toLocaleString('zh-CN')}`,
+                    font: "微软雅黑",
+                    size: 18,
+                    color: "666666"
+                })],
+                spacing: { after: 360 },
+                alignment: AlignmentType.CENTER
+            }));
+
+            if (contentType === 'markdown' || this.containsMarkdownElements(cleanedContent)) {
+                const elements = markdownParser.parseMarkdown(cleanedContent);
+                children.push(...this.convertElementsToWord(elements));
+            } else {
+                // 智能文本处理
+                const processedElements = this.parseTextContent(cleanedContent);
+                children.push(...this.convertElementsToWord(processedElements));
+            }
+
+            const doc = new Document({
+                creator: "AI内容格式转换工具 v1.1.1",
+                title: fileName.replace(/\.[^/.]+$/, ""),
+                description: "由AI内容格式转换工具生成 - 支持ChatGPT、Claude、DeepSeek等AI内容",
+                subject: "AI内容转换文档",
+                keywords: ["AI", "转换", "Word", "文档"],
+                sections: [{
+                    properties: {
+                        page: {
+                            margin: {
+                                top: convertInchesToTwip(1),
+                                right: convertInchesToTwip(1),
+                                bottom: convertInchesToTwip(1),
+                                left: convertInchesToTwip(1)
+                            }
+                        }
+                    },
+                    children: children
+                }]
+            });
+
+            const blob = await Packer.toBlob(doc);
+
+            // 验证生成的文档大小
+            console.log('📄 Word文档生成完成:', {
+                size: `${(blob.size / 1024).toFixed(2)} KB`,
+                elements: children.length
+            });
+
+            this.downloadFile(blob, fileName.replace(/\.[^/.]+$/, "") + '.docx');
+
+        } catch (error) {
+            console.error('❌ Word文档生成失败:', error);
+            throw new Error(`Word文档生成失败: ${error.message}`);
         }
-
-        const doc = new Document({
-            creator: "AI内容格式转换工具",
-            title: fileName.replace(/\.[^/.]+$/, ""),
-            description: "由AI内容格式转换工具生成",
-            sections: [{
-                properties: {},
-                children: children
-            }]
-        });
-
-        const blob = await Packer.toBlob(doc);
-        this.downloadFile(blob, fileName.replace(/\.[^/.]+$/, "") + '.docx');
     }
 
     /**
@@ -238,10 +290,22 @@ class AIContentConverter {
     }
 
     /**
-     * 转换元素为Word格式
+     * 转换元素为Word格式 - 增强版
      */
     convertElementsToWord(elements) {
-        const { Paragraph, TextRun, HeadingLevel, AlignmentType } = docx;
+        const {
+            Paragraph,
+            TextRun,
+            Table,
+            TableRow,
+            TableCell,
+            HeadingLevel,
+            AlignmentType,
+            WidthType,
+            BorderStyle,
+            convertInchesToTwip
+        } = docx;
+
         const wordElements = [];
 
         elements.forEach(element => {
@@ -262,9 +326,45 @@ class AIContentConverter {
 
                 case 'paragraph':
                     wordElements.push(new Paragraph({
-                        children: this.convertInlineToWord(element.formatted),
+                        children: this.convertInlineToWord(element.formatted || [{ type: 'text', text: element.text || '' }]),
                         spacing: { after: 120 }
                     }));
+                    break;
+
+                case 'table':
+                    wordElements.push(this.createWordTable(element));
+                    break;
+
+                case 'list':
+                    element.items.forEach(item => {
+                        wordElements.push(new Paragraph({
+                            children: [
+                                new TextRun({
+                                    text: `• ${item.text}`,
+                                    font: "微软雅黑",
+                                    size: 22
+                                })
+                            ],
+                            spacing: { after: 60 },
+                            indent: { left: convertInchesToTwip(0.25) }
+                        }));
+                    });
+                    break;
+
+                case 'orderedList':
+                    element.items.forEach((item, index) => {
+                        wordElements.push(new Paragraph({
+                            children: [
+                                new TextRun({
+                                    text: `${index + 1}. ${item.text}`,
+                                    font: "微软雅黑",
+                                    size: 22
+                                })
+                            ],
+                            spacing: { after: 60 },
+                            indent: { left: convertInchesToTwip(0.25) }
+                        }));
+                    });
                     break;
 
                 case 'codeBlock':
@@ -272,14 +372,48 @@ class AIContentConverter {
                         children: [new TextRun({
                             text: element.content,
                             font: "Consolas",
-                            size: 20
+                            size: 20,
+                            color: "333333"
                         })],
                         shading: { fill: "F8F8F8" },
-                        spacing: { before: 120, after: 120 }
+                        spacing: { before: 120, after: 120 },
+                        border: {
+                            top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+                            bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+                            left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+                            right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" }
+                        }
                     }));
                     break;
 
-                // 其他元素类型...
+                case 'blockquote':
+                    wordElements.push(new Paragraph({
+                        children: [new TextRun({
+                            text: element.content,
+                            font: "微软雅黑",
+                            size: 22,
+                            italics: true,
+                            color: "666666"
+                        })],
+                        spacing: { before: 120, after: 120 },
+                        indent: { left: convertInchesToTwip(0.5) },
+                        shading: { fill: "F9F9F9" }
+                    }));
+                    break;
+
+                default:
+                    // 处理未知类型，作为普通段落
+                    if (element.text) {
+                        wordElements.push(new Paragraph({
+                            children: [new TextRun({
+                                text: element.text,
+                                font: "微软雅黑",
+                                size: 22
+                            })],
+                            spacing: { after: 120 }
+                        }));
+                    }
+                    break;
             }
         });
 
@@ -287,13 +421,153 @@ class AIContentConverter {
     }
 
     /**
+     * 创建Word表格
+     */
+    createWordTable(tableElement) {
+        const {
+            Table,
+            TableRow,
+            TableCell,
+            Paragraph,
+            TextRun,
+            WidthType,
+            BorderStyle,
+            AlignmentType,
+            convertInchesToTwip
+        } = docx;
+
+        const rows = [];
+
+        // 创建表头
+        if (tableElement.headers && tableElement.headers.length > 0) {
+            const headerCells = tableElement.headers.map(header =>
+                new TableCell({
+                    children: [new Paragraph({
+                        children: [new TextRun({
+                            text: header,
+                            font: "微软雅黑",
+                            size: 22,
+                            bold: true,
+                            color: "FFFFFF"
+                        })],
+                        alignment: AlignmentType.CENTER
+                    })],
+                    shading: { fill: "4472C4" },
+                    margins: {
+                        top: convertInchesToTwip(0.08),
+                        bottom: convertInchesToTwip(0.08),
+                        left: convertInchesToTwip(0.08),
+                        right: convertInchesToTwip(0.08)
+                    }
+                })
+            );
+            rows.push(new TableRow({ children: headerCells }));
+        }
+
+        // 创建数据行
+        if (tableElement.rows && tableElement.rows.length > 0) {
+            tableElement.rows.forEach((row, rowIndex) => {
+                const cells = row.map(cellData => {
+                    // 智能数据类型识别和格式化
+                    const formattedText = this.formatCellData(cellData);
+                    const isNumeric = this.isNumericData(cellData);
+
+                    return new TableCell({
+                        children: [new Paragraph({
+                            children: [new TextRun({
+                                text: formattedText,
+                                font: "微软雅黑",
+                                size: 20,
+                                color: isNumeric ? "0066CC" : "333333"
+                            })],
+                            alignment: isNumeric ? AlignmentType.RIGHT : AlignmentType.LEFT
+                        })],
+                        shading: { fill: rowIndex % 2 === 0 ? "F8F9FA" : "FFFFFF" },
+                        margins: {
+                            top: convertInchesToTwip(0.06),
+                            bottom: convertInchesToTwip(0.06),
+                            left: convertInchesToTwip(0.08),
+                            right: convertInchesToTwip(0.08)
+                        }
+                    });
+                });
+                rows.push(new TableRow({ children: cells }));
+            });
+        }
+
+        return new Table({
+            rows: rows,
+            width: {
+                size: 100,
+                type: WidthType.PERCENTAGE
+            },
+            borders: {
+                top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+                bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+                left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+                right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
+                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "EEEEEE" },
+                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "EEEEEE" }
+            },
+            margins: {
+                top: convertInchesToTwip(0.1),
+                bottom: convertInchesToTwip(0.1)
+            }
+        });
+    }
+
+    /**
+     * 格式化单元格数据
+     */
+    formatCellData(cellData) {
+        if (!cellData) return '';
+
+        const text = cellData.toString().trim();
+
+        // 处理货币格式
+        if (text.match(/^[¥$€£]\d+([,.]?\d+)*$/)) {
+            return text;
+        }
+
+        // 处理百分比
+        if (text.match(/^[+-]?\d+(\.\d+)?%$/)) {
+            return text;
+        }
+
+        // 处理数字（添加千分位分隔符）
+        if (text.match(/^\d+(\.\d+)?$/)) {
+            const num = parseFloat(text);
+            return num.toLocaleString();
+        }
+
+        return text;
+    }
+
+    /**
+     * 判断是否为数值数据
+     */
+    isNumericData(cellData) {
+        if (!cellData) return false;
+
+        const text = cellData.toString().trim();
+
+        // 货币、百分比、纯数字都算数值数据
+        return text.match(/^[¥$€£+-]?\d+([,.]?\d+)*%?$/) !== null;
+    }
+
+    /**
      * 转换行内格式为Word
      */
     convertInlineToWord(formatted) {
         const { TextRun } = docx;
+
+        if (!formatted || !Array.isArray(formatted)) {
+            return [new TextRun({ text: '', font: "微软雅黑", size: 22 })];
+        }
+
         return formatted.map(part => {
             const options = {
-                text: part.text,
+                text: part.text || '',
                 font: "微软雅黑",
                 size: 22
             };
@@ -308,6 +582,14 @@ class AIContentConverter {
                 case 'code':
                     options.font = "Consolas";
                     options.shading = { fill: "F0F0F0" };
+                    options.size = 20;
+                    break;
+                case 'link':
+                    options.color = "0066CC";
+                    options.underline = {};
+                    break;
+                default:
+                    // 普通文本
                     break;
             }
 
@@ -352,6 +634,192 @@ class AIContentConverter {
         });
         
         return this.createStyledWorksheet(data, "文本内容");
+    }
+
+    /**
+     * 预处理AI内容，支持多源格式
+     */
+    preprocessAIContent(content) {
+        if (!content) return '';
+
+        let cleaned = content;
+
+        // 1. 清理HTML标签（来自网页复制）
+        cleaned = cleaned.replace(/<[^>]*>/g, '');
+
+        // 2. 清理特殊编码字符
+        cleaned = cleaned.replace(/&nbsp;/g, ' ');
+        cleaned = cleaned.replace(/&lt;/g, '<');
+        cleaned = cleaned.replace(/&gt;/g, '>');
+        cleaned = cleaned.replace(/&amp;/g, '&');
+        cleaned = cleaned.replace(/&quot;/g, '"');
+
+        // 3. 标准化换行符
+        cleaned = cleaned.replace(/\r\n/g, '\n');
+        cleaned = cleaned.replace(/\r/g, '\n');
+
+        // 4. 清理多余的空白字符
+        cleaned = cleaned.replace(/[ \t]+$/gm, ''); // 行尾空格
+        cleaned = cleaned.replace(/\n{3,}/g, '\n\n'); // 多余空行
+
+        // 5. 修复表格格式（处理不同AI工具的表格输出）
+        cleaned = this.normalizeTableFormat(cleaned);
+
+        // 6. 修复代码块格式
+        cleaned = this.normalizeCodeBlocks(cleaned);
+
+        // 7. 修复列表格式
+        cleaned = this.normalizeListFormat(cleaned);
+
+        return cleaned.trim();
+    }
+
+    /**
+     * 标准化表格格式
+     */
+    normalizeTableFormat(content) {
+        const lines = content.split('\n');
+        const normalizedLines = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+
+            // 检测表格行
+            if (line.includes('|')) {
+                // 确保表格行格式正确
+                if (!line.trim().startsWith('|')) {
+                    line = '|' + line;
+                }
+                if (!line.trim().endsWith('|')) {
+                    line = line + '|';
+                }
+
+                // 清理单元格内容
+                const cells = line.split('|');
+                const cleanedCells = cells.map(cell => cell.trim());
+                line = cleanedCells.join(' | ');
+            }
+
+            normalizedLines.push(line);
+        }
+
+        return normalizedLines.join('\n');
+    }
+
+    /**
+     * 标准化代码块格式
+     */
+    normalizeCodeBlocks(content) {
+        // 修复代码块标记
+        content = content.replace(/```(\w+)?\n/g, '```$1\n');
+        content = content.replace(/```\s*$/gm, '```');
+
+        // 处理行内代码
+        content = content.replace(/`([^`\n]+)`/g, '`$1`');
+
+        return content;
+    }
+
+    /**
+     * 标准化列表格式
+     */
+    normalizeListFormat(content) {
+        const lines = content.split('\n');
+        const normalizedLines = [];
+
+        for (let line of lines) {
+            // 标准化无序列表
+            line = line.replace(/^[\s]*[-*+]\s+/, '- ');
+
+            // 标准化有序列表
+            line = line.replace(/^[\s]*(\d+)[\.\)]\s+/, '$1. ');
+
+            normalizedLines.push(line);
+        }
+
+        return normalizedLines.join('\n');
+    }
+
+    /**
+     * 检查是否包含Markdown元素
+     */
+    containsMarkdownElements(content) {
+        const markdownPatterns = [
+            /^#{1,6}\s+/m,           // 标题
+            /\|.*\|/m,               // 表格
+            /```[\s\S]*?```/m,       // 代码块
+            /^[-*+]\s+/m,            // 无序列表
+            /^\d+\.\s+/m,            // 有序列表
+            /^>\s+/m,                // 引用
+            /\*\*.*?\*\*/,           // 加粗
+            /_.*?_/,                 // 斜体
+            /`.*?`/                  // 行内代码
+        ];
+
+        return markdownPatterns.some(pattern => pattern.test(content));
+    }
+
+    /**
+     * 解析纯文本内容为结构化元素
+     */
+    parseTextContent(content) {
+        const lines = content.split('\n');
+        const elements = [];
+        let currentElement = null;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            if (!line) {
+                // 空行，结束当前元素
+                if (currentElement) {
+                    elements.push(currentElement);
+                    currentElement = null;
+                }
+                continue;
+            }
+
+            // 检测表格
+            if (line.includes('|') && line.split('|').length > 2) {
+                if (!currentElement || currentElement.type !== 'table') {
+                    if (currentElement) elements.push(currentElement);
+                    currentElement = {
+                        type: 'table',
+                        headers: [],
+                        rows: []
+                    };
+                }
+
+                const cells = line.split('|')
+                    .map(cell => cell.trim())
+                    .filter(cell => cell.length > 0);
+
+                if (currentElement.headers.length === 0) {
+                    currentElement.headers = cells;
+                } else if (!this.isSimpleSeparatorLine(line)) {
+                    currentElement.rows.push(cells);
+                }
+            } else {
+                // 普通文本
+                if (currentElement && currentElement.type === 'table') {
+                    elements.push(currentElement);
+                    currentElement = null;
+                }
+
+                elements.push({
+                    type: 'paragraph',
+                    text: line,
+                    formatted: [{ type: 'text', text: line }]
+                });
+            }
+        }
+
+        // 添加最后一个元素
+        if (currentElement) {
+            elements.push(currentElement);
+        }
+
+        return elements;
     }
 
     /**
