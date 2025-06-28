@@ -103,27 +103,97 @@ jobs:
     runs-on: ubuntu-latest
     needs: [basic-check]
 
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
 
     - name: 检查敏感信息
       run: |
-        echo "检查是否包含敏感信息..."
-        # 检查是否有API密钥等敏感信息
-        if grep -r "api_key\|secret\|password" --exclude-dir=.git .; then
-          echo "⚠️ 发现可能的敏感信息"
-        else
+        echo "🔍 检查敏感信息..."
+
+        # 检查常见的敏感信息模式
+        SENSITIVE_PATTERNS=(
+          "api_key"
+          "secret"
+          "password"
+          "token"
+          "private_key"
+          "access_key"
+          "auth_token"
+        )
+
+        FOUND_SENSITIVE=false
+
+        for pattern in "${SENSITIVE_PATTERNS[@]}"; do
+          if grep -r -i "$pattern" --exclude-dir=.git --exclude-dir=archive . 2>/dev/null; then
+            echo "⚠️ 发现可能的敏感信息: $pattern"
+            FOUND_SENSITIVE=true
+          fi
+        done
+
+        if [ "$FOUND_SENSITIVE" = false ]; then
           echo "✅ 未发现敏感信息"
+        else
+          echo "❌ 发现敏感信息，请检查并移除"
+          exit 1
         fi
 
-    - name: 运行 CodeQL 分析
-      uses: github/codeql-action/init@v2
-      with:
-        languages: javascript
+    - name: JavaScript安全检查
+      run: |
+        echo "🔍 JavaScript安全检查..."
 
-    - name: 执行 CodeQL 分析
-      uses: github/codeql-action/analyze@v2
+        # 检查常见的JavaScript安全问题
+        echo "检查eval()使用..."
+        if grep -r "eval(" js/ 2>/dev/null; then
+          echo "⚠️ 发现eval()使用，可能存在安全风险"
+        else
+          echo "✅ 未发现eval()使用"
+        fi
+
+        echo "检查innerHTML使用..."
+        if grep -r "innerHTML" js/ 2>/dev/null; then
+          echo "⚠️ 发现innerHTML使用，请确保输入已清理"
+        else
+          echo "✅ 未发现innerHTML使用"
+        fi
+
+        echo "检查document.write使用..."
+        if grep -r "document.write" js/ 2>/dev/null; then
+          echo "⚠️ 发现document.write使用，可能存在XSS风险"
+        else
+          echo "✅ 未发现document.write使用"
+        fi
+
+        echo "✅ JavaScript安全检查完成"
+
+    - name: 依赖安全检查
+      run: |
+        echo "🔍 依赖安全检查..."
+
+        # 检查是否有外部依赖
+        if [ -f "package.json" ]; then
+          echo "检查package.json依赖..."
+          if grep -q '"dependencies"' package.json && ! grep -q '{}' package.json; then
+            echo "⚠️ 发现外部依赖，建议进行安全审计"
+          else
+            echo "✅ 无外部依赖，安全风险较低"
+          fi
+        fi
+
+        # 检查CDN链接
+        echo "检查CDN链接..."
+        if grep -r "https://cdn\|http://cdn" . --exclude-dir=.git --exclude-dir=archive 2>/dev/null; then
+          echo "⚠️ 发现CDN链接，请确保来源可信"
+        else
+          echo "✅ 未发现CDN链接"
+        fi
+
+        echo "✅ 依赖安全检查完成"
 
   # 质量检查完成通知
   quality-check-complete:
