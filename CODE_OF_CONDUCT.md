@@ -36,7 +36,7 @@
 
 可以通过以下方式报告辱骂、骚扰或其他不可接受的行为：
 
-* **邮件**: conduct@aiconverter.com
+* **邮件**: admin@zk0x01.com
 * **GitHub**: 联系项目维护者 [@KK8088](https://github.com/KK8088)
 * **私信**: 通过GitHub私信功能
 
@@ -72,7 +72,7 @@
 如果您对本行为准则有任何疑问或需要澄清，请联系：
 
 * **项目维护者**: [@KK8088](https://github.com/KK8088)
-* **邮箱**: conduct@aiconverter.com
+* **邮箱**: admin@zk0x01.com
 * **GitHub讨论**: [项目讨论区](https://github.com/KK8088/ai-content-converter/discussions)
 
 ## 归属

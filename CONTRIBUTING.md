@@ -315,7 +315,7 @@ git commit -m "test: 添加表格解析测试用例"
 
 - 在相关Issue中提问
 - 创建新的Discussion
-- 发送邮件至 contribute@aiconverter.com
+- 发送邮件至 admin@zk0x01.com
 
 ---
 

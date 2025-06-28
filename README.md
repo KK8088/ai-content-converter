@@ -234,8 +234,8 @@ npm run build
 
 - **GitHub Issues**: [报告问题](https://github.com/KK8088/ai-content-converter/issues)
 - **GitHub Discussions**: [参与讨论](https://github.com/KK8088/ai-content-converter/discussions)
-- **Email**: support@aiconverter.com
-- **Twitter**: [@AIConverter](https://twitter.com/AIConverter)
+- **Email**: admin@zk0x01.com
+- **GitHub**: [@KK8088](https://github.com/KK8088)
 
 ---
 

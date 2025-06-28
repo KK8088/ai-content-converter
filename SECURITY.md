@@ -17,7 +17,7 @@
 
 **请不要在公开的GitHub Issues中报告安全漏洞**
 
-1. **邮件报告**: 发送邮件至 `security@aiconverter.com`
+1. **邮件报告**: 发送邮件至 `admin@zk0x01.com`
 2. **GitHub安全报告**: 使用GitHub的私密安全报告功能
 3. **加密通信**: 如需要，我们可以提供PGP公钥
 
@@ -71,7 +71,7 @@
 
 ## 联系方式
 
-- **安全邮箱**: security@aiconverter.com
+- **安全邮箱**: admin@zk0x01.com
 - **项目维护者**: [@KK8088](https://github.com/KK8088)
 - **GitHub仓库**: https://github.com/KK8088/ai-content-converter
 
