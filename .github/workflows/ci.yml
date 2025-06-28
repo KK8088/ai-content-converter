@@ -125,51 +125,28 @@ jobs:
     - name: 执行 CodeQL 分析
       uses: github/codeql-action/analyze@v2
 
-  # 部署到 GitHub Pages
-  deploy:
-    name: 部署到 GitHub Pages
+  # 质量检查完成通知
+  quality-check-complete:
+    name: 质量检查完成
     runs-on: ubuntu-latest
     needs: [basic-check, functional-test, security]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
-
-    - name: 设置 Pages
-      uses: actions/configure-pages@v3
-
-    - name: 上传到 Pages
-      uses: actions/upload-pages-artifact@v2
-      with:
-        path: '.'
-
-    - name: 部署到 Pages
-      id: deployment
-      uses: actions/deploy-pages@v2
-
-  # 通知
-  notify:
-    name: 通知
-    runs-on: ubuntu-latest
-    needs: [deploy]
     if: always()
 
     steps:
-    - name: 通知部署结果
+    - name: 质量检查结果
       run: |
-        if [ "${{ needs.deploy.result }}" == "success" ]; then
-          echo "🎉 部署成功！"
-          echo "网站地址: https://${{ github.repository_owner }}.github.io/ai-content-converter"
+        echo "📊 质量检查结果汇总:"
+        echo "   - 基础检查: ${{ needs.basic-check.result }}"
+        echo "   - 功能测试: ${{ needs.functional-test.result }}"
+        echo "   - 安全扫描: ${{ needs.security.result }}"
+        echo ""
+
+        if [ "${{ needs.basic-check.result }}" == "success" ] && \
+           [ "${{ needs.functional-test.result }}" == "success" ] && \
+           [ "${{ needs.security.result }}" == "success" ]; then
+          echo "✅ 所有质量检查通过！"
+          echo "🚀 项目已准备好部署"
         else
-          echo "❌ 部署失败"
+          echo "❌ 质量检查未完全通过"
+          echo "⚠️ 请修复失败的检查项后再部署"
         fi

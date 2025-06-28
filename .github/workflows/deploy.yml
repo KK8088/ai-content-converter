@@ -1,0 +1,197 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # 构建作业
+  build:
+    name: 构建静态文件
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 验证项目结构
+      run: |
+        echo "🔍 验证项目结构..."
+        
+        # 检查必需文件
+        if [ ! -f "index.html" ]; then
+          echo "❌ 缺少 index.html"
+          exit 1
+        fi
+        
+        if [ ! -d "css" ]; then
+          echo "❌ 缺少 css 目录"
+          exit 1
+        fi
+        
+        if [ ! -d "js" ]; then
+          echo "❌ 缺少 js 目录"
+          exit 1
+        fi
+        
+        echo "✅ 项目结构验证通过"
+
+    - name: 检查文件完整性
+      run: |
+        echo "🔍 检查关键文件..."
+        
+        # 检查CSS文件
+        if [ ! -f "css/styles.css" ]; then
+          echo "❌ 缺少 css/styles.css"
+          exit 1
+        fi
+        
+        # 检查JS文件
+        if [ ! -f "js/config.js" ]; then
+          echo "❌ 缺少 js/config.js"
+          exit 1
+        fi
+        
+        if [ ! -f "js/app.js" ]; then
+          echo "❌ 缺少 js/app.js"
+          exit 1
+        fi
+        
+        echo "✅ 关键文件检查通过"
+
+    - name: 验证HTML语法
+      run: |
+        echo "🔍 验证HTML语法..."
+        
+        # 检查HTML5 DOCTYPE
+        if ! grep -q "<!DOCTYPE html>" index.html; then
+          echo "❌ 缺少HTML5 DOCTYPE"
+          exit 1
+        fi
+        
+        # 检查基本HTML结构
+        if ! grep -q "<html" index.html; then
+          echo "❌ 缺少html标签"
+          exit 1
+        fi
+        
+        if ! grep -q "<head>" index.html; then
+          echo "❌ 缺少head标签"
+          exit 1
+        fi
+        
+        if ! grep -q "<body>" index.html; then
+          echo "❌ 缺少body标签"
+          exit 1
+        fi
+        
+        echo "✅ HTML语法验证通过"
+
+    - name: 设置GitHub Pages
+      uses: actions/configure-pages@v4
+
+    - name: 创建部署目录
+      run: |
+        echo "📁 创建部署目录..."
+        mkdir -p _site
+        
+        # 复制所有必要文件到部署目录
+        cp index.html _site/
+        cp -r css _site/
+        cp -r js _site/
+        cp LICENSE _site/
+        cp README.md _site/
+        cp README_EN.md _site/
+        
+        echo "✅ 部署目录创建完成"
+
+    - name: 验证部署文件
+      run: |
+        echo "🔍 验证部署文件..."
+        ls -la _site/
+        
+        # 确认关键文件存在
+        if [ ! -f "_site/index.html" ]; then
+          echo "❌ 部署目录缺少 index.html"
+          exit 1
+        fi
+        
+        echo "✅ 部署文件验证通过"
+
+    - name: 上传Pages构件
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '_site'
+
+  # 部署作业
+  deploy:
+    name: 部署到GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: 部署到GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+    - name: 验证部署
+      run: |
+        echo "🎉 部署完成！"
+        echo "📍 网站地址: ${{ steps.deployment.outputs.page_url }}"
+        
+        # 等待几秒让部署生效
+        sleep 10
+        
+        # 验证网站可访问性
+        echo "🔍 验证网站可访问性..."
+        if curl -f -s "${{ steps.deployment.outputs.page_url }}" > /dev/null; then
+          echo "✅ 网站可正常访问"
+        else
+          echo "⚠️ 网站可能需要几分钟才能完全生效"
+        fi
+
+  # 通知作业
+  notify:
+    name: 部署通知
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    if: always()
+    
+    steps:
+    - name: 发送部署通知
+      run: |
+        if [ "${{ needs.deploy.result }}" == "success" ]; then
+          echo "🎉 GitHub Pages 部署成功！"
+          echo ""
+          echo "📍 网站地址: https://${{ github.repository_owner }}.github.io/ai-content-converter"
+          echo "🔗 仓库地址: https://github.com/${{ github.repository }}"
+          echo ""
+          echo "✅ 部署详情:"
+          echo "   - 构建状态: ${{ needs.build.result }}"
+          echo "   - 部署状态: ${{ needs.deploy.result }}"
+          echo "   - 提交SHA: ${{ github.sha }}"
+          echo "   - 分支: ${{ github.ref_name }}"
+        else
+          echo "❌ GitHub Pages 部署失败"
+          echo ""
+          echo "🔍 失败详情:"
+          echo "   - 构建状态: ${{ needs.build.result }}"
+          echo "   - 部署状态: ${{ needs.deploy.result }}"
+          echo "   - 提交SHA: ${{ github.sha }}"
+          echo "   - 分支: ${{ github.ref_name }}"
+          echo ""
+          echo "💡 请检查工作流日志获取详细错误信息"
+        fi
