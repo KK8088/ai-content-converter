@@ -24,7 +24,104 @@ class AIContentConverter {
             debug: (msg) => APP_CONFIG.debug && console.log(`[DEBUG] ${msg}`)
         };
 
+        // Word标准样式配置
+        this.wordStyles = this.initWordStyles();
+
         this.init();
+    }
+
+    /**
+     * 初始化Word标准样式配置
+     */
+    initWordStyles() {
+        return {
+            // 字体配置 - 符合Word中文环境默认
+            fonts: {
+                chinese: "宋体",           // Word中文默认字体
+                english: "Calibri",       // Word英文默认字体
+                code: "Consolas",         // 代码字体
+                fallback: "微软雅黑"      // 备用字体
+            },
+
+            // 字号配置 - 符合Word默认设置
+            fontSizes: {
+                title: 28,        // 文档标题
+                heading1: 24,     // 一级标题
+                heading2: 20,     // 二级标题
+                heading3: 16,     // 三级标题
+                heading4: 14,     // 四级标题
+                heading5: 12,     // 五级标题
+                heading6: 11,     // 六级标题
+                normal: 11,       // 正文
+                small: 9,         // 小字
+                code: 10          // 代码
+            },
+
+            // 颜色配置 - Word标准配色
+            colors: {
+                text: "000000",           // 正文黑色
+                heading: "2E5BBA",        // 标题蓝色
+                tableHeader: "FFFFFF",    // 表头白色文字
+                tableHeaderBg: "4472C4",  // 表头蓝色背景
+                code: "333333",           // 代码深灰
+                codeBg: "F2F2F2",         // 代码背景浅灰
+                quote: "666666",          // 引用灰色
+                quoteBg: "F9F9F9",        // 引用背景
+                border: "BFBFBF"          // 边框灰色
+            },
+
+            // 间距配置 - Word标准间距（单位：磅）
+            spacing: {
+                titleBefore: 0,           // 文档标题前间距
+                titleAfter: 18,           // 文档标题后间距
+                heading1Before: 12,       // 一级标题前间距
+                heading1After: 6,         // 一级标题后间距
+                heading2Before: 10,       // 二级标题前间距
+                heading2After: 6,         // 二级标题后间距
+                heading3Before: 10,       // 三级标题前间距
+                heading3After: 6,         // 三级标题后间距
+                paragraphAfter: 8,        // 段落后间距
+                listAfter: 4,             // 列表项后间距
+                codeBlockBefore: 6,       // 代码块前间距
+                codeBlockAfter: 6,        // 代码块后间距
+                tableBefore: 6,           // 表格前间距
+                tableAfter: 6             // 表格后间距
+            },
+
+            // 行间距配置
+            lineSpacing: {
+                normal: 1.15,             // 正文行间距
+                heading: 1.0,             // 标题行间距
+                code: 1.0                 // 代码行间距
+            }
+        };
+    }
+
+    /**
+     * 获取标题字体大小
+     */
+    getHeadingFontSize(level) {
+        const sizes = {
+            1: this.wordStyles.fontSizes.heading1,
+            2: this.wordStyles.fontSizes.heading2,
+            3: this.wordStyles.fontSizes.heading3,
+            4: this.wordStyles.fontSizes.heading4,
+            5: this.wordStyles.fontSizes.heading5,
+            6: this.wordStyles.fontSizes.heading6
+        };
+        return sizes[level] || this.wordStyles.fontSizes.normal;
+    }
+
+    /**
+     * 获取标题间距
+     */
+    getHeadingSpacing(level) {
+        const spacings = {
+            1: { before: this.wordStyles.spacing.heading1Before, after: this.wordStyles.spacing.heading1After },
+            2: { before: this.wordStyles.spacing.heading2Before, after: this.wordStyles.spacing.heading2After },
+            3: { before: this.wordStyles.spacing.heading3Before, after: this.wordStyles.spacing.heading3After }
+        };
+        return spacings[level] || { before: 10, after: 6 };
     }
 
     /**
@@ -192,28 +289,38 @@ class AIContentConverter {
 
             const children = [];
 
-            // 添加文档头部信息
+            // 添加文档标题 - 使用Word标准样式
             children.push(new Paragraph({
                 children: [new TextRun({
                     text: fileName.replace(/\.[^/.]+$/, ""),
-                    font: "微软雅黑",
-                    size: 32,
+                    font: {
+                        name: this.wordStyles.fonts.chinese,
+                        eastAsia: this.wordStyles.fonts.chinese
+                    },
+                    size: this.wordStyles.fontSizes.title * 2, // docx.js使用半磅单位
                     bold: true,
-                    color: "2E5BBA"
+                    color: this.wordStyles.colors.heading
                 })],
                 heading: HeadingLevel.TITLE,
-                spacing: { after: 240 },
+                spacing: {
+                    before: this.wordStyles.spacing.titleBefore * 20,
+                    after: this.wordStyles.spacing.titleAfter * 20
+                },
                 alignment: AlignmentType.CENTER
             }));
 
+            // 添加生成时间 - 使用Word标准格式
             children.push(new Paragraph({
                 children: [new TextRun({
                     text: `生成时间: ${new Date().toLocaleString('zh-CN')}`,
-                    font: "微软雅黑",
-                    size: 18,
-                    color: "666666"
+                    font: {
+                        name: this.wordStyles.fonts.chinese,
+                        eastAsia: this.wordStyles.fonts.chinese
+                    },
+                    size: this.wordStyles.fontSizes.small * 2,
+                    color: this.wordStyles.colors.quote
                 })],
-                spacing: { after: 360 },
+                spacing: { after: this.wordStyles.spacing.paragraphAfter * 20 * 3 },
                 alignment: AlignmentType.CENTER
             }));
 
@@ -226,25 +333,58 @@ class AIContentConverter {
                 children.push(...this.convertElementsToWord(processedElements));
             }
 
+            // 创建Word文档 - 使用标准设置
             const doc = new Document({
                 creator: "AI内容格式转换工具 v1.1.1",
                 title: fileName.replace(/\.[^/.]+$/, ""),
                 description: "由AI内容格式转换工具生成 - 支持ChatGPT、Claude、DeepSeek等AI内容",
                 subject: "AI内容转换文档",
                 keywords: ["AI", "转换", "Word", "文档"],
+
+                // 设置默认字体 - 符合Word中文环境
+                defaultTabStop: convertInchesToTwip(0.5),
+
                 sections: [{
                     properties: {
                         page: {
+                            // Word标准页面设置 - A4纸张，标准页边距
+                            size: {
+                                orientation: "portrait",
+                                width: convertInchesToTwip(8.27),   // A4宽度
+                                height: convertInchesToTwip(11.69)  // A4高度
+                            },
                             margin: {
-                                top: convertInchesToTwip(1),
-                                right: convertInchesToTwip(1),
-                                bottom: convertInchesToTwip(1),
-                                left: convertInchesToTwip(1)
+                                top: convertInchesToTwip(1),        // 上边距1英寸
+                                right: convertInchesToTwip(1),      // 右边距1英寸
+                                bottom: convertInchesToTwip(1),     // 下边距1英寸
+                                left: convertInchesToTwip(1)        // 左边距1英寸
                             }
                         }
                     },
                     children: children
-                }]
+                }],
+
+                // 设置文档样式 - Word标准样式
+                styles: {
+                    default: {
+                        document: {
+                            run: {
+                                font: {
+                                    name: this.wordStyles.fonts.chinese,
+                                    eastAsia: this.wordStyles.fonts.chinese
+                                },
+                                size: this.wordStyles.fontSizes.normal * 2,
+                                color: this.wordStyles.colors.text
+                            },
+                            paragraph: {
+                                spacing: {
+                                    line: Math.round(this.wordStyles.lineSpacing.normal * 240),
+                                    after: this.wordStyles.spacing.paragraphAfter * 20
+                                }
+                            }
+                        }
+                    }
+                }
             });
 
             const blob = await Packer.toBlob(doc);
@@ -311,23 +451,38 @@ class AIContentConverter {
         elements.forEach(element => {
             switch (element.type) {
                 case 'heading':
+                    // 使用Word标准标题样式
+                    const headingFontSize = this.getHeadingFontSize(element.level);
+                    const headingSpacing = this.getHeadingSpacing(element.level);
+
                     wordElements.push(new Paragraph({
                         children: [new TextRun({
                             text: element.text,
-                            font: "微软雅黑",
-                            size: 32 - (element.level - 1) * 4,
+                            font: {
+                                name: this.wordStyles.fonts.chinese,
+                                eastAsia: this.wordStyles.fonts.chinese
+                            },
+                            size: headingFontSize * 2, // docx.js使用半磅单位
                             bold: true,
-                            color: "2E5BBA"
+                            color: this.wordStyles.colors.heading
                         })],
                         heading: HeadingLevel[`HEADING_${element.level}`],
-                        spacing: { before: 240, after: 120 }
+                        spacing: {
+                            before: headingSpacing.before * 20,
+                            after: headingSpacing.after * 20,
+                            line: Math.round(this.wordStyles.lineSpacing.heading * 240)
+                        }
                     }));
                     break;
 
                 case 'paragraph':
+                    // 使用Word标准正文样式
                     wordElements.push(new Paragraph({
                         children: this.convertInlineToWord(element.formatted || [{ type: 'text', text: element.text || '' }]),
-                        spacing: { after: 120 }
+                        spacing: {
+                            after: this.wordStyles.spacing.paragraphAfter * 20,
+                            line: Math.round(this.wordStyles.lineSpacing.normal * 240)
+                        }
                     }));
                     break;
 
@@ -336,81 +491,117 @@ class AIContentConverter {
                     break;
 
                 case 'list':
+                    // 使用Word标准无序列表样式
                     element.items.forEach(item => {
                         wordElements.push(new Paragraph({
                             children: [
                                 new TextRun({
                                     text: `• ${item.text}`,
-                                    font: "微软雅黑",
-                                    size: 22
+                                    font: {
+                                        name: this.wordStyles.fonts.chinese,
+                                        eastAsia: this.wordStyles.fonts.chinese
+                                    },
+                                    size: this.wordStyles.fontSizes.normal * 2
                                 })
                             ],
-                            spacing: { after: 60 },
+                            spacing: {
+                                after: this.wordStyles.spacing.listAfter * 20,
+                                line: Math.round(this.wordStyles.lineSpacing.normal * 240)
+                            },
                             indent: { left: convertInchesToTwip(0.25) }
                         }));
                     });
                     break;
 
                 case 'orderedList':
+                    // 使用Word标准有序列表样式
                     element.items.forEach((item, index) => {
                         wordElements.push(new Paragraph({
                             children: [
                                 new TextRun({
                                     text: `${index + 1}. ${item.text}`,
-                                    font: "微软雅黑",
-                                    size: 22
+                                    font: {
+                                        name: this.wordStyles.fonts.chinese,
+                                        eastAsia: this.wordStyles.fonts.chinese
+                                    },
+                                    size: this.wordStyles.fontSizes.normal * 2
                                 })
                             ],
-                            spacing: { after: 60 },
+                            spacing: {
+                                after: this.wordStyles.spacing.listAfter * 20,
+                                line: Math.round(this.wordStyles.lineSpacing.normal * 240)
+                            },
                             indent: { left: convertInchesToTwip(0.25) }
                         }));
                     });
                     break;
 
                 case 'codeBlock':
+                    // 使用Word标准代码样式
                     wordElements.push(new Paragraph({
                         children: [new TextRun({
                             text: element.content,
-                            font: "Consolas",
-                            size: 20,
-                            color: "333333"
+                            font: {
+                                name: this.wordStyles.fonts.code
+                            },
+                            size: this.wordStyles.fontSizes.code * 2,
+                            color: this.wordStyles.colors.code
                         })],
-                        shading: { fill: "F8F8F8" },
-                        spacing: { before: 120, after: 120 },
+                        shading: { fill: this.wordStyles.colors.codeBg },
+                        spacing: {
+                            before: this.wordStyles.spacing.codeBlockBefore * 20,
+                            after: this.wordStyles.spacing.codeBlockAfter * 20,
+                            line: Math.round(this.wordStyles.lineSpacing.code * 240)
+                        },
                         border: {
-                            top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                            bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                            left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                            right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" }
+                            top: { style: BorderStyle.SINGLE, size: 1, color: this.wordStyles.colors.border },
+                            bottom: { style: BorderStyle.SINGLE, size: 1, color: this.wordStyles.colors.border },
+                            left: { style: BorderStyle.SINGLE, size: 1, color: this.wordStyles.colors.border },
+                            right: { style: BorderStyle.SINGLE, size: 1, color: this.wordStyles.colors.border }
                         }
                     }));
                     break;
 
                 case 'blockquote':
+                    // 使用Word标准引用样式
                     wordElements.push(new Paragraph({
                         children: [new TextRun({
                             text: element.content,
-                            font: "微软雅黑",
-                            size: 22,
+                            font: {
+                                name: this.wordStyles.fonts.chinese,
+                                eastAsia: this.wordStyles.fonts.chinese
+                            },
+                            size: this.wordStyles.fontSizes.normal * 2,
                             italics: true,
-                            color: "666666"
+                            color: this.wordStyles.colors.quote
                         })],
-                        spacing: { before: 120, after: 120 },
+                        spacing: {
+                            before: this.wordStyles.spacing.paragraphAfter * 20,
+                            after: this.wordStyles.spacing.paragraphAfter * 20,
+                            line: Math.round(this.wordStyles.lineSpacing.normal * 240)
+                        },
                         indent: { left: convertInchesToTwip(0.5) },
-                        shading: { fill: "F9F9F9" }
+                        shading: { fill: this.wordStyles.colors.quoteBg }
                     }));
                     break;
 
                 default:
-                    // 处理未知类型，作为普通段落
+                    // 处理未知类型，作为普通段落 - 使用Word标准样式
                     if (element.text) {
                         wordElements.push(new Paragraph({
                             children: [new TextRun({
                                 text: element.text,
-                                font: "微软雅黑",
-                                size: 22
+                                font: {
+                                    name: this.wordStyles.fonts.chinese,
+                                    eastAsia: this.wordStyles.fonts.chinese
+                                },
+                                size: this.wordStyles.fontSizes.normal * 2,
+                                color: this.wordStyles.colors.text
                             })],
-                            spacing: { after: 120 }
+                            spacing: {
+                                after: this.wordStyles.spacing.paragraphAfter * 20,
+                                line: Math.round(this.wordStyles.lineSpacing.normal * 240)
+                            }
                         }));
                     }
                     break;
@@ -438,23 +629,29 @@ class AIContentConverter {
 
         const rows = [];
 
-        // 创建表头
+        // 创建表头 - 使用Word标准表格样式
         if (tableElement.headers && tableElement.headers.length > 0) {
             const headerCells = tableElement.headers.map(header =>
                 new TableCell({
                     children: [new Paragraph({
                         children: [new TextRun({
                             text: header,
-                            font: "微软雅黑",
-                            size: 22,
+                            font: {
+                                name: this.wordStyles.fonts.chinese,
+                                eastAsia: this.wordStyles.fonts.chinese
+                            },
+                            size: this.wordStyles.fontSizes.normal * 2,
                             bold: true,
-                            color: "FFFFFF"
+                            color: this.wordStyles.colors.tableHeader
                         })],
-                        alignment: AlignmentType.CENTER
+                        alignment: AlignmentType.CENTER,
+                        spacing: {
+                            line: Math.round(this.wordStyles.lineSpacing.normal * 240)
+                        }
                     })],
-                    shading: { fill: "4472C4" },
+                    shading: { fill: this.wordStyles.colors.tableHeaderBg },
                     margins: {
-                        top: convertInchesToTwip(0.08),
+                        top: convertInchesToTwip(0.08),    // Word标准单元格内边距
                         bottom: convertInchesToTwip(0.08),
                         left: convertInchesToTwip(0.08),
                         right: convertInchesToTwip(0.08)
@@ -464,7 +661,7 @@ class AIContentConverter {
             rows.push(new TableRow({ children: headerCells }));
         }
 
-        // 创建数据行
+        // 创建数据行 - 使用Word标准样式
         if (tableElement.rows && tableElement.rows.length > 0) {
             tableElement.rows.forEach((row, rowIndex) => {
                 const cells = row.map(cellData => {
@@ -476,16 +673,24 @@ class AIContentConverter {
                         children: [new Paragraph({
                             children: [new TextRun({
                                 text: formattedText,
-                                font: "微软雅黑",
-                                size: 20,
-                                color: isNumeric ? "0066CC" : "333333"
+                                font: {
+                                    name: this.wordStyles.fonts.chinese,
+                                    eastAsia: this.wordStyles.fonts.chinese
+                                },
+                                size: this.wordStyles.fontSizes.normal * 2,
+                                color: isNumeric ? "0066CC" : this.wordStyles.colors.text
                             })],
-                            alignment: isNumeric ? AlignmentType.RIGHT : AlignmentType.LEFT
+                            alignment: isNumeric ? AlignmentType.RIGHT : AlignmentType.LEFT,
+                            spacing: {
+                                line: Math.round(this.wordStyles.lineSpacing.normal * 240)
+                            }
                         })],
-                        shading: { fill: rowIndex % 2 === 0 ? "F8F9FA" : "FFFFFF" },
+                        shading: {
+                            fill: rowIndex % 2 === 0 ? "F8F9FA" : "FFFFFF"
+                        },
                         margins: {
-                            top: convertInchesToTwip(0.06),
-                            bottom: convertInchesToTwip(0.06),
+                            top: convertInchesToTwip(0.08),     // Word标准单元格内边距
+                            bottom: convertInchesToTwip(0.08),
                             left: convertInchesToTwip(0.08),
                             right: convertInchesToTwip(0.08)
                         }
@@ -501,17 +706,42 @@ class AIContentConverter {
                 size: 100,
                 type: WidthType.PERCENTAGE
             },
+            // Word标准表格边框样式
             borders: {
-                top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                left: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                right: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "EEEEEE" },
-                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "EEEEEE" }
+                top: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,  // Word默认边框粗细（0.5pt = 4 eighths of a point）
+                    color: this.wordStyles.colors.border
+                },
+                bottom: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: this.wordStyles.colors.border
+                },
+                left: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: this.wordStyles.colors.border
+                },
+                right: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: this.wordStyles.colors.border
+                },
+                insideHorizontal: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: this.wordStyles.colors.border
+                },
+                insideVertical: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: this.wordStyles.colors.border
+                }
             },
             margins: {
-                top: convertInchesToTwip(0.1),
-                bottom: convertInchesToTwip(0.1)
+                top: convertInchesToTwip(this.wordStyles.spacing.tableBefore / 20),
+                bottom: convertInchesToTwip(this.wordStyles.spacing.tableAfter / 20)
             }
         });
     }
@@ -556,20 +786,31 @@ class AIContentConverter {
     }
 
     /**
-     * 转换行内格式为Word
+     * 转换行内格式为Word - 使用Word标准样式
      */
     convertInlineToWord(formatted) {
         const { TextRun } = docx;
 
         if (!formatted || !Array.isArray(formatted)) {
-            return [new TextRun({ text: '', font: "微软雅黑", size: 22 })];
+            return [new TextRun({
+                text: '',
+                font: {
+                    name: this.wordStyles.fonts.chinese,
+                    eastAsia: this.wordStyles.fonts.chinese
+                },
+                size: this.wordStyles.fontSizes.normal * 2
+            })];
         }
 
         return formatted.map(part => {
             const options = {
                 text: part.text || '',
-                font: "微软雅黑",
-                size: 22
+                font: {
+                    name: this.wordStyles.fonts.chinese,
+                    eastAsia: this.wordStyles.fonts.chinese
+                },
+                size: this.wordStyles.fontSizes.normal * 2,
+                color: this.wordStyles.colors.text
             };
 
             switch (part.type) {
@@ -580,16 +821,19 @@ class AIContentConverter {
                     options.italics = true;
                     break;
                 case 'code':
-                    options.font = "Consolas";
-                    options.shading = { fill: "F0F0F0" };
-                    options.size = 20;
+                    options.font = {
+                        name: this.wordStyles.fonts.code
+                    };
+                    options.shading = { fill: this.wordStyles.colors.codeBg };
+                    options.size = this.wordStyles.fontSizes.code * 2;
+                    options.color = this.wordStyles.colors.code;
                     break;
                 case 'link':
                     options.color = "0066CC";
                     options.underline = {};
                     break;
                 default:
-                    // 普通文本
+                    // 普通文本使用默认样式
                     break;
             }
 
