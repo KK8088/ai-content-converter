@@ -1,0 +1,251 @@
+/**
+ * 双语切换器样式文件
+ * 
+ * @description 为README.md双语切换功能提供样式支持
+ * @version 1.0.0
+ * @author zk0x01
+ */
+
+/* 语言切换器容器 */
+.language-switcher {
+  text-align: center;
+  margin: 20px auto;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  max-width: 300px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 添加光泽效果 */
+.language-switcher::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.language-switcher:hover::before {
+  left: 100%;
+}
+
+/* 语言切换按钮 */
+.lang-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 10px 24px;
+  margin: 0 6px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+  min-width: 80px;
+  text-decoration: none;
+  display: inline-block;
+  user-select: none;
+}
+
+/* 按钮悬停效果 */
+.lang-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* 激活状态按钮 */
+.lang-btn.active {
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.lang-btn.active:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* 按钮点击效果 */
+.lang-btn:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s;
+}
+
+/* 语言内容容器 */
+.language-content {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+}
+
+/* 隐藏状态的语言内容 */
+.language-content[style*="display: none"] {
+  animation: none;
+}
+
+/* 淡入动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 淡出动画 */
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* 切换动画类 */
+.language-content.fade-out {
+  animation: fadeOutDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 响应式设计 - 平板 */
+@media (max-width: 768px) {
+  .language-switcher {
+    margin: 15px auto;
+    padding: 10px 15px;
+    max-width: 280px;
+  }
+  
+  .lang-btn {
+    padding: 8px 18px;
+    font-size: 13px;
+    margin: 0 4px;
+    min-width: 70px;
+  }
+}
+
+/* 响应式设计 - 手机 */
+@media (max-width: 480px) {
+  .language-switcher {
+    margin: 12px auto;
+    padding: 8px 12px;
+    max-width: 250px;
+  }
+  
+  .lang-btn {
+    padding: 6px 15px;
+    font-size: 12px;
+    margin: 0 3px;
+    min-width: 60px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .language-switcher {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    box-shadow: 0 4px 20px rgba(45, 55, 72, 0.4);
+  }
+  
+  .lang-btn.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1a202c;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .language-switcher {
+    background: #000;
+    border: 2px solid #fff;
+  }
+  
+  .lang-btn {
+    border-color: #fff;
+    color: #fff;
+  }
+  
+  .lang-btn.active {
+    background: #fff;
+    color: #000;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .lang-btn,
+  .language-content {
+    transition: none;
+    animation: none;
+  }
+  
+  .lang-btn:hover {
+    transform: none;
+  }
+  
+  .lang-btn.active {
+    transform: none;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .language-switcher {
+    display: none;
+  }
+  
+  .language-content {
+    display: block !important;
+  }
+}
+
+/* 焦点可访问性 */
+.lang-btn:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.lang-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 键盘导航提示 */
+.language-switcher::after {
+  content: 'Ctrl+1/2 for quick switch';
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: rgba(102, 126, 234, 0.6);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.language-switcher:hover::after {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .language-switcher::after {
+    display: none;
+  }
+}

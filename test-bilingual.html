@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双语README测试页面</title>
+    <link rel="stylesheet" href="css/language-switcher.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🌐 双语README功能测试</h1>
+    
+    <div class="language-switcher">
+        <button id="lang-zh" class="lang-btn active" onclick="switchLanguage('zh')">🇨🇳 中文</button>
+        <button id="lang-en" class="lang-btn" onclick="switchLanguage('en')">🇺🇸 English</button>
+    </div>
+
+    <!-- 中文测试内容 -->
+    <div id="content-zh" class="language-content">
+        <div class="test-section">
+            <h2>🎯 中文内容测试</h2>
+            <p>这是中文版本的测试内容。如果您能看到这段文字，说明中文显示功能正常。</p>
+            
+            <h3>✨ 功能特性</h3>
+            <ul>
+                <li>📄 Word文档转换</li>
+                <li>📊 Excel表格生成</li>
+                <li>🤖 智能内容检测</li>
+                <li>👁️ 实时预览功能</li>
+            </ul>
+            
+            <div class="status success">
+                ✅ 中文内容显示正常
+            </div>
+        </div>
+    </div>
+
+    <!-- 英文测试内容 -->
+    <div id="content-en" class="language-content" style="display: none;">
+        <div class="test-section">
+            <h2>🎯 English Content Test</h2>
+            <p>This is the English version of the test content. If you can see this text, the English display function is working properly.</p>
+            
+            <h3>✨ Features</h3>
+            <ul>
+                <li>📄 Word Document Conversion</li>
+                <li>📊 Excel Spreadsheet Generation</li>
+                <li>🤖 Smart Content Detection</li>
+                <li>👁️ Real-time Preview</li>
+            </ul>
+            
+            <div class="status success">
+                ✅ English content display is working
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 功能测试 | Function Tests</h2>
+        
+        <div class="status info">
+            <strong>测试说明 | Test Instructions:</strong><br>
+            1. 点击上方语言按钮测试切换功能<br>
+            2. 使用快捷键 Ctrl+1 (中文) 和 Ctrl+2 (英文)<br>
+            3. 刷新页面测试语言偏好保存功能<br><br>
+            1. Click the language buttons above to test switching<br>
+            2. Use shortcuts Ctrl+1 (Chinese) and Ctrl+2 (English)<br>
+            3. Refresh the page to test language preference saving
+        </div>
+
+        <div id="test-results">
+            <h3>测试结果 | Test Results</h3>
+            <div id="current-lang" class="status info">当前语言 | Current Language: 中文</div>
+            <div id="switch-count" class="status info">切换次数 | Switch Count: 0</div>
+            <div id="storage-test" class="status info">本地存储 | Local Storage: 测试中...</div>
+        </div>
+    </div>
+
+    <script src="js/language-switcher.js"></script>
+    <script>
+        let switchCount = 0;
+        
+        // 监听语言切换事件
+        window.addEventListener('languagechange', function(e) {
+            switchCount++;
+            const currentLang = e.detail.language === 'zh' ? '中文' : 'English';
+            document.getElementById('current-lang').textContent = 
+                `当前语言 | Current Language: ${currentLang}`;
+            document.getElementById('switch-count').textContent = 
+                `切换次数 | Switch Count: ${switchCount}`;
+        });
+        
+        // 测试本地存储
+        function testLocalStorage() {
+            try {
+                const testKey = 'test-storage';
+                const testValue = 'test-value';
+                localStorage.setItem(testKey, testValue);
+                const retrieved = localStorage.getItem(testKey);
+                localStorage.removeItem(testKey);
+                
+                if (retrieved === testValue) {
+                    document.getElementById('storage-test').textContent = 
+                        '本地存储 | Local Storage: ✅ 正常工作 | Working';
+                    document.getElementById('storage-test').className = 'status success';
+                } else {
+                    throw new Error('Storage test failed');
+                }
+            } catch (e) {
+                document.getElementById('storage-test').textContent = 
+                    '本地存储 | Local Storage: ❌ 不可用 | Not Available';
+                document.getElementById('storage-test').className = 'status error';
+            }
+        }
+        
+        // 页面加载完成后运行测试
+        document.addEventListener('DOMContentLoaded', function() {
+            testLocalStorage();
+            
+            // 显示当前语言
+            const currentLang = languageSwitcher.getCurrentLanguage() === 'zh' ? '中文' : 'English';
+            document.getElementById('current-lang').textContent = 
+                `当前语言 | Current Language: ${currentLang}`;
+        });
+    </script>
+</body>
+</html>

@@ -1,248 +1,460 @@
-# AI内容格式转换工具
+# 🚀 AI内容格式转换工具 - 开源版 | AI Content Format Converter - Open Source Edition
 
-<div align="center">
-
-![AI Content Converter](https://img.shields.io/badge/AI%20Content-Converter-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)
-
-**将AI对话内容完美转换为专业的Word和Excel文档**
-
-[![GitHub Stars](https://img.shields.io/github/stars/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/KK8088/ai-content-converter/releases)
-[![CI/CD](https://github.com/KK8088/ai-content-converter/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/KK8088/ai-content-converter/actions)
-[![GitHub Issues](https://img.shields.io/github/issues/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/issues)
-[![GitHub Forks](https://img.shields.io/github/forks/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/network)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
-
-[🚀 在线体验](https://KK8088.github.io/ai-content-converter) | [📖 文档](https://docs.aiconverter.com) | [🐛 报告问题](https://github.com/KK8088/ai-content-converter/issues) | [💬 讨论](https://github.com/KK8088/ai-content-converter/discussions)
-
+<div class="language-switcher">
+  <button id="lang-zh" class="lang-btn active" onclick="switchLanguage('zh')">🇨🇳 中文</button>
+  <button id="lang-en" class="lang-btn" onclick="switchLanguage('en')">🇺🇸 English</button>
 </div>
 
----
+<!-- 中文版本 -->
+<div id="content-zh" class="language-content">
 
-## ✨ 特性
+[![GitHub Stars](https://img.shields.io/github/stars/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
+[![GitHub Forks](https://img.shields.io/github/forks/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
+[![GitHub Issues](https://img.shields.io/github/issues/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/issues)
+[![GitHub License](https://img.shields.io/github/license/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/blob/main/LICENSE)
+[![Version](https://img.shields.io/badge/version-v1.1.1-blue)](https://github.com/KK8088/ai-content-converter/releases)
 
-### 🎯 **智能识别**
-- **95%+准确率** 的内容格式检测
-- 支持 **Markdown表格、代码块、列表、引用** 等复杂格式
-- 智能识别 **货币、日期、百分比** 等数据类型
-- 容错处理，支持不规范格式
+> 🌟 **完美转换AI对话内容为专业Word和Excel文档**
 
-### 📄 **完美Word转换**
-- **专业文档质量**，如同Word原生编辑
-- 支持标题层级、表格格式、代码高亮
-- 自动应用商务模板样式
-- 保持原始格式和数据结构
+[在线演示](https://KK8088.github.io/ai-content-converter) | [GitHub仓库](https://github.com/KK8088/ai-content-converter) | [问题反馈](https://github.com/KK8088/ai-content-converter/issues)
 
-### 📊 **强大Excel转换**
-- **多工作表支持**，每个表格独立转换
-- **智能数据类型识别**，自动格式化数字、货币、日期
-- 专业表格样式，表头突出显示
-- 支持复杂表格结构
+## ✨ 功能特色
 
-### 🎨 **现代化界面**
-- **响应式设计**，完美适配桌面和移动端
-- **多主题支持**：亮色、暗色、高对比度、护眼模式
-- **拖拽上传**，支持.md和.txt文件
-- **实时预览**，所见即所得
+### 🎯 核心功能
+- 📄 **Word文档(.docx)** - 专业文档生成，支持丰富格式
+- 📊 **Excel表格(.xlsx)** - 多工作表支持，智能数据类型识别
+- 🤖 **智能内容检测** - 95%+准确率的格式识别
+- 👁️ **实时预览** - 转换前可视化预览效果 (v1.1.0新增!)
+
+### 🔥 实时预览系统 (v1.1.0)
+- **结构预览** - 智能检测结果和表格结构展示
+- **Word预览** - 专业Word文档样式模拟
+- **Excel预览** - 完整Excel工作表格式预览
+- **无缝切换** - 三种预览模式流畅切换
+
+### 📋 支持格式
+- **Markdown表格** - 标准和非标准表格格式
+- **代码块** - 多语言语法高亮支持
+- **列表** - 有序和无序列表处理
+- **引用块** - 保持引用格式和层次
+- **标题** - 自动识别H1-H6标题级别
+- **行内格式** - 粗体、斜体、代码、链接等
+
+### 🧠 智能数据类型识别
+- **货币** - ¥、$、€、£、₹、₽等多种货币
+- **百分比** - 自动检测和格式化百分比数据
+- **日期** - ISO、中文、美式、欧式日期格式
+- **数字** - 整数、小数、科学计数法
+- **布尔值** - 是/否、√/×、true/false等
 
 ## 🚀 快速开始
 
 ### 在线使用
-
-访问 [在线版本](https://KK8088.github.io/ai-content-converter)，无需安装即可使用。
+访问：https://KK8088.github.io/ai-content-converter
 
 ### 本地部署
-
 ```bash
-# 克隆项目
+# 克隆仓库
 git clone https://github.com/KK8088/ai-content-converter.git
 
-# 进入项目目录
+# 进入目录
 cd ai-content-converter
 
 # 启动本地服务器
 python -m http.server 8080
-# 或使用 Node.js
-npx serve .
 
-# 访问 http://localhost:8080
-```
-
-### Docker 部署
-
-```bash
-# 构建镜像
-docker build -t ai-content-converter .
-
-# 运行容器
-docker run -p 8080:80 ai-content-converter
+# 打开浏览器
+# 访问：http://localhost:8080
 ```
 
 ## 📖 使用指南
 
 ### 基础使用
-
-1. **输入内容**：将从ChatGPT、DeepSeek等AI对话中复制的内容粘贴到文本框
-2. **选择格式**：选择输出格式（Word、Excel或两者）
-3. **一键转换**：点击"开始转换"按钮
-4. **下载文档**：自动下载生成的专业文档
-
-### 支持的格式
-
-#### 📊 Markdown表格
-```markdown
-| 产品名称 | 价格 | 库存 | 状态 |
-|----------|------|------|------|
-| iPhone 15 Pro | ¥8,999.00 | 50 | 有货 |
-| MacBook Air | $1,299.99 | 30 | 有货 |
-```
-
-#### 💻 代码块
-```markdown
-```javascript
-function processData(data) {
-    return data.map(item => ({
-        id: item.id,
-        value: parseFloat(item.value)
-    }));
-}
-```
-```
-
-#### 📋 列表和引用
-```markdown
-## 项目清单
-- 需求分析 ✅
-- 系统设计 🔄
-- 开发实施 ⏳
-
-> **重要提示**: 请确保所有数据准确无误
-```
-
-#### 🎨 格式化文本
-```markdown
-**加粗文本** *斜体文本* `行内代码`
-[链接文本](https://example.com)
-~~删除线~~ __下划线__
-```
+1. **输入内容** - 粘贴AI对话内容或Markdown表格
+2. **实时预览** - 点击"👁️ 实时预览"查看转换效果
+3. **选择选项** - 选择内容类型、输出格式和模板
+4. **开始转换** - 点击"🚀 开始转换"生成文件
 
 ### 高级功能
 
 #### 智能数据类型识别
 - **货币**: ¥1,250.50, $999.99, €850.00
 - **百分比**: 15.6%, -8.2%, +23.8%
-- **日期**: 2025-06-27, 2025年6月27日
-- **布尔**: 是/否, √/×, true/false
+- **日期**: 2025-06-28, 2025年6月28日
+- **布尔值**: 是/否, √/×, true/false
 
 #### 多主题支持
-- 🌞 **亮色主题** - 经典白色背景
-- 🌙 **暗色主题** - 护眼深色模式
-- 🔍 **高对比度** - 无障碍访问
-- 🌿 **护眼模式** - 绿色护眼配色
+- 🌞 **浅色主题** - 经典白色背景
+- 🌙 **深色主题** - 护眼深色模式
 
-## 🏗️ 技术架构
+#### 模板选项
+- 💼 **专业商务** - 企业文档风格
+- 🎓 **学术论文** - 学术格式标准
+- 📝 **简洁清爽** - 极简主义设计
+- 🎨 **多彩活泼** - 创意生动风格
 
-### 前端技术栈
-- **HTML5** - 语义化标签，无障碍访问
-- **CSS3** - 现代化样式，响应式设计
-- **Vanilla JavaScript** - 无框架依赖，轻量高效
-- **Web APIs** - File API, Blob API等现代浏览器特性
+## 🎯 使用场景
 
-### 核心库
-- **[docx.js](https://github.com/dolanmiu/docx)** - Word文档生成
-- **[xlsx.js](https://github.com/SheetJS/sheetjs)** - Excel文档处理
-- **[FileSaver.js](https://github.com/eligrey/FileSaver.js)** - 文件下载
-
-### 项目结构
-```
-ai-content-converter/
-├── index.html              # 主页面
-├── css/
-│   ├── styles.css          # 主样式文件
-│   └── themes.css          # 主题样式
-├── js/
-│   ├── config.js           # 配置管理
-│   ├── utils.js            # 工具函数
-│   ├── contentDetector.js  # 内容检测
-│   ├── markdownParser.js   # Markdown解析
-│   └── app.js             # 主应用
-├── docs/                   # 文档目录
-├── examples/               # 示例文件
-└── tests/                  # 测试文件
+### 📊 数据分析报告
+将ChatGPT分析结果转换为专业Excel报表
+```markdown
+| 产品 | 销量 | 增长率 |
+|------|------|--------|
+| iPhone | 1200 | +15% |
+| MacBook | 800 | +8% |
 ```
 
-## 🤝 贡献指南
+### 📄 会议纪要
+将AI整理的会议内容转换为Word文档
+```markdown
+# 会议纪要 - 项目评审
+## 参会人员
+- 张三（项目经理）
+- 李四（开发工程师）
 
-我们欢迎所有形式的贡献！请查看 [贡献指南](CONTRIBUTING.md) 了解详细信息。
+## 行动项目
+1. 完成功能开发
+2. 进行测试验证
+```
 
-### 快速贡献
+### 📈 财务报告
+将财务数据转换为格式化Excel表格
+```markdown
+| 季度 | 收入 | 利润 | 利润率 |
+|------|------|------|--------|
+| Q1 2025 | ¥120万 | ¥24万 | 20% |
+| Q2 2025 | ¥150万 | ¥30万 | 20% |
+```
 
-1. **Fork** 本项目
-2. **创建** 特性分支 (`git checkout -b feature/AmazingFeature`)
-3. **提交** 更改 (`git commit -m 'Add some AmazingFeature'`)
-4. **推送** 到分支 (`git push origin feature/AmazingFeature`)
-5. **创建** Pull Request
+## 🔧 技术特性
 
-### 开发环境
+### 🏗️ 架构设计
+- **纯前端** - 无需服务器，完全在浏览器中运行
+- **本地处理** - 数据安全保障，无上传风险
+- **模块化设计** - 代码结构清晰，易于维护
+- **响应式UI** - 完美适配各种设备
 
+### 🛡️ 安全与隐私
+- **本地处理** - 所有数据在本地处理
+- **无数据上传** - 内容永不离开您的设备
+- **XSS防护** - HTML转义防止脚本攻击
+- **输入验证** - 增强的用户输入验证
+
+### ⚡ 性能表现
+- **快速处理** - 大部分内容瞬间转换
+- **内存高效** - 针对大文档优化
+- **浏览器兼容** - 支持所有现代浏览器
+
+## 📊 版本历史
+
+### v1.1.1 (2025-06-28) - 项目整理和重新发布
+- 🧹 **项目结构优化** - 文件整理和标准化
+- 📧 **联系方式统一** - 统一邮箱为admin@zk0x01.com
+- 📁 **文档完善** - 改进项目文档和结构说明
+- 🔧 **维护性改进** - 符合开源项目最佳实践
+
+### v1.1.0 (2025-06-27) - 重大功能更新
+- ✨ **实时预览系统** - 完整的预览功能
+- 🎯 **用户体验革命** - 转换前可视化预览
+- 🔧 **技术架构改进** - 增强错误处理和安全性
+- 📈 **性能提升** - 预览功能100%改进
+
+### v1.0.0 (2025-06-26) - 首次发布
+- 🎉 **首次发布** - AI内容格式转换工具开源版
+- 📄 **Word生成** - 专业Word文档输出
+- 📊 **Excel转换** - 多工作表智能数据识别
+- 🎨 **现代界面** - 响应式设计，支持主题切换
+
+## 🤝 参与贡献
+
+我们欢迎各种形式的贡献！请查看我们的[贡献指南](CONTRIBUTING.md)了解详情。
+
+### 开发环境搭建
 ```bash
-# 安装开发依赖
-npm install
+# Fork并克隆仓库
+git clone https://github.com/YOUR_USERNAME/ai-content-converter.git
 
-# 启动开发服务器
-npm run dev
+# 创建功能分支
+git checkout -b feature/your-feature-name
 
-# 运行测试
-npm test
+# 进行修改并提交
+git commit -m "feat: add your feature"
 
-# 构建生产版本
-npm run build
+# 推送并创建Pull Request
+git push origin feature/your-feature-name
 ```
 
-## 📊 路线图
+## 📄 开源协议
 
-### 🎯 v1.1 (计划中)
-- [ ] 实时预览功能
-- [ ] 批量文件处理
-- [ ] 更多模板样式
-- [ ] PDF输出支持
-
-### 🚀 v1.2 (规划中)
-- [ ] PowerPoint输出
-- [ ] 云端存储集成
-- [ ] 协作编辑功能
-- [ ] API接口开放
-
-### 🌟 v2.0 (愿景)
-- [ ] AI内容优化
-- [ ] 多语言支持
-- [ ] 插件生态系统
-- [ ] 企业级功能
-
-## 📄 许可证
-
-本项目基于 [MIT 许可证](LICENSE) 开源。
+本项目采用MIT协议 - 查看[LICENSE](LICENSE)文件了解详情。
 
 ## 🙏 致谢
 
-- 感谢 [docx.js](https://github.com/dolanmiu/docx) 提供的Word文档生成能力
-- 感谢 [xlsx.js](https://github.com/SheetJS/sheetjs) 提供的Excel处理功能
-- 感谢所有贡献者和用户的支持
+- 感谢所有用户的支持和反馈
+- 特别感谢开源社区的贡献
+- 感谢AI内容处理需求的启发
 
-## 📞 联系我们
+## 📞 联系支持
 
-- **GitHub Issues**: [报告问题](https://github.com/KK8088/ai-content-converter/issues)
-- **GitHub Discussions**: [参与讨论](https://github.com/KK8088/ai-content-converter/discussions)
-- **Email**: admin@zk0x01.com
+### 问题报告
+- [GitHub Issues](https://github.com/KK8088/ai-content-converter/issues)
+
+### 功能建议
+- [GitHub Discussions](https://github.com/KK8088/ai-content-converter/discussions)
+
+### 社区交流
+- [GitHub Discussions](https://github.com/KK8088/ai-content-converter/discussions)
+
+### 联系方式
+- **邮箱**: admin@zk0x01.com
 - **GitHub**: [@KK8088](https://github.com/KK8088)
+
+## 🔮 发展路线图
+
+### v1.2.0 (计划2025年7月)
+- 📄 **PDF输出** - 高质量PDF文档生成
+- 🎨 **PowerPoint转换** - PPT幻灯片生成
+- 📁 **批量处理** - 多文件转换支持
+- 🎯 **更多模板** - 商务、学术、创意模板
+
+### v2.0.0 (未来)
+- 🔌 **插件系统** - 可扩展架构
+- 🌐 **API访问** - 开发者友好的API
+- 🤝 **协作功能** - 实时协作编辑
 
 ---
 
-<div align="center">
+**🌟 如果这个项目对您有帮助，请给我们一个Star！**
 
-**如果这个项目对您有帮助，请给我们一个 ⭐️**
-
-Made with ❤️ by [zk0x01](https://github.com/KK8088)
+**Made with ❤️ by [@KK8088](https://github.com/KK8088)**
 
 </div>
+
+<!-- 英文版本 -->
+<div id="content-en" class="language-content" style="display: none;">
+
+[![GitHub Stars](https://img.shields.io/github/stars/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
+[![GitHub Forks](https://img.shields.io/github/forks/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
+[![GitHub Issues](https://img.shields.io/github/issues/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/issues)
+[![GitHub License](https://img.shields.io/github/license/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/blob/main/LICENSE)
+[![Version](https://img.shields.io/badge/version-v1.1.1-blue)](https://github.com/KK8088/ai-content-converter/releases)
+
+> 🌟 **Perfect conversion of AI dialogue content to professional Word and Excel documents**
+
+[Online Demo](https://KK8088.github.io/ai-content-converter) | [GitHub Repository](https://github.com/KK8088/ai-content-converter) | [Report Issues](https://github.com/KK8088/ai-content-converter/issues)
+
+## ✨ Features
+
+### 🎯 Core Functions
+- 📄 **Word Document (.docx)** - Professional document generation with rich formatting
+- 📊 **Excel Spreadsheet (.xlsx)** - Multi-sheet support with intelligent data type recognition
+- 🤖 **Smart Content Detection** - 95%+ accuracy in format recognition
+- 👁️ **Real-time Preview** - Visual preview before conversion (NEW in v1.1.0!)
+
+### 🔥 NEW: Real-time Preview System (v1.1.0)
+- **Structure Preview** - Smart detection results and table structure display
+- **Word Preview** - Professional Word document style simulation
+- **Excel Preview** - Complete Excel worksheet format preview
+- **Seamless Switching** - Smooth transition between three preview modes
+
+### 📋 Supported Formats
+- **Markdown Tables** - Standard and non-standard table formats
+- **Code Blocks** - Multi-language syntax highlighting support
+- **Lists** - Ordered and unordered list processing
+- **Quote Blocks** - Maintain quote formatting and hierarchy
+- **Headers** - Auto-detect H1-H6 header levels
+- **Inline Formatting** - Bold, italic, code, links, etc.
+
+### 🧠 Intelligent Data Type Recognition
+- **Currency** - ¥, $, €, £, ₹, ₽ and more
+- **Percentages** - Auto-detect and format percentage data
+- **Dates** - ISO, Chinese, US, European date formats
+- **Numbers** - Integers, decimals, scientific notation
+- **Booleans** - Yes/No, √/×, true/false, etc.
+
+## 🚀 Quick Start
+
+### Online Usage
+Visit: https://KK8088.github.io/ai-content-converter
+
+### Local Deployment
+```bash
+# Clone repository
+git clone https://github.com/KK8088/ai-content-converter.git
+
+# Enter directory
+cd ai-content-converter
+
+# Start local server
+python -m http.server 8080
+
+# Open browser
+# Visit: http://localhost:8080
+```
+
+## 📖 Usage Guide
+
+### Basic Usage
+1. **Input Content** - Paste AI dialogue content or Markdown tables
+2. **Real-time Preview** - Click "👁️ Real-time Preview" to see conversion effects
+3. **Choose Options** - Select content type, output format, and template
+4. **Start Conversion** - Click "🚀 Start Conversion" to generate files
+
+### Advanced Features
+
+#### Smart Data Type Recognition
+- **Currency**: ¥1,250.50, $999.99, €850.00
+- **Percentage**: 15.6%, -8.2%, +23.8%
+- **Date**: 2025-06-28, June 28, 2025
+- **Boolean**: Yes/No, √/×, true/false
+
+#### Multi-theme Support
+- 🌞 **Light Theme** - Classic white background
+- 🌙 **Dark Theme** - Eye-friendly dark mode
+
+#### Template Options
+- 💼 **Professional Business** - Corporate document style
+- 🎓 **Academic Paper** - Academic formatting standards
+- 📝 **Clean & Simple** - Minimalist design
+- 🎨 **Colorful & Vibrant** - Creative and lively style
+
+## 🎯 Use Cases
+
+### 📊 Data Analysis Reports
+Convert ChatGPT analysis results to professional Excel reports
+```markdown
+| Product | Sales | Growth |
+|---------|-------|--------|
+| iPhone  | 1200  | +15%   |
+| MacBook | 800   | +8%    |
+```
+
+### 📄 Meeting Minutes
+Transform AI-organized meeting content to Word documents
+```markdown
+# Meeting Minutes - Project Review
+## Attendees
+- John Smith (Project Manager)
+- Jane Doe (Developer)
+
+## Action Items
+1. Complete feature development
+2. Conduct testing
+```
+
+### 📈 Financial Reports
+Convert financial data to formatted Excel spreadsheets
+```markdown
+| Quarter | Revenue | Profit | Margin |
+|---------|---------|--------|--------|
+| Q1 2025 | $1.2M   | $240K  | 20%    |
+| Q2 2025 | $1.5M   | $300K  | 20%    |
+```
+
+## 🔧 Technical Features
+
+### 🏗️ Architecture
+- **Pure Frontend** - No server required, runs entirely in browser
+- **Local Processing** - Data security guaranteed, no uploads
+- **Modular Design** - Clean code structure, easy to maintain
+- **Responsive UI** - Perfect adaptation to all devices
+
+### 🛡️ Security & Privacy
+- **Local Processing** - All data processed locally
+- **No Data Upload** - Content never leaves your device
+- **XSS Protection** - HTML escaping prevents script attacks
+- **Input Validation** - Enhanced user input validation
+
+### ⚡ Performance
+- **Fast Processing** - Instant conversion for most content
+- **Memory Efficient** - Optimized for large documents
+- **Browser Compatible** - Works on all modern browsers
+
+## 📊 Version History
+
+### v1.1.1 (2025-06-28) - Project Cleanup and Re-release
+- 🧹 **Project Structure Optimization** - File organization and standardization
+- 📧 **Contact Information Unification** - Unified email to admin@zk0x01.com
+- 📁 **Documentation Enhancement** - Improved project docs and structure guide
+- 🔧 **Maintenance Improvements** - Compliance with open source best practices
+
+### v1.1.0 (2025-06-27) - Major Feature Update
+- ✨ **Real-time Preview System** - Complete preview functionality
+- 🎯 **User Experience Revolution** - Visual preview before conversion
+- 🔧 **Technical Improvements** - Enhanced error handling and security
+- 📈 **Performance Boost** - 100% improvement in preview functionality
+
+### v1.0.0 (2025-06-26) - Initial Release
+- 🎉 **First Release** - AI Content Format Converter Open Source Edition
+- 📄 **Word Generation** - Professional Word document output
+- 📊 **Excel Conversion** - Multi-sheet intelligent data recognition
+- 🎨 **Modern Interface** - Responsive design with theme support
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+```bash
+# Fork and clone the repository
+git clone https://github.com/YOUR_USERNAME/ai-content-converter.git
+
+# Create feature branch
+git checkout -b feature/your-feature-name
+
+# Make changes and commit
+git commit -m "feat: add your feature"
+
+# Push and create pull request
+git push origin feature/your-feature-name
+```
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Thanks to all users for their support and feedback
+- Special thanks to the open source community
+- Inspired by the need for better AI content processing tools
+
+## 📞 Support
+
+### Bug Reports
+- [GitHub Issues](https://github.com/KK8088/ai-content-converter/issues)
+
+### Feature Requests
+- [GitHub Discussions](https://github.com/KK8088/ai-content-converter/discussions)
+
+### Community
+- [GitHub Discussions](https://github.com/KK8088/ai-content-converter/discussions)
+
+### Contact
+- **Email**: admin@zk0x01.com
+- **GitHub**: [@KK8088](https://github.com/KK8088)
+
+## 🔮 Roadmap
+
+### v1.2.0 (Planned for July 2025)
+- 📄 **PDF Output** - High-quality PDF document generation
+- 🎨 **PowerPoint Conversion** - PPT slide generation
+- 📁 **Batch Processing** - Multiple file conversion support
+- 🎯 **More Templates** - Business, academic, creative templates
+
+### v2.0.0 (Future)
+- 🔌 **Plugin System** - Extensible architecture
+- 🌐 **API Access** - RESTful API for developers
+- 🤝 **Collaboration** - Real-time collaborative editing
+
+---
+
+**🌟 Star this repository if you find it helpful!**
+
+**Made with ❤️ by [@KK8088](https://github.com/KK8088)**
+
+</div>
+
+<!-- 引用外部样式和脚本文件 -->
+<link rel="stylesheet" href="css/language-switcher.css">
+<script src="js/language-switcher.js"></script>
