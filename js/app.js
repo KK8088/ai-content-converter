@@ -49,6 +49,9 @@ class AIContentConverter {
             }, 300));
         }
 
+        // 快捷操作按钮事件
+        this.bindQuickActions();
+
         // 转换按钮
         const convertBtn = document.getElementById('convert-btn');
         if (convertBtn) {
@@ -396,14 +399,168 @@ class AIContentConverter {
     }
 
     /**
-     * 更新统计信息
+     * 更新统计信息 - 增强版
      */
     updateStats(content) {
         const stats = Utils.string.getTextStats(content);
-        
-        document.getElementById('char-count').textContent = `字符数: ${stats.chars}`;
-        document.getElementById('word-count').textContent = `单词数: ${stats.words}`;
-        document.getElementById('table-count').textContent = `表格数: ${stats.tables}`;
+
+        // 更新统计数值
+        this.updateStatValue('char-count', stats.chars);
+        this.updateStatValue('word-count', stats.words);
+        this.updateStatValue('table-count', stats.tables);
+        this.updateStatValue('code-count', stats.codeBlocks);
+
+        // 添加动画效果
+        this.animateStats();
+    }
+
+    /**
+     * 更新单个统计值
+     */
+    updateStatValue(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            const valueElement = element.querySelector('.stat-value');
+            if (valueElement) {
+                const oldValue = parseInt(valueElement.textContent) || 0;
+                if (oldValue !== value) {
+                    valueElement.style.transform = 'scale(1.2)';
+                    valueElement.style.color = 'var(--success-color)';
+
+                    setTimeout(() => {
+                        valueElement.textContent = value.toLocaleString();
+                        valueElement.style.transform = 'scale(1)';
+                        valueElement.style.color = 'var(--primary-color)';
+                    }, 150);
+                }
+            }
+        }
+    }
+
+    /**
+     * 统计动画效果
+     */
+    animateStats() {
+        const statsGroup = document.querySelector('.stats-group');
+        if (statsGroup) {
+            statsGroup.style.transform = 'translateY(-2px)';
+            setTimeout(() => {
+                statsGroup.style.transform = 'translateY(0)';
+            }, 200);
+        }
+    }
+
+    /**
+     * 绑定快捷操作事件
+     */
+    bindQuickActions() {
+        // 清空内容
+        const clearBtn = document.getElementById('clear-content');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.clearContent());
+        }
+
+        // 格式化内容
+        const formatBtn = document.getElementById('format-content');
+        if (formatBtn) {
+            formatBtn.addEventListener('click', () => this.formatContent());
+        }
+
+        // 保存草稿
+        const saveBtn = document.getElementById('save-draft');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveDraft());
+        }
+    }
+
+    /**
+     * 清空内容
+     */
+    clearContent() {
+        if (this.currentContent.trim() && !confirm('确定要清空所有内容吗？')) {
+            return;
+        }
+
+        const textarea = document.getElementById('ai-content');
+        if (textarea) {
+            textarea.value = '';
+            this.handleContentChange('');
+            this.showMessage('内容已清空', 'success');
+
+            // 添加清空动画
+            textarea.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                textarea.style.transform = 'scale(1)';
+            }, 150);
+        }
+    }
+
+    /**
+     * 格式化内容
+     */
+    formatContent() {
+        if (!this.currentContent.trim()) {
+            this.showMessage('没有内容需要格式化', 'warning');
+            return;
+        }
+
+        try {
+            // 基础格式化逻辑
+            let formatted = this.currentContent
+                .replace(/\n{3,}/g, '\n\n') // 移除多余空行
+                .replace(/[ \t]+$/gm, '') // 移除行尾空格
+                .replace(/^[ \t]+/gm, '') // 移除行首空格（保留代码块）
+                .trim();
+
+            const textarea = document.getElementById('ai-content');
+            if (textarea) {
+                textarea.value = formatted;
+                this.handleContentChange(formatted);
+                this.showMessage('内容格式化完成', 'success');
+
+                // 添加格式化动画
+                textarea.style.background = 'rgba(16, 185, 129, 0.1)';
+                setTimeout(() => {
+                    textarea.style.background = '';
+                }, 1000);
+            }
+        } catch (error) {
+            this.showMessage('格式化失败：' + error.message, 'error');
+        }
+    }
+
+    /**
+     * 保存草稿
+     */
+    saveDraft() {
+        if (!this.currentContent.trim()) {
+            this.showMessage('没有内容需要保存', 'warning');
+            return;
+        }
+
+        try {
+            const draft = {
+                content: this.currentContent,
+                timestamp: new Date().toISOString(),
+                stats: Utils.string.getTextStats(this.currentContent)
+            };
+
+            localStorage.setItem(STORAGE_KEYS.LAST_CONTENT, JSON.stringify(draft));
+            this.showMessage('草稿已保存', 'success');
+
+            // 添加保存动画
+            const saveBtn = document.getElementById('save-draft');
+            if (saveBtn) {
+                saveBtn.style.background = 'var(--success-color)';
+                saveBtn.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    saveBtn.style.background = '';
+                    saveBtn.style.transform = '';
+                }, 500);
+            }
+        } catch (error) {
+            this.showMessage('保存失败：' + error.message, 'error');
+        }
     }
 
     /**

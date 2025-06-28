@@ -104,19 +104,59 @@ const Utils = {
         },
 
         /**
-         * 统计文本信息
+         * 统计文本信息 - 增强版
          * @param {string} text - 文本内容
          * @returns {object} 统计信息
          */
         getTextStats(text) {
-            if (!text) return { chars: 0, words: 0, lines: 0, tables: 0 };
-            
+            if (!text) return {
+                chars: 0,
+                words: 0,
+                lines: 0,
+                tables: 0,
+                codeBlocks: 0,
+                links: 0,
+                images: 0,
+                headings: 0,
+                lists: 0
+            };
+
             const chars = text.length;
             const words = text.trim() ? text.trim().split(/\s+/).length : 0;
             const lines = text.split('\n').length;
-            const tables = (text.match(/\|.*\|/g) || []).length;
-            
-            return { chars, words, lines, tables };
+
+            // 表格统计（更精确）
+            const tableRows = text.match(/^\|.*\|$/gm) || [];
+            const tables = Math.max(0, Math.floor(tableRows.length / 2)); // 假设表格至少有2行
+
+            // 代码块统计
+            const codeBlocks = (text.match(/```[\s\S]*?```/g) || []).length +
+                              (text.match(/`[^`\n]+`/g) || []).length;
+
+            // 链接统计
+            const links = (text.match(/\[.*?\]\(.*?\)/g) || []).length;
+
+            // 图片统计
+            const images = (text.match(/!\[.*?\]\(.*?\)/g) || []).length;
+
+            // 标题统计
+            const headings = (text.match(/^#{1,6}\s+.*/gm) || []).length;
+
+            // 列表统计
+            const lists = (text.match(/^[\s]*[-*+]\s+/gm) || []).length +
+                         (text.match(/^[\s]*\d+\.\s+/gm) || []).length;
+
+            return {
+                chars,
+                words,
+                lines,
+                tables,
+                codeBlocks,
+                links,
+                images,
+                headings,
+                lists
+            };
         }
     },
 

@@ -53,9 +53,39 @@
                     支持格式：Markdown表格、代码块、引用、列表、链接、加粗斜体等
                 </div>
                 <div class="input-stats">
-                    <span id="char-count">字符数: 0</span>
-                    <span id="word-count">单词数: 0</span>
-                    <span id="table-count">表格数: 0</span>
+                    <div class="stats-group">
+                        <span class="stat-item" id="char-count">
+                            <span class="stat-icon">📝</span>
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">字符</span>
+                        </span>
+                        <span class="stat-item" id="word-count">
+                            <span class="stat-icon">📄</span>
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">单词</span>
+                        </span>
+                        <span class="stat-item" id="table-count">
+                            <span class="stat-icon">📊</span>
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">表格</span>
+                        </span>
+                        <span class="stat-item" id="code-count">
+                            <span class="stat-icon">💻</span>
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">代码块</span>
+                        </span>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="quick-btn" id="clear-content" title="清空内容">
+                            <span class="btn-icon">🗑️</span>
+                        </button>
+                        <button class="quick-btn" id="format-content" title="格式化内容">
+                            <span class="btn-icon">✨</span>
+                        </button>
+                        <button class="quick-btn" id="save-draft" title="保存草稿">
+                            <span class="btn-icon">💾</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             
