@@ -846,7 +846,7 @@ class AIContentConverter {
 
                     wordElements.push(new Paragraph({
                         children: [new TextRun({
-                            text: element.text,
+                            text: this.deepCleanMarkdownText(element.text),
                             font: {
                                 name: this.wordStyles.fonts.chinese,
                                 eastAsia: this.wordStyles.fonts.chinese
@@ -885,7 +885,7 @@ class AIContentConverter {
                         wordElements.push(new Paragraph({
                             children: [
                                 new TextRun({
-                                    text: `• ${item.text}`,
+                                    text: `• ${this.deepCleanMarkdownText(item.text)}`,
                                     font: {
                                         name: this.wordStyles.fonts.chinese,
                                         eastAsia: this.wordStyles.fonts.chinese
@@ -908,7 +908,7 @@ class AIContentConverter {
                         wordElements.push(new Paragraph({
                             children: [
                                 new TextRun({
-                                    text: `${index + 1}. ${item.text}`,
+                                    text: `${index + 1}. ${this.deepCleanMarkdownText(item.text)}`,
                                     font: {
                                         name: this.wordStyles.fonts.chinese,
                                         eastAsia: this.wordStyles.fonts.chinese
@@ -976,7 +976,7 @@ class AIContentConverter {
                                 color: this.wordStyles.colors.primary
                             }),
                             new TextRun({
-                                text: element.content,
+                                text: this.deepCleanMarkdownText(element.content),
                                 font: {
                                     name: this.wordStyles.fonts.chinese,
                                     eastAsia: this.wordStyles.fonts.chinese
@@ -1066,7 +1066,7 @@ class AIContentConverter {
                 new TableCell({
                     children: [new Paragraph({
                         children: [new TextRun({
-                            text: header,
+                            text: this.deepCleanMarkdownText(header),
                             font: {
                                 name: this.wordStyles.fonts.chinese,
                                 eastAsia: this.wordStyles.fonts.chinese
@@ -1188,8 +1188,8 @@ class AIContentConverter {
 
         let text = cellData.toString().trim();
 
-        // 清理单元格内容
-        text = this.cleanCellText(text);
+        // 深度清理单元格内容，移除所有Markdown标记
+        text = this.deepCleanMarkdownText(text);
 
         // 处理货币格式
         if (text.match(/^[¥$€£]\s*\d+([,.]?\d+)*$/)) {
@@ -1285,8 +1285,11 @@ class AIContentConverter {
         }
 
         return formatted.map(part => {
+            // 彻底清理文本中的Markdown符号
+            const cleanText = this.deepCleanMarkdownText(part.text || '');
+
             const options = {
-                text: part.text || '',
+                text: cleanText,
                 font: {
                     name: this.wordStyles.fonts.chinese,
                     eastAsia: this.wordStyles.fonts.chinese
@@ -1521,6 +1524,74 @@ class AIContentConverter {
         cleaned = cleaned.replace(/^={3,}$/, '');
 
         return cleaned.trim();
+    }
+
+    /**
+     * 深度清理Markdown文本 - 确保Word原生格式
+     */
+    deepCleanMarkdownText(text) {
+        if (!text) return '';
+
+        let cleaned = text.toString();
+
+        // 1. 清理所有Markdown格式标记
+        cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1');     // **粗体**
+        cleaned = cleaned.replace(/\*([^*]+)\*/g, '$1');         // *斜体*
+        cleaned = cleaned.replace(/__([^_]+)__/g, '$1');         // __粗体__
+        cleaned = cleaned.replace(/_([^_]+)_/g, '$1');           // _斜体_
+        cleaned = cleaned.replace(/`([^`]+)`/g, '$1');           // `代码`
+        cleaned = cleaned.replace(/~~([^~]+)~~/g, '$1');         // ~~删除线~~
+
+        // 2. 清理链接标记
+        cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // [文本](链接)
+        cleaned = cleaned.replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1'); // ![图片](链接)
+
+        // 3. 清理标题标记
+        cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');           // # 标题
+
+        // 4. 清理列表标记
+        cleaned = cleaned.replace(/^[-*+]\s+/gm, '');            // - 列表
+        cleaned = cleaned.replace(/^\d+\.\s+/gm, '');            // 1. 列表
+
+        // 5. 清理引用标记
+        cleaned = cleaned.replace(/^>\s*/gm, '');                // > 引用
+
+        // 6. 清理代码块标记
+        cleaned = cleaned.replace(/```[\w]*\n?/g, '');           // ```代码块
+        cleaned = cleaned.replace(/\n?```$/g, '');               // 结束```
+
+        // 7. 清理分隔线
+        cleaned = cleaned.replace(/^[-=]{3,}$/gm, '');           // --- 或 ===
+
+        // 8. 清理HTML标签
+        cleaned = cleaned.replace(/<[^>]*>/g, '');
+
+        // 9. 清理HTML实体
+        cleaned = cleaned.replace(/&nbsp;/g, ' ');
+        cleaned = cleaned.replace(/&amp;/g, '&');
+        cleaned = cleaned.replace(/&lt;/g, '<');
+        cleaned = cleaned.replace(/&gt;/g, '>');
+        cleaned = cleaned.replace(/&quot;/g, '"');
+        cleaned = cleaned.replace(/&apos;/g, "'");
+        cleaned = cleaned.replace(/&#39;/g, "'");
+        cleaned = cleaned.replace(/&#34;/g, '"');
+
+        // 10. 标准化引号和符号
+        cleaned = cleaned.replace(/[""]/g, '"');
+        cleaned = cleaned.replace(/['']/g, "'");
+        cleaned = cleaned.replace(/[—–]/g, '-');
+
+        // 11. 清理零宽字符
+        cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, '');
+
+        // 12. 清理多余空格和换行
+        cleaned = cleaned.replace(/\s+/g, ' ');                  // 多个空格变单个
+        cleaned = cleaned.replace(/\n\s*\n/g, '\n');             // 多个换行变单个
+
+        // 13. 清理行首行尾空格
+        cleaned = cleaned.trim();
+
+        return cleaned;
     }
 
     /**
