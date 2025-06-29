@@ -234,356 +234,654 @@ class AIContentConverter {
     }
 
     /**
-     * 智能内容检测 - 增强版算法
+     * 智能内容检测 - v2.0 增强版算法
      */
     intelligentContentDetection(content) {
         if (!content || !content.trim()) {
             return {
                 type: 'auto',
                 confidence: 0,
-                details: { reason: '内容为空' }
+                details: { reason: '内容为空' },
+                recommendations: [],
+                outputFormats: ['docx']
             };
         }
 
+        // 初始化分析结果
+        const analysisResult = {
+            syntaxAnalysis: this.analyzeSyntaxFeatures(content),
+            semanticAnalysis: this.analyzeSemanticFeatures(content),
+            structureAnalysis: this.analyzeStructureFeatures(content),
+            contextAnalysis: this.analyzeContextFeatures(content)
+        };
+
+        // 综合分析结果
+        return this.synthesizeAnalysisResults(analysisResult, content);
+    }
+
+    /**
+     * 语法特征分析 - 新增
+     */
+    analyzeSyntaxFeatures(content) {
         const lines = content.split('\n').map(line => line.trim()).filter(line => line);
         const totalLines = lines.length;
 
-        // 计算各种格式的权重分数
-        const scores = {
-            markdown: 0,
-            table: 0,
-            list: 0,
-            code: 0,
-            article: 0
+        // 语法模式识别
+        const syntaxPatterns = {
+            markdown: {
+                headers: (content.match(/^#{1,6}\s+/gm) || []).length,
+                tables: this.detectMarkdownTables(content),
+                codeBlocks: (content.match(/```[\s\S]*?```/gm) || []).length,
+                inlineCode: (content.match(/`[^`]+`/g) || []).length,
+                lists: this.detectLists(content),
+                emphasis: (content.match(/\*\*.*?\*\*|\*.*?\*/gm) || []).length,
+                links: (content.match(/\[([^\]]+)\]\(([^)]+)\)/g) || []).length,
+                quotes: (content.match(/^>\s+/gm) || []).length
+            },
+            structured: {
+                json: /^\s*[\{\[]/.test(content.trim()),
+                xml: /<[^>]+>/.test(content),
+                csv: this.detectCSV(content),
+                yaml: /^[\w\s]+:\s*[\w\s]/m.test(content),
+                ini: /^\[[\w\s]+\]$/m.test(content)
+            },
+            conversational: {
+                aiDialog: (content.match(/^(用户|User|Human|助手|Assistant|AI|ChatGPT|Claude|DeepSeek)[:：]/gm) || []).length,
+                qaFormat: (content.match(/^[QA][:：]/gm) || []).length,
+                interview: (content.match(/^(问|答|Q|A)[:：]/gm) || []).length,
+                dialogue: (content.match(/^[A-Za-z\u4e00-\u9fa5]+[:：]/gm) || []).length
+            }
         };
 
-        const details = {
-            features: [],
-            patterns: [],
-            confidence_factors: []
-        };
-
-        // 1. 检测Markdown表格 - 更严格的检测
-        const tableLines = lines.filter(line => line.includes('|'));
-        const separatorLines = lines.filter(line =>
-            /^\|?[\s]*:?-+:?[\s]*\|/.test(line) ||
-            /^[\s]*:?-+:?[\s]*\|/.test(line)
-        );
-
-        if (tableLines.length >= 2 && separatorLines.length >= 1) {
-            // 检查表格结构的一致性
-            const tableLinesWithPipes = tableLines.filter(line => {
-                const pipeCount = (line.match(/\|/g) || []).length;
-                return pipeCount >= 2; // 至少需要2个管道符形成表格
-            });
-
-            if (tableLinesWithPipes.length >= 2) {
-                scores.table += 50;
-                scores.markdown += 30;
-                details.features.push('Markdown表格结构');
-                details.patterns.push(`${tableLinesWithPipes.length}行表格数据`);
-            }
-        }
-
-        // 2. 检测代码块
-        const codeBlockMatches = content.match(/```[\s\S]*?```/g);
-        if (codeBlockMatches) {
-            scores.code += codeBlockMatches.length * 20;
-            scores.markdown += 25;
-            details.features.push('代码块');
-            details.patterns.push(`${codeBlockMatches.length}个代码块`);
-        }
-
-        // 检测单行代码块（没有结束标记的）
-        if (content.includes('```')) {
-            scores.markdown += 15;
-            details.features.push('代码标记');
-        }
-
-        // 3. 检测引用块
-        const quoteLines = lines.filter(line => /^>\s/.test(line));
-        if (quoteLines.length > 0) {
-            scores.markdown += quoteLines.length * 5;
-            details.features.push('引用块');
-            details.patterns.push(`${quoteLines.length}行引用`);
-        }
-
-        // 4. 检测Markdown标题
-        const headingLines = lines.filter(line => /^#{1,6}\s/.test(line));
-        if (headingLines.length > 0) {
-            scores.markdown += headingLines.length * 10;
-            details.features.push('Markdown标题');
-            details.patterns.push(`${headingLines.length}个标题`);
-        }
-
-        // 5. 检测列表
-        const unorderedListLines = lines.filter(line => /^[-*+]\s/.test(line));
-        const orderedListLines = lines.filter(line => /^\d+\.\s/.test(line));
-        const totalListLines = unorderedListLines.length + orderedListLines.length;
-
-        if (totalListLines > 0) {
-            scores.list += totalListLines * 8;
-            scores.markdown += totalListLines * 5;
-            details.features.push('列表项');
-            details.patterns.push(`${totalListLines}个列表项`);
-        }
-
-        // 6. 检测Markdown链接和格式
-        const linkMatches = content.match(/\[([^\]]+)\]\(([^)]+)\)/g);
-        if (linkMatches) {
-            scores.markdown += linkMatches.length * 3;
-            details.features.push('Markdown链接');
-        }
-
-        const boldMatches = content.match(/\*\*([^*]+)\*\*/g);
-        if (boldMatches) {
-            scores.markdown += boldMatches.length * 2;
-            details.features.push('加粗文本');
-        }
-
-        const italicMatches = content.match(/\*([^*]+)\*/g);
-        if (italicMatches) {
-            scores.markdown += italicMatches.length * 1;
-            details.features.push('斜体文本');
-        }
-
-        // 7. 检测简单CSV
-        if (this.isSimpleCSV(content)) {
-            scores.table += 40;
-            details.features.push('CSV格式');
-        }
-
-        // 8. 检测分隔线
-        const separatorCount = lines.filter(line => /^-{3,}$/.test(line)).length;
-        if (separatorCount > 0) {
-            scores.markdown += separatorCount * 5;
-            details.features.push('分隔线');
-        }
-
-        // 9. 检测AI对话特征
-        const aiPatterns = [
-            /^(用户|User|Human)[:：]/i,
-            /^(助手|Assistant|AI|ChatGPT|Claude|DeepSeek)[:：]/i,
-            /^Q[:：]/i,
-            /^A[:：]/i
-        ];
-
-        let aiDialogScore = 0;
-        for (const line of lines) {
-            for (const pattern of aiPatterns) {
-                if (pattern.test(line)) {
-                    aiDialogScore += 5;
-                    break;
-                }
-            }
-        }
-
-        if (aiDialogScore > 0) {
-            scores.article += aiDialogScore;
-            details.features.push('AI对话格式');
-        }
-
-        // 计算最终结果
-        const maxScore = Math.max(...Object.values(scores));
-        const detectedType = Object.keys(scores).find(key => scores[key] === maxScore);
-
-        // 计算置信度
-        const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
-        const confidence = totalScore > 0 ? Math.round((maxScore / totalScore) * 100) : 0;
-
-        // 决定最终类型
-        let finalType = 'auto';
-        if (scores.table >= 30 && scores.table === maxScore) {
-            finalType = 'table';
-        } else if (scores.markdown >= 15) {
-            finalType = 'markdown';
-        } else if (scores.list >= 20 && totalListLines / totalLines > 0.5) {
-            finalType = 'list';
-        } else if (scores.code >= 20) {
-            finalType = 'code';
-        } else {
-            finalType = 'article';
-        }
-
-        details.confidence_factors = [
-            `总分: ${totalScore}`,
-            `最高分: ${maxScore} (${detectedType})`,
-            `特征数: ${details.features.length}`
-        ];
+        // 计算语法特征分数
+        const scores = this.calculateSyntaxScores(syntaxPatterns, totalLines);
 
         return {
-            type: finalType,
-            confidence: confidence,
-            details: details,
-            scores: scores
+            patterns: syntaxPatterns,
+            scores: scores,
+            confidence: this.calculateSyntaxConfidence(scores)
         };
     }
 
     /**
-     * 智能内容检测 - 增强版算法
+     * 检测Markdown表格 - 增强版
      */
-    intelligentContentDetection(content) {
-        if (!content || !content.trim()) {
-            return {
-                type: 'auto',
-                confidence: 0,
-                details: { reason: '内容为空' }
-            };
+    detectMarkdownTables(content) {
+        const lines = content.split('\n');
+        let tableCount = 0;
+        let inTable = false;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            if (line.includes('|') && !this.isTableSeparatorLine(line)) {
+                if (!inTable) {
+                    // 检查下一行是否为分隔符
+                    const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
+                    if (this.isTableSeparatorLine(nextLine)) {
+                        tableCount++;
+                        inTable = true;
+                    }
+                }
+            } else if (inTable && !line.includes('|')) {
+                inTable = false;
+            }
         }
 
-        const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-        const totalLines = lines.length;
+        return tableCount;
+    }
 
-        // 计算各种格式的权重分数
+    /**
+     * 检测列表结构
+     */
+    detectLists(content) {
+        const lines = content.split('\n').map(line => line.trim());
+
+        const unorderedLists = lines.filter(line => /^[-*+]\s+/.test(line)).length;
+        const orderedLists = lines.filter(line => /^\d+\.\s+/.test(line)).length;
+        const nestedLists = lines.filter(line => /^\s{2,}[-*+]\s+/.test(line)).length;
+
+        return {
+            unordered: unorderedLists,
+            ordered: orderedLists,
+            nested: nestedLists,
+            total: unorderedLists + orderedLists
+        };
+    }
+
+    /**
+     * 检测CSV格式 - 增强版
+     */
+    detectCSV(content) {
+        const lines = content.split('\n').filter(line => line.trim());
+        if (lines.length < 2) return false;
+
+        // 检查是否包含Markdown表格标记
+        if (content.includes('|') && content.includes('---')) {
+            return false;
+        }
+
+        // 检查逗号分隔的一致性
+        const firstLineCommas = (lines[0].match(/,/g) || []).length;
+        if (firstLineCommas === 0) return false;
+
+        const consistentLines = lines.slice(0, Math.min(5, lines.length)).filter(line => {
+            const commas = (line.match(/,/g) || []).length;
+            return commas === firstLineCommas;
+        });
+
+        return consistentLines.length >= Math.min(3, lines.length) && firstLineCommas >= 1;
+    }
+
+    /**
+     * 计算语法特征分数
+     */
+    calculateSyntaxScores(patterns, totalLines) {
         const scores = {
             markdown: 0,
+            structured: 0,
+            conversational: 0,
             table: 0,
-            list: 0,
             code: 0,
+            list: 0,
             article: 0
         };
 
-        const details = {
-            features: [],
-            patterns: [],
-            confidence_factors: []
-        };
+        // Markdown特征评分
+        scores.markdown += patterns.markdown.headers * 8;
+        scores.markdown += patterns.markdown.tables * 15;
+        scores.markdown += patterns.markdown.codeBlocks * 12;
+        scores.markdown += patterns.markdown.inlineCode * 2;
+        scores.markdown += patterns.markdown.lists.total * 5;
+        scores.markdown += patterns.markdown.emphasis * 3;
+        scores.markdown += patterns.markdown.links * 4;
+        scores.markdown += patterns.markdown.quotes * 6;
 
-        // 1. 检测Markdown表格
-        const tableLines = lines.filter(line => line.includes('|'));
-        const separatorLines = lines.filter(line =>
-            /^\|?[\s]*:?-+:?[\s]*\|/.test(line) ||
-            /^[\s]*:?-+:?[\s]*\|/.test(line)
-        );
+        // 结构化数据评分
+        if (patterns.structured.json) scores.structured += 20;
+        if (patterns.structured.xml) scores.structured += 15;
+        if (patterns.structured.csv) scores.structured += 25;
+        if (patterns.structured.yaml) scores.structured += 18;
+        if (patterns.structured.ini) scores.structured += 12;
 
-        if (tableLines.length >= 2 && separatorLines.length >= 1) {
-            const tableLinesWithPipes = tableLines.filter(line => {
-                const pipeCount = (line.match(/\|/g) || []).length;
-                return pipeCount >= 2;
-            });
+        // 对话格式评分
+        scores.conversational += patterns.conversational.aiDialog * 8;
+        scores.conversational += patterns.conversational.qaFormat * 6;
+        scores.conversational += patterns.conversational.interview * 7;
+        scores.conversational += patterns.conversational.dialogue * 3;
 
-            if (tableLinesWithPipes.length >= 2) {
-                scores.table += 50;
-                scores.markdown += 30;
-                details.features.push('Markdown表格结构');
-                details.patterns.push(`${tableLinesWithPipes.length}行表格数据`);
-            }
+        // 专门类型评分
+        scores.table = patterns.markdown.tables * 20 + (patterns.structured.csv ? 25 : 0);
+        scores.code = patterns.markdown.codeBlocks * 15 + patterns.markdown.inlineCode * 2;
+        scores.list = patterns.markdown.lists.total * 8;
+
+        // 文章类型评分（基于文本长度和结构）
+        if (totalLines > 10 && scores.markdown < 20 && scores.structured < 10) {
+            scores.article = Math.min(totalLines * 2, 50);
         }
 
-        // 2. 检测代码块
-        const codeBlockMatches = content.match(/```[\s\S]*?```/g);
-        if (codeBlockMatches) {
-            scores.code += codeBlockMatches.length * 20;
-            scores.markdown += 25;
-            details.features.push('代码块');
-            details.patterns.push(`${codeBlockMatches.length}个代码块`);
-        }
+        return scores;
+    }
 
-        if (content.includes('```')) {
-            scores.markdown += 15;
-            details.features.push('代码标记');
-        }
-
-        // 3. 检测引用块
-        const quoteLines = lines.filter(line => /^>\s/.test(line));
-        if (quoteLines.length > 0) {
-            scores.markdown += quoteLines.length * 5;
-            details.features.push('引用块');
-            details.patterns.push(`${quoteLines.length}行引用`);
-        }
-
-        // 4. 检测Markdown标题
-        const headingLines = lines.filter(line => /^#{1,6}\s/.test(line));
-        if (headingLines.length > 0) {
-            scores.markdown += headingLines.length * 10;
-            details.features.push('Markdown标题');
-            details.patterns.push(`${headingLines.length}个标题`);
-        }
-
-        // 5. 检测列表
-        const unorderedListLines = lines.filter(line => /^[-*+]\s/.test(line));
-        const orderedListLines = lines.filter(line => /^\d+\.\s/.test(line));
-        const totalListLines = unorderedListLines.length + orderedListLines.length;
-
-        if (totalListLines > 0) {
-            scores.list += totalListLines * 8;
-            scores.markdown += totalListLines * 5;
-            details.features.push('列表项');
-            details.patterns.push(`${totalListLines}个列表项`);
-        }
-
-        // 6. 检测Markdown格式
-        const linkMatches = content.match(/\[([^\]]+)\]\(([^)]+)\)/g);
-        if (linkMatches) {
-            scores.markdown += linkMatches.length * 3;
-            details.features.push('Markdown链接');
-        }
-
-        const boldMatches = content.match(/\*\*([^*]+)\*\*/g);
-        if (boldMatches) {
-            scores.markdown += boldMatches.length * 2;
-            details.features.push('加粗文本');
-        }
-
-        // 7. 检测简单CSV
-        if (this.isSimpleCSV(content)) {
-            scores.table += 40;
-            details.features.push('CSV格式');
-        }
-
-        // 8. 检测AI对话特征
-        const aiPatterns = [
-            /^(用户|User|Human)[:：]/i,
-            /^(助手|Assistant|AI|ChatGPT|Claude|DeepSeek)[:：]/i,
-            /^Q[:：]/i,
-            /^A[:：]/i
-        ];
-
-        let aiDialogScore = 0;
-        for (const line of lines) {
-            for (const pattern of aiPatterns) {
-                if (pattern.test(line)) {
-                    aiDialogScore += 5;
-                    break;
-                }
-            }
-        }
-
-        if (aiDialogScore > 0) {
-            scores.article += aiDialogScore;
-            details.features.push('AI对话格式');
-        }
-
-        // 计算最终结果
+    /**
+     * 计算语法置信度
+     */
+    calculateSyntaxConfidence(scores) {
         const maxScore = Math.max(...Object.values(scores));
         const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
-        const confidence = totalScore > 0 ? Math.round((maxScore / totalScore) * 100) : 0;
 
-        // 决定最终类型
-        let finalType = 'auto';
-        if (scores.table >= 30 && scores.table === maxScore) {
-            finalType = 'table';
-        } else if (scores.markdown >= 15) {
-            finalType = 'markdown';
-        } else if (scores.list >= 20 && totalListLines / totalLines > 0.5) {
-            finalType = 'list';
-        } else if (scores.code >= 20) {
-            finalType = 'code';
-        } else {
-            finalType = 'article';
-        }
+        if (totalScore === 0) return 0;
 
-        details.confidence_factors = [
-            `总分: ${totalScore}`,
-            `最高分: ${maxScore}`,
-            `特征数: ${details.features.length}`
-        ];
+        const confidence = Math.round((maxScore / totalScore) * 100);
+        return Math.min(confidence, 95); // 语法分析最高95%
+    }
+
+    /**
+     * 语义特征分析 - 新增
+     */
+    analyzeSemanticFeatures(content) {
+        const businessTypes = {
+            report: ['报告', '分析', '总结', '汇报', 'report', 'analysis', 'summary'],
+            proposal: ['方案', '计划', '建议', '提案', 'proposal', 'plan', 'suggestion'],
+            documentation: ['说明', '文档', '手册', '指南', 'documentation', 'manual', 'guide'],
+            data: ['数据', '统计', '指标', '结果', 'data', 'statistics', 'metrics', 'results'],
+            meeting: ['会议', '讨论', '记录', 'meeting', 'discussion', 'minutes'],
+            technical: ['技术', '开发', '代码', '系统', 'technical', 'development', 'system'],
+            academic: ['研究', '论文', '学术', 'research', 'paper', 'academic']
+        };
+
+        const semanticScores = {};
+        Object.keys(businessTypes).forEach(type => {
+            semanticScores[type] = 0;
+            businessTypes[type].forEach(keyword => {
+                const regex = new RegExp(keyword, 'gi');
+                const matches = content.match(regex);
+                if (matches) {
+                    semanticScores[type] += matches.length * 3;
+                }
+            });
+        });
+
+        // 检测专业术语密度
+        const technicalTerms = ['API', 'JSON', 'XML', 'HTTP', 'SQL', 'CSS', 'HTML', 'JavaScript', 'Python'];
+        const technicalScore = technicalTerms.reduce((score, term) => {
+            const regex = new RegExp(term, 'gi');
+            const matches = content.match(regex);
+            return score + (matches ? matches.length * 2 : 0);
+        }, 0);
+
+        return {
+            businessTypes: semanticScores,
+            technicalScore: technicalScore,
+            confidence: this.calculateSemanticConfidence(semanticScores, technicalScore)
+        };
+    }
+
+    /**
+     * 计算语义置信度
+     */
+    calculateSemanticConfidence(businessScores, technicalScore) {
+        const maxBusinessScore = Math.max(...Object.values(businessScores));
+        const totalScore = Object.values(businessScores).reduce((sum, score) => sum + score, 0) + technicalScore;
+
+        if (totalScore === 0) return 0;
+
+        const confidence = Math.round(((maxBusinessScore + technicalScore) / totalScore) * 100);
+        return Math.min(confidence, 90); // 语义分析最高90%
+    }
+
+    /**
+     * 结构特征分析 - 新增
+     */
+    analyzeStructureFeatures(content) {
+        const lines = content.split('\n').filter(line => line.trim());
+        const totalLines = lines.length;
+
+        // 计算各类型内容占比
+        const tableLines = lines.filter(line => line.includes('|') && !this.isTableSeparatorLine(line)).length;
+        const codeLines = this.countCodeLines(content);
+        const listLines = lines.filter(line => /^[-*+]\s+|^\d+\.\s+/.test(line.trim())).length;
+        const textLines = totalLines - tableLines - codeLines - listLines;
+
+        const distribution = {
+            textRatio: textLines / totalLines,
+            tableRatio: tableLines / totalLines,
+            codeRatio: codeLines / totalLines,
+            listRatio: listLines / totalLines
+        };
+
+        // 分析文档层次结构
+        const hierarchy = this.analyzeHierarchy(content);
+
+        // 评估复杂度
+        const complexity = this.assessComplexity(distribution, hierarchy, totalLines);
+
+        return {
+            distribution: distribution,
+            hierarchy: hierarchy,
+            complexity: complexity,
+            confidence: this.calculateStructureConfidence(distribution, hierarchy)
+        };
+    }
+
+    /**
+     * 计算代码行数
+     */
+    countCodeLines(content) {
+        const codeBlocks = content.match(/```[\s\S]*?```/g) || [];
+        let codeLines = 0;
+
+        codeBlocks.forEach(block => {
+            const lines = block.split('\n');
+            codeLines += Math.max(0, lines.length - 2); // 减去开始和结束的```行
+        });
+
+        return codeLines;
+    }
+
+    /**
+     * 分析文档层次结构
+     */
+    analyzeHierarchy(content) {
+        const headings = content.match(/^#{1,6}\s+.+$/gm) || [];
+        const levels = headings.map(heading => {
+            const level = heading.match(/^#+/)[0].length;
+            return level;
+        });
+
+        return {
+            depth: levels.length > 0 ? Math.max(...levels) : 0,
+            sections: levels.length,
+            flow: this.determineFlow(levels)
+        };
+    }
+
+    /**
+     * 确定文档流类型
+     */
+    determineFlow(levels) {
+        if (levels.length === 0) return 'simple';
+        if (levels.length === 1) return 'single';
+
+        const hasMultipleLevels = new Set(levels).size > 1;
+        const isSequential = levels.every((level, index) => {
+            if (index === 0) return true;
+            return level >= levels[index - 1] - 1; // 允许同级或下一级
+        });
+
+        if (hasMultipleLevels && isSequential) return 'hierarchical';
+        if (hasMultipleLevels) return 'complex';
+        return 'linear';
+    }
+
+    /**
+     * 评估内容复杂度
+     */
+    assessComplexity(distribution, hierarchy, totalLines) {
+        let complexityScore = 0;
+
+        // 基于内容分布的复杂度
+        if (distribution.tableRatio > 0.3) complexityScore += 2;
+        if (distribution.codeRatio > 0.2) complexityScore += 2;
+        if (distribution.listRatio > 0.4) complexityScore += 1;
+
+        // 基于层次结构的复杂度
+        if (hierarchy.depth > 3) complexityScore += 2;
+        if (hierarchy.sections > 5) complexityScore += 1;
+        if (hierarchy.flow === 'complex') complexityScore += 2;
+
+        // 基于文档长度的复杂度
+        if (totalLines > 100) complexityScore += 1;
+        if (totalLines > 500) complexityScore += 2;
+
+        if (complexityScore >= 6) return 'high';
+        if (complexityScore >= 3) return 'medium';
+        return 'low';
+    }
+
+    /**
+     * 计算结构置信度
+     */
+    calculateStructureConfidence(distribution, hierarchy) {
+        // 基于分布的均匀性和层次的清晰度计算置信度
+        const distributionEntropy = this.calculateEntropy(Object.values(distribution));
+        const hierarchyScore = hierarchy.sections > 0 ? Math.min(hierarchy.sections * 10, 50) : 0;
+
+        const confidence = Math.round((distributionEntropy * 50) + (hierarchyScore));
+        return Math.min(confidence, 85); // 结构分析最高85%
+    }
+
+    /**
+     * 计算熵值
+     */
+    calculateEntropy(values) {
+        const total = values.reduce((sum, val) => sum + val, 0);
+        if (total === 0) return 0;
+
+        const probabilities = values.map(val => val / total).filter(p => p > 0);
+        const entropy = -probabilities.reduce((sum, p) => sum + p * Math.log2(p), 0);
+
+        return Math.min(entropy / Math.log2(probabilities.length), 1);
+    }
+
+    /**
+     * 上下文特征分析 - 新增
+     */
+    analyzeContextFeatures(content) {
+        // 检测时间相关内容
+        const timePatterns = {
+            dates: (content.match(/\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{4}/g) || []).length,
+            times: (content.match(/\d{1,2}:\d{2}(:\d{2})?/g) || []).length,
+            periods: (content.match(/今天|昨天|明天|本周|上周|下周|本月|上月|下月/g) || []).length
+        };
+
+        // 检测数值和度量
+        const numericalPatterns = {
+            percentages: (content.match(/\d+(\.\d+)?%/g) || []).length,
+            currencies: (content.match(/[¥$€£]\s*\d+([,.]?\d+)*/g) || []).length,
+            numbers: (content.match(/\d+([,.]?\d+)*/g) || []).length
+        };
+
+        // 检测引用和来源
+        const referencePatterns = {
+            citations: (content.match(/\[[^\]]+\]/g) || []).length,
+            urls: (content.match(/https?:\/\/[^\s]+/g) || []).length,
+            emails: (content.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []).length
+        };
+
+        return {
+            temporal: timePatterns,
+            numerical: numericalPatterns,
+            references: referencePatterns,
+            confidence: this.calculateContextConfidence(timePatterns, numericalPatterns, referencePatterns)
+        };
+    }
+
+    /**
+     * 计算上下文置信度
+     */
+    calculateContextConfidence(timePatterns, numericalPatterns, referencePatterns) {
+        const timeScore = Object.values(timePatterns).reduce((sum, val) => sum + val, 0);
+        const numScore = Object.values(numericalPatterns).reduce((sum, val) => sum + val, 0);
+        const refScore = Object.values(referencePatterns).reduce((sum, val) => sum + val, 0);
+
+        const totalScore = timeScore + numScore + refScore;
+        if (totalScore === 0) return 0;
+
+        const confidence = Math.min(totalScore * 5, 80); // 上下文分析最高80%
+        return confidence;
+    }
+
+    /**
+     * 综合分析结果 - 新增
+     */
+    synthesizeAnalysisResults(analysisResult, content) {
+        const { syntaxAnalysis, semanticAnalysis, structureAnalysis, contextAnalysis } = analysisResult;
+
+        // 权重配置
+        const weights = {
+            syntax: 0.35,
+            semantic: 0.25,
+            structure: 0.25,
+            context: 0.15
+        };
+
+        // 计算加权置信度
+        const weightedConfidence = Math.round(
+            syntaxAnalysis.confidence * weights.syntax +
+            semanticAnalysis.confidence * weights.semantic +
+            structureAnalysis.confidence * weights.structure +
+            contextAnalysis.confidence * weights.context
+        );
+
+        // 确定最终内容类型
+        const finalType = this.determineContentType(analysisResult);
+
+        // 生成推荐和输出格式
+        const recommendations = this.generateRecommendations(analysisResult, finalType);
+        const outputFormats = this.suggestOutputFormats(analysisResult, finalType);
 
         return {
             type: finalType,
-            confidence: confidence,
-            details: details,
-            scores: scores
+            confidence: Math.min(weightedConfidence, 98), // 最高98%置信度
+            details: this.generateDetailedAnalysis(analysisResult),
+            recommendations: recommendations,
+            outputFormats: outputFormats,
+            analysisBreakdown: {
+                syntax: syntaxAnalysis,
+                semantic: semanticAnalysis,
+                structure: structureAnalysis,
+                context: contextAnalysis
+            }
+        };
+    }
+
+    /**
+     * 确定最终内容类型
+     */
+    determineContentType(analysisResult) {
+        const { syntaxAnalysis, semanticAnalysis, structureAnalysis } = analysisResult;
+        const syntaxScores = syntaxAnalysis.scores;
+        const distribution = structureAnalysis.distribution;
+
+        // 基于多维度分析确定类型
+        if (distribution.tableRatio > 0.4 || syntaxScores.table > 40) {
+            return 'table';
+        }
+
+        if (distribution.codeRatio > 0.3 || syntaxScores.code > 30) {
+            return 'code';
+        }
+
+        if (syntaxScores.conversational > 20) {
+            return 'conversation';
+        }
+
+        if (distribution.listRatio > 0.5 || syntaxScores.list > 25) {
+            return 'list';
+        }
+
+        if (syntaxScores.structured > 20) {
+            return 'structured';
+        }
+
+        if (syntaxScores.markdown > 15 || structureAnalysis.hierarchy.sections > 2) {
+            return 'markdown';
+        }
+
+        return 'article';
+    }
+
+    /**
+     * 生成推荐建议
+     */
+    generateRecommendations(analysisResult, contentType) {
+        const recommendations = [];
+        const { structureAnalysis, contextAnalysis } = analysisResult;
+
+        switch (contentType) {
+            case 'table':
+                recommendations.push('建议使用Excel格式以获得最佳表格展示效果');
+                if (structureAnalysis.complexity === 'high') {
+                    recommendations.push('内容复杂，建议同时生成Word文档作为说明');
+                }
+                break;
+
+            case 'code':
+                recommendations.push('建议使用Word格式以保持代码格式和语法高亮');
+                recommendations.push('考虑添加技术文档模板以提升专业性');
+                break;
+
+            case 'conversation':
+                recommendations.push('建议使用Word格式以清晰展示对话结构');
+                recommendations.push('可考虑添加时间戳和参与者标识');
+                break;
+
+            case 'structured':
+                recommendations.push('检测到结构化数据，建议保持原有格式');
+                recommendations.push('可考虑转换为表格形式以提高可读性');
+                break;
+
+            default:
+                recommendations.push('建议使用Word格式以获得最佳阅读体验');
+                if (structureAnalysis.hierarchy.depth > 3) {
+                    recommendations.push('文档层次较深，建议添加目录导航');
+                }
+        }
+
+        // 基于上下文添加建议
+        if (contextAnalysis.numerical.currencies > 0) {
+            recommendations.push('检测到货币信息，建议使用专业商务模板');
+        }
+
+        if (contextAnalysis.temporal.dates > 3) {
+            recommendations.push('包含多个日期，建议按时间顺序组织内容');
+        }
+
+        return recommendations;
+    }
+
+    /**
+     * 建议输出格式
+     */
+    suggestOutputFormats(analysisResult, contentType) {
+        const { structureAnalysis } = analysisResult;
+        const formats = [];
+
+        switch (contentType) {
+            case 'table':
+                formats.push({ format: 'xlsx', priority: 'primary', reason: '表格数据最适合Excel格式' });
+                if (structureAnalysis.distribution.textRatio > 0.3) {
+                    formats.push({ format: 'docx', priority: 'secondary', reason: '包含说明文字，Word作为补充' });
+                }
+                break;
+
+            case 'code':
+                formats.push({ format: 'docx', priority: 'primary', reason: '代码内容适合Word格式展示' });
+                break;
+
+            case 'conversation':
+                formats.push({ format: 'docx', priority: 'primary', reason: '对话格式适合Word文档' });
+                break;
+
+            case 'structured':
+                formats.push({ format: 'docx', priority: 'primary', reason: '结构化内容适合Word格式' });
+                formats.push({ format: 'xlsx', priority: 'alternative', reason: '可选择Excel以表格形式展示' });
+                break;
+
+            default:
+                formats.push({ format: 'docx', priority: 'primary', reason: '文档内容适合Word格式' });
+                if (structureAnalysis.distribution.tableRatio > 0.2) {
+                    formats.push({ format: 'xlsx', priority: 'alternative', reason: '包含表格，可选择Excel格式' });
+                }
+        }
+
+        return formats;
+    }
+
+    /**
+     * 生成详细分析报告
+     */
+    generateDetailedAnalysis(analysisResult) {
+        const { syntaxAnalysis, semanticAnalysis, structureAnalysis, contextAnalysis } = analysisResult;
+
+        const features = [];
+        const patterns = [];
+
+        // 语法特征
+        if (syntaxAnalysis.patterns.markdown.tables > 0) {
+            features.push(`${syntaxAnalysis.patterns.markdown.tables}个表格`);
+        }
+        if (syntaxAnalysis.patterns.markdown.codeBlocks > 0) {
+            features.push(`${syntaxAnalysis.patterns.markdown.codeBlocks}个代码块`);
+        }
+        if (syntaxAnalysis.patterns.markdown.lists.total > 0) {
+            features.push(`${syntaxAnalysis.patterns.markdown.lists.total}个列表项`);
+        }
+
+        // 结构特征
+        if (structureAnalysis.hierarchy.sections > 0) {
+            features.push(`${structureAnalysis.hierarchy.sections}个章节`);
+        }
+
+        // 上下文特征
+        if (contextAnalysis.numerical.currencies > 0) {
+            features.push(`${contextAnalysis.numerical.currencies}个货币值`);
+        }
+        if (contextAnalysis.temporal.dates > 0) {
+            features.push(`${contextAnalysis.temporal.dates}个日期`);
+        }
+
+        return {
+            features: features,
+            patterns: patterns,
+            complexity: structureAnalysis.complexity,
+            confidence_factors: [
+                `语法分析: ${syntaxAnalysis.confidence}%`,
+                `语义分析: ${semanticAnalysis.confidence}%`,
+                `结构分析: ${structureAnalysis.confidence}%`,
+                `上下文分析: ${contextAnalysis.confidence}%`
+            ]
         };
     }
 
