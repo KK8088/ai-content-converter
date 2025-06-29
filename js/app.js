@@ -992,38 +992,67 @@ class AIContentConverter {
      * 智能策略选择
      */
     selectOptimalStrategy(analysisResult) {
+        // 安全检查分析结果结构
+        if (!analysisResult || !analysisResult.analysisBreakdown) {
+            console.warn('分析结果结构不完整，使用默认策略');
+            return {
+                strategy: 'text-heavy',
+                confidence: 50,
+                reasons: ['分析结果不完整，使用默认策略'],
+                strategyInfo: this.conversionStrategies.get('text-heavy')
+            };
+        }
+
         const { syntaxAnalysis, semanticAnalysis, structureAnalysis, contextAnalysis } = analysisResult.analysisBreakdown;
+
+        // 安全检查各个分析组件
+        if (!structureAnalysis || !structureAnalysis.distribution) {
+            console.warn('结构分析数据不完整，使用默认策略');
+            return {
+                strategy: 'text-heavy',
+                confidence: 50,
+                reasons: ['结构分析数据不完整'],
+                strategyInfo: this.conversionStrategies.get('text-heavy')
+            };
+        }
+
         const distribution = structureAnalysis.distribution;
-        const complexity = structureAnalysis.complexity;
+        const complexity = structureAnalysis.complexity || 'medium';
 
         // 策略选择决策树
         let selectedStrategy = 'text-heavy'; // 默认策略
         let confidence = 0;
         let reasons = [];
 
+        // 安全获取分析分数
+        const syntaxScores = syntaxAnalysis?.scores || {};
+        const tableRatio = distribution.tableRatio || 0;
+        const codeRatio = distribution.codeRatio || 0;
+        const listRatio = distribution.listRatio || 0;
+
         // 1. 数据密集型判断
-        if (distribution.tableRatio > 0.6 || syntaxAnalysis.scores.table > 50) {
+        if (tableRatio > 0.6 || syntaxScores.table > 50) {
             selectedStrategy = 'data-heavy';
-            confidence = Math.min(90, distribution.tableRatio * 100 + 20);
-            reasons.push(`表格内容占比${Math.round(distribution.tableRatio * 100)}%`);
+            confidence = Math.min(90, tableRatio * 100 + 20);
+            reasons.push(`表格内容占比${Math.round(tableRatio * 100)}%`);
         }
         // 2. 代码密集型判断
-        else if (distribution.codeRatio > 0.4 || syntaxAnalysis.scores.code > 40) {
+        else if (codeRatio > 0.4 || syntaxScores.code > 40) {
             selectedStrategy = 'code-heavy';
-            confidence = Math.min(85, distribution.codeRatio * 100 + 25);
-            reasons.push(`代码内容占比${Math.round(distribution.codeRatio * 100)}%`);
+            confidence = Math.min(85, codeRatio * 100 + 25);
+            reasons.push(`代码内容占比${Math.round(codeRatio * 100)}%`);
         }
         // 3. 对话记录判断
-        else if (syntaxAnalysis.scores.conversational > 25) {
+        else if (syntaxScores.conversational > 25) {
             selectedStrategy = 'conversational';
-            confidence = Math.min(80, syntaxAnalysis.scores.conversational + 30);
+            confidence = Math.min(80, syntaxScores.conversational + 30);
             reasons.push(`检测到对话格式特征`);
         }
         // 4. 列表密集型判断
-        else if (distribution.listRatio > 0.5 || syntaxAnalysis.scores.list > 30) {
+        else if (listRatio > 0.5 || syntaxScores.list > 30) {
             selectedStrategy = 'list-heavy';
-            confidence = Math.min(75, distribution.listRatio * 100 + 15);
-            reasons.push(`列表内容占比${Math.round(distribution.listRatio * 100)}%`);
+            confidence = Math.min(75, listRatio * 100 + 15);
+            reasons.push(`列表内容占比${Math.round(listRatio * 100)}%`);
         }
         // 5. 混合内容判断
         else if (complexity === 'high' || this.isComplexMixedContent(distribution)) {
@@ -1033,13 +1062,15 @@ class AIContentConverter {
         }
 
         // 6. 基于语义分析调整策略
-        const businessType = this.getDominantBusinessType(semanticAnalysis.businessTypes);
-        if (businessType) {
-            const adjustment = this.adjustStrategyByBusinessType(selectedStrategy, businessType);
-            if (adjustment.changed) {
-                selectedStrategy = adjustment.strategy;
-                confidence = Math.min(confidence + 10, 95);
-                reasons.push(`业务类型：${businessType}`);
+        if (semanticAnalysis && semanticAnalysis.businessTypes) {
+            const businessType = this.getDominantBusinessType(semanticAnalysis.businessTypes);
+            if (businessType) {
+                const adjustment = this.adjustStrategyByBusinessType(selectedStrategy, businessType);
+                if (adjustment.changed) {
+                    selectedStrategy = adjustment.strategy;
+                    confidence = Math.min(confidence + 10, 95);
+                    reasons.push(`业务类型：${businessType}`);
+                }
             }
         }
 
@@ -1185,7 +1216,17 @@ class AIContentConverter {
      * 根据内容特征调整推荐
      */
     adjustRecommendationsByFeatures(baseMatrix, analysisResult) {
+        // 安全检查分析结果
+        if (!analysisResult || !analysisResult.analysisBreakdown) {
+            return baseMatrix;
+        }
+
         const { structureAnalysis, contextAnalysis } = analysisResult.analysisBreakdown;
+
+        if (!structureAnalysis || !structureAnalysis.distribution) {
+            return baseMatrix;
+        }
+
         const distribution = structureAnalysis.distribution;
 
         let adjusted = JSON.parse(JSON.stringify(baseMatrix)); // 深拷贝
@@ -1240,8 +1281,17 @@ class AIContentConverter {
      * 生成模板推荐
      */
     generateTemplateRecommendation(analysisResult) {
+        // 安全检查分析结果
+        if (!analysisResult || !analysisResult.analysisBreakdown || !analysisResult.analysisBreakdown.semanticAnalysis) {
+            return {
+                template: 'professional',
+                confidence: 50,
+                reason: '分析数据不完整，使用默认专业模板'
+            };
+        }
+
         const { semanticAnalysis } = analysisResult.analysisBreakdown;
-        const businessTypes = semanticAnalysis.businessTypes;
+        const businessTypes = semanticAnalysis.businessTypes || {};
 
         // 找到最高分的业务类型
         const dominantType = Object.keys(businessTypes).reduce((a, b) =>
