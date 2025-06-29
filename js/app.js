@@ -152,6 +152,12 @@ class AIContentConverter {
         // 高级选项切换事件
         this.bindAdvancedOptions();
 
+        // 初始化转换策略引擎
+        this.initializeConversionStrategies();
+
+        // 初始化格式推荐系统
+        this.initializeFormatRecommendationSystem();
+
         // 转换按钮
         const convertBtn = document.getElementById('convert-btn');
         if (convertBtn) {
@@ -886,7 +892,373 @@ class AIContentConverter {
     }
 
     /**
-     * 处理转换
+     * 转换策略引擎 - 新增
+     */
+    initializeConversionStrategies() {
+        this.conversionStrategies = new Map();
+
+        // 数据密集型策略
+        this.conversionStrategies.set('data-heavy', {
+            name: '数据密集型',
+            description: '适用于表格数据占比超过60%的内容',
+            primaryFormat: 'xlsx',
+            secondaryFormat: 'docx',
+            template: 'data-analysis',
+            options: {
+                preserveFormatting: true,
+                autoFitColumns: true,
+                addCharts: true,
+                dataValidation: true
+            }
+        });
+
+        // 代码密集型策略
+        this.conversionStrategies.set('code-heavy', {
+            name: '代码密集型',
+            description: '适用于代码内容占比超过40%的技术文档',
+            primaryFormat: 'docx',
+            secondaryFormat: null,
+            template: 'technical',
+            options: {
+                syntaxHighlighting: true,
+                codeFormatting: true,
+                lineNumbers: true,
+                technicalLayout: true
+            }
+        });
+
+        // 对话记录策略
+        this.conversionStrategies.set('conversational', {
+            name: '对话记录型',
+            description: '适用于AI对话、会议记录等对话格式内容',
+            primaryFormat: 'docx',
+            secondaryFormat: null,
+            template: 'conversation',
+            options: {
+                speakerIdentification: true,
+                timestampFormatting: true,
+                dialogueLayout: true,
+                conversationFlow: true
+            }
+        });
+
+        // 混合内容策略
+        this.conversionStrategies.set('mixed-content', {
+            name: '混合内容型',
+            description: '适用于包含多种格式的复杂文档',
+            primaryFormat: 'docx',
+            secondaryFormat: 'xlsx',
+            template: 'comprehensive',
+            options: {
+                multiFormatSupport: true,
+                adaptiveLayout: true,
+                crossReferences: true,
+                tableOfContents: true
+            }
+        });
+
+        // 文本密集型策略
+        this.conversionStrategies.set('text-heavy', {
+            name: '文本密集型',
+            description: '适用于以文本内容为主的文档',
+            primaryFormat: 'docx',
+            secondaryFormat: null,
+            template: 'article',
+            options: {
+                readabilityOptimization: true,
+                paragraphFormatting: true,
+                headingStructure: true,
+                documentFlow: true
+            }
+        });
+
+        // 列表密集型策略
+        this.conversionStrategies.set('list-heavy', {
+            name: '列表密集型',
+            description: '适用于列表项目占比较高的内容',
+            primaryFormat: 'docx',
+            secondaryFormat: 'xlsx',
+            template: 'structured-list',
+            options: {
+                listFormatting: true,
+                hierarchicalStructure: true,
+                bulletCustomization: true,
+                listToTable: true
+            }
+        });
+    }
+
+    /**
+     * 智能策略选择
+     */
+    selectOptimalStrategy(analysisResult) {
+        const { syntaxAnalysis, semanticAnalysis, structureAnalysis, contextAnalysis } = analysisResult.analysisBreakdown;
+        const distribution = structureAnalysis.distribution;
+        const complexity = structureAnalysis.complexity;
+
+        // 策略选择决策树
+        let selectedStrategy = 'text-heavy'; // 默认策略
+        let confidence = 0;
+        let reasons = [];
+
+        // 1. 数据密集型判断
+        if (distribution.tableRatio > 0.6 || syntaxAnalysis.scores.table > 50) {
+            selectedStrategy = 'data-heavy';
+            confidence = Math.min(90, distribution.tableRatio * 100 + 20);
+            reasons.push(`表格内容占比${Math.round(distribution.tableRatio * 100)}%`);
+        }
+        // 2. 代码密集型判断
+        else if (distribution.codeRatio > 0.4 || syntaxAnalysis.scores.code > 40) {
+            selectedStrategy = 'code-heavy';
+            confidence = Math.min(85, distribution.codeRatio * 100 + 25);
+            reasons.push(`代码内容占比${Math.round(distribution.codeRatio * 100)}%`);
+        }
+        // 3. 对话记录判断
+        else if (syntaxAnalysis.scores.conversational > 25) {
+            selectedStrategy = 'conversational';
+            confidence = Math.min(80, syntaxAnalysis.scores.conversational + 30);
+            reasons.push(`检测到对话格式特征`);
+        }
+        // 4. 列表密集型判断
+        else if (distribution.listRatio > 0.5 || syntaxAnalysis.scores.list > 30) {
+            selectedStrategy = 'list-heavy';
+            confidence = Math.min(75, distribution.listRatio * 100 + 15);
+            reasons.push(`列表内容占比${Math.round(distribution.listRatio * 100)}%`);
+        }
+        // 5. 混合内容判断
+        else if (complexity === 'high' || this.isComplexMixedContent(distribution)) {
+            selectedStrategy = 'mixed-content';
+            confidence = 70;
+            reasons.push(`内容复杂度为${complexity}`);
+        }
+
+        // 6. 基于语义分析调整策略
+        const businessType = this.getDominantBusinessType(semanticAnalysis.businessTypes);
+        if (businessType) {
+            const adjustment = this.adjustStrategyByBusinessType(selectedStrategy, businessType);
+            if (adjustment.changed) {
+                selectedStrategy = adjustment.strategy;
+                confidence = Math.min(confidence + 10, 95);
+                reasons.push(`业务类型：${businessType}`);
+            }
+        }
+
+        return {
+            strategy: selectedStrategy,
+            confidence: confidence,
+            reasons: reasons,
+            strategyInfo: this.conversionStrategies.get(selectedStrategy)
+        };
+    }
+
+    /**
+     * 判断是否为复杂混合内容
+     */
+    isComplexMixedContent(distribution) {
+        const nonZeroTypes = Object.values(distribution).filter(ratio => ratio > 0.1).length;
+        const maxRatio = Math.max(...Object.values(distribution));
+
+        // 如果有3种以上内容类型且没有明显主导类型
+        return nonZeroTypes >= 3 && maxRatio < 0.6;
+    }
+
+    /**
+     * 获取主导业务类型
+     */
+    getDominantBusinessType(businessTypes) {
+        const maxScore = Math.max(...Object.values(businessTypes));
+        if (maxScore < 5) return null; // 分数太低，不明确
+
+        return Object.keys(businessTypes).find(type => businessTypes[type] === maxScore);
+    }
+
+    /**
+     * 根据业务类型调整策略
+     */
+    adjustStrategyByBusinessType(currentStrategy, businessType) {
+        const adjustments = {
+            'technical': {
+                'text-heavy': 'code-heavy',
+                'mixed-content': 'code-heavy'
+            },
+            'data': {
+                'text-heavy': 'data-heavy',
+                'mixed-content': 'data-heavy'
+            },
+            'meeting': {
+                'text-heavy': 'conversational',
+                'mixed-content': 'conversational'
+            }
+        };
+
+        const adjustment = adjustments[businessType];
+        if (adjustment && adjustment[currentStrategy]) {
+            return {
+                changed: true,
+                strategy: adjustment[currentStrategy]
+            };
+        }
+
+        return { changed: false, strategy: currentStrategy };
+    }
+
+    /**
+     * 初始化格式推荐系统 - 新增
+     */
+    initializeFormatRecommendationSystem() {
+        this.formatRecommendations = {
+            // 格式适配矩阵
+            adaptationMatrix: {
+                'table': {
+                    primary: { format: 'xlsx', confidence: 95, reason: '表格数据最适合Excel格式展示和计算' },
+                    secondary: { format: 'docx', confidence: 75, reason: 'Word可以展示表格但功能有限' },
+                    alternative: { format: 'both', confidence: 90, reason: '同时生成Excel和Word满足不同需求' }
+                },
+                'code': {
+                    primary: { format: 'docx', confidence: 90, reason: '代码内容适合Word格式的语法高亮和格式化' },
+                    secondary: { format: 'xlsx', confidence: 30, reason: 'Excel不适合代码内容展示' },
+                    alternative: { format: 'docx', confidence: 90, reason: 'Word是代码文档的最佳选择' }
+                },
+                'conversation': {
+                    primary: { format: 'docx', confidence: 85, reason: '对话格式适合Word的文档流和格式化' },
+                    secondary: { format: 'xlsx', confidence: 40, reason: 'Excel可以表格化展示但不够自然' },
+                    alternative: { format: 'docx', confidence: 85, reason: 'Word最适合对话记录的阅读体验' }
+                },
+                'list': {
+                    primary: { format: 'docx', confidence: 80, reason: '列表内容适合Word的列表格式和层次结构' },
+                    secondary: { format: 'xlsx', confidence: 70, reason: 'Excel可以将列表转换为结构化数据' },
+                    alternative: { format: 'both', confidence: 85, reason: '提供文档和数据两种视图' }
+                },
+                'structured': {
+                    primary: { format: 'both', confidence: 88, reason: '结构化数据适合多格式展示' },
+                    secondary: { format: 'xlsx', confidence: 82, reason: 'Excel适合结构化数据的分析和处理' },
+                    alternative: { format: 'docx', confidence: 75, reason: 'Word适合结构化数据的文档化展示' }
+                },
+                'markdown': {
+                    primary: { format: 'docx', confidence: 85, reason: 'Markdown内容最适合转换为Word文档' },
+                    secondary: { format: 'xlsx', confidence: 50, reason: 'Excel仅适合其中的表格部分' },
+                    alternative: { format: 'both', confidence: 80, reason: '复杂Markdown可能需要多格式支持' }
+                },
+                'article': {
+                    primary: { format: 'docx', confidence: 95, reason: '文章内容最适合Word的文档格式和排版' },
+                    secondary: { format: 'xlsx', confidence: 25, reason: 'Excel不适合长文本内容' },
+                    alternative: { format: 'docx', confidence: 95, reason: 'Word是文章的最佳载体' }
+                }
+            },
+
+            // 模板推荐规则
+            templateRecommendations: {
+                'technical': 'technical',
+                'data': 'data-analysis',
+                'meeting': 'conversation',
+                'academic': 'academic',
+                'report': 'professional',
+                'proposal': 'professional',
+                'documentation': 'simple'
+            }
+        };
+    }
+
+    /**
+     * 生成智能格式推荐
+     */
+    generateFormatRecommendations(analysisResult) {
+        const contentType = analysisResult.type;
+        const matrix = this.formatRecommendations.adaptationMatrix[contentType];
+
+        if (!matrix) {
+            // 默认推荐
+            return {
+                primary: { format: 'docx', confidence: 70, reason: '通用文档格式，适合大多数内容' },
+                secondary: { format: 'xlsx', confidence: 40, reason: '备选表格格式' },
+                alternative: { format: 'both', confidence: 60, reason: '提供多种格式选择' }
+            };
+        }
+
+        // 基于内容特征调整推荐
+        const adjustedRecommendations = this.adjustRecommendationsByFeatures(matrix, analysisResult);
+
+        return adjustedRecommendations;
+    }
+
+    /**
+     * 根据内容特征调整推荐
+     */
+    adjustRecommendationsByFeatures(baseMatrix, analysisResult) {
+        const { structureAnalysis, contextAnalysis } = analysisResult.analysisBreakdown;
+        const distribution = structureAnalysis.distribution;
+
+        let adjusted = JSON.parse(JSON.stringify(baseMatrix)); // 深拷贝
+
+        // 基于表格占比调整
+        if (distribution.tableRatio > 0.5) {
+            adjusted.primary.confidence = Math.min(adjusted.primary.confidence + 10, 98);
+            if (adjusted.primary.format !== 'xlsx') {
+                adjusted.alternative = {
+                    format: 'xlsx',
+                    confidence: 90,
+                    reason: '高表格占比建议使用Excel格式'
+                };
+            }
+        }
+
+        // 基于代码占比调整
+        if (distribution.codeRatio > 0.3) {
+            if (adjusted.primary.format !== 'docx') {
+                adjusted.primary = {
+                    format: 'docx',
+                    confidence: 92,
+                    reason: '高代码占比最适合Word格式的代码展示'
+                };
+            }
+        }
+
+        // 基于复杂度调整
+        if (structureAnalysis.complexity === 'high') {
+            adjusted.alternative = {
+                format: 'both',
+                confidence: Math.min(adjusted.alternative.confidence + 15, 95),
+                reason: '复杂内容建议生成多种格式以满足不同需求'
+            };
+        }
+
+        // 基于数值内容调整
+        if (contextAnalysis.numerical.currencies > 3 || contextAnalysis.numerical.percentages > 5) {
+            if (adjusted.primary.format !== 'xlsx') {
+                adjusted.secondary = {
+                    format: 'xlsx',
+                    confidence: 85,
+                    reason: '包含大量数值数据，Excel格式便于计算和分析'
+                };
+            }
+        }
+
+        return adjusted;
+    }
+
+    /**
+     * 生成模板推荐
+     */
+    generateTemplateRecommendation(analysisResult) {
+        const { semanticAnalysis } = analysisResult.analysisBreakdown;
+        const businessTypes = semanticAnalysis.businessTypes;
+
+        // 找到最高分的业务类型
+        const dominantType = Object.keys(businessTypes).reduce((a, b) =>
+            businessTypes[a] > businessTypes[b] ? a : b
+        );
+
+        const recommendedTemplate = this.formatRecommendations.templateRecommendations[dominantType];
+
+        return {
+            template: recommendedTemplate || 'professional',
+            confidence: businessTypes[dominantType] > 10 ? 85 : 60,
+            reason: `基于${dominantType}业务类型的最佳模板选择`
+        };
+    }
+
+    /**
+     * 处理转换 - 智能策略版
      */
     async handleConvert() {
         if (!this.currentContent.trim()) {
@@ -901,35 +1273,343 @@ class AIContentConverter {
         try {
             this.isProcessing = true;
             this.showLoading(true);
-            
+
+            // 1. 智能内容分析
+            this.showMessage('🧠 正在智能分析内容...', 'info');
+            const analysisResult = this.intelligentContentDetection(this.currentContent);
+
+            // 2. 策略选择
+            const strategyResult = this.selectOptimalStrategy(analysisResult);
+
+            // 3. 显示策略选择结果
+            this.showMessage(`🎯 已选择${strategyResult.strategyInfo.name}策略 (${strategyResult.confidence}%置信度)`, 'info');
+
+            // 4. 获取用户设置
             const outputFormat = document.getElementById('output-format')?.value || 'docx';
-            const fileName = document.getElementById('file-name')?.value || 
+            const templateStyle = document.getElementById('template-style')?.value || 'professional';
+            const fileName = document.getElementById('file-name')?.value ||
                            Utils.string.generateFileName(this.currentContent, outputFormat);
 
-            // 检测内容类型
-            const contentType = this.currentContentType === 'auto' 
-                ? contentDetector.detectContentType(this.currentContent)
-                : this.currentContentType;
+            // 5. 生成格式推荐
+            const formatRecommendations = this.generateFormatRecommendations(analysisResult);
+            const templateRecommendation = this.generateTemplateRecommendation(analysisResult);
 
-            // 根据输出格式进行转换
-            if (outputFormat === 'docx' || outputFormat === 'both') {
-                await this.generateWord(this.currentContent, contentType, fileName);
-            }
-            
-            if (outputFormat === 'xlsx' || outputFormat === 'both') {
-                await this.generateExcel(this.currentContent, contentType, fileName);
-            }
+            // 6. 应用智能策略和推荐
+            const conversionPlan = this.createConversionPlan(strategyResult, outputFormat, templateStyle, fileName, formatRecommendations, templateRecommendation);
 
-            this.showMessage('转换完成！文件已开始下载', 'success');
+            // 7. 显示智能预览
+            this.showIntelligentPreview(conversionPlan, analysisResult, formatRecommendations);
+
+            // 8. 显示转换计划
+            this.showMessage(`📋 转换计划：${conversionPlan.description}`, 'info');
+
+            // 9. 执行转换
+            await this.executeConversionPlan(conversionPlan, analysisResult);
+
+            // 8. 完成提示
+            this.showMessage('✅ 智能转换完成！文件已开始下载', 'success');
             this.updateUsageStats();
-            
+
         } catch (error) {
-            this.logger.error('转换失败: ' + error.message);
-            this.showMessage('转换失败：' + error.message, 'error');
+            this.logger.error('智能转换失败: ' + error.message);
+            this.showMessage('❌ 转换失败：' + error.message, 'error');
         } finally {
             this.isProcessing = false;
             this.showLoading(false);
         }
+    }
+
+    /**
+     * 创建转换计划 - 增强版
+     */
+    createConversionPlan(strategyResult, userFormat, templateStyle, fileName, formatRecommendations, templateRecommendation) {
+        const strategy = strategyResult.strategyInfo;
+
+        // 智能格式选择 - 结合推荐系统
+        let finalFormat = userFormat;
+        let formatReason = '用户选择';
+
+        // 如果用户选择了auto或者推荐置信度很高，使用推荐格式
+        if (userFormat === 'auto' || formatRecommendations.primary.confidence > 90) {
+            finalFormat = formatRecommendations.primary.format;
+            formatReason = formatRecommendations.primary.reason;
+        }
+
+        // 智能模板选择 - 结合推荐系统
+        let finalTemplate = templateStyle;
+        let templateReason = '用户选择';
+
+        if (templateStyle === 'auto' || templateRecommendation.confidence > 80) {
+            finalTemplate = templateRecommendation.template;
+            templateReason = templateRecommendation.reason;
+        }
+
+        return {
+            strategy: strategyResult.strategy,
+            confidence: strategyResult.confidence,
+            reasons: strategyResult.reasons,
+            format: finalFormat,
+            formatReason: formatReason,
+            template: finalTemplate,
+            templateReason: templateReason,
+            fileName: fileName,
+            options: strategy.options,
+            recommendations: {
+                format: formatRecommendations,
+                template: templateRecommendation
+            },
+            description: this.generateConversionDescription(strategy, finalFormat, finalTemplate)
+        };
+    }
+
+    /**
+     * 生成转换描述
+     */
+    generateConversionDescription(strategy, format, template) {
+        const formatNames = {
+            'docx': 'Word文档',
+            'xlsx': 'Excel表格',
+            'both': 'Word和Excel'
+        };
+
+        const templateNames = {
+            'professional': '专业商务',
+            'academic': '学术论文',
+            'simple': '简洁清爽',
+            'colorful': '彩色活泼',
+            'technical': '技术文档',
+            'data-analysis': '数据分析',
+            'conversation': '对话记录',
+            'comprehensive': '综合文档',
+            'article': '文章报告',
+            'structured-list': '结构化列表'
+        };
+
+        return `使用${strategy.name}策略生成${formatNames[format] || format}，应用${templateNames[template] || template}模板`;
+    }
+
+    /**
+     * 执行转换计划
+     */
+    async executeConversionPlan(plan, analysisResult) {
+        const { format, template, fileName, options } = plan;
+
+        // 根据策略应用特殊选项
+        this.applyStrategyOptions(options);
+
+        if (format === 'docx' || format === 'both') {
+            await this.generateWordWithStrategy(this.currentContent, plan, analysisResult, fileName);
+        }
+
+        if (format === 'xlsx' || format === 'both') {
+            await this.generateExcelWithStrategy(this.currentContent, plan, analysisResult, fileName);
+        }
+    }
+
+    /**
+     * 应用策略选项
+     */
+    applyStrategyOptions(options) {
+        // 将策略选项应用到转换器配置
+        this.strategyOptions = options || {};
+
+        // 更新Word样式配置
+        if (options.technicalLayout) {
+            this.wordStyles.fonts.code = 'Consolas';
+            this.wordStyles.fontSizes.code = 9;
+        }
+
+        if (options.readabilityOptimization) {
+            this.wordStyles.lineSpacing.normal = 1.15;
+            this.wordStyles.spacing.paragraphAfter = 6;
+        }
+
+        if (options.dialogueLayout) {
+            this.wordStyles.spacing.paragraphBefore = 4;
+            this.wordStyles.spacing.paragraphAfter = 4;
+        }
+    }
+
+    /**
+     * 使用策略生成Word文档
+     */
+    async generateWordWithStrategy(content, plan, analysisResult, fileName) {
+        // 使用现有的generateWord方法，但应用策略选项
+        const contentType = analysisResult.type;
+        await this.generateWord(content, contentType, fileName);
+    }
+
+    /**
+     * 使用策略生成Excel文档
+     */
+    async generateExcelWithStrategy(content, plan, analysisResult, fileName) {
+        // 使用现有的generateExcel方法，但应用策略选项
+        const contentType = analysisResult.type;
+        await this.generateExcel(content, contentType, fileName);
+    }
+
+    /**
+     * 显示智能预览 - 新增
+     */
+    showIntelligentPreview(conversionPlan, analysisResult, formatRecommendations) {
+        // 更新检测结果显示
+        this.updateDetectionResultDisplay(analysisResult);
+
+        // 显示策略信息
+        this.displayStrategyInfo(conversionPlan);
+
+        // 显示格式推荐
+        this.displayFormatRecommendations(formatRecommendations);
+
+        // 显示转换预览
+        this.displayConversionPreview(conversionPlan, analysisResult);
+    }
+
+    /**
+     * 显示策略信息
+     */
+    displayStrategyInfo(conversionPlan) {
+        const detectionPanel = document.getElementById('detection-panel');
+        if (detectionPanel) {
+            // 添加策略信息到检测面板
+            let strategyInfo = detectionPanel.querySelector('.strategy-info');
+            if (!strategyInfo) {
+                strategyInfo = document.createElement('div');
+                strategyInfo.className = 'strategy-info';
+                detectionPanel.appendChild(strategyInfo);
+            }
+
+            strategyInfo.innerHTML = `
+                <div class="strategy-header">
+                    <span class="strategy-icon">🎯</span>
+                    <span class="strategy-name">${conversionPlan.strategy}</span>
+                    <span class="strategy-confidence">${conversionPlan.confidence}%</span>
+                </div>
+                <div class="strategy-reasons">
+                    ${conversionPlan.reasons.map(reason => `<span class="reason-tag">${reason}</span>`).join('')}
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * 显示格式推荐
+     */
+    displayFormatRecommendations(recommendations) {
+        const optionsSection = document.querySelector('.options-grid');
+        if (optionsSection) {
+            // 添加推荐信息到选项区域
+            let recommendationPanel = optionsSection.querySelector('.recommendation-panel');
+            if (!recommendationPanel) {
+                recommendationPanel = document.createElement('div');
+                recommendationPanel.className = 'recommendation-panel';
+                optionsSection.appendChild(recommendationPanel);
+            }
+
+            recommendationPanel.innerHTML = `
+                <div class="recommendation-header">
+                    <span class="rec-icon">💡</span>
+                    <span class="rec-title">智能推荐</span>
+                </div>
+                <div class="recommendation-items">
+                    <div class="rec-item primary">
+                        <span class="rec-badge">推荐</span>
+                        <span class="rec-format">${this.getFormatDisplayName(recommendations.primary.format)}</span>
+                        <span class="rec-confidence">${recommendations.primary.confidence}%</span>
+                        <div class="rec-reason">${recommendations.primary.reason}</div>
+                    </div>
+                    ${recommendations.secondary ? `
+                    <div class="rec-item secondary">
+                        <span class="rec-badge">备选</span>
+                        <span class="rec-format">${this.getFormatDisplayName(recommendations.secondary.format)}</span>
+                        <span class="rec-confidence">${recommendations.secondary.confidence}%</span>
+                        <div class="rec-reason">${recommendations.secondary.reason}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * 显示转换预览
+     */
+    displayConversionPreview(conversionPlan, analysisResult) {
+        // 在预览区域显示转换效果预览
+        const previewArea = document.querySelector('.preview-area');
+        if (previewArea) {
+            const previewContent = this.generatePreviewContent(conversionPlan, analysisResult);
+            previewArea.innerHTML = previewContent;
+        }
+    }
+
+    /**
+     * 生成预览内容
+     */
+    generatePreviewContent(conversionPlan, analysisResult) {
+        const { format, template, strategy } = conversionPlan;
+        const { details } = analysisResult;
+
+        return `
+            <div class="preview-header">
+                <h3>📋 转换预览</h3>
+                <div class="preview-meta">
+                    <span class="meta-item">格式: ${this.getFormatDisplayName(format)}</span>
+                    <span class="meta-item">模板: ${template}</span>
+                    <span class="meta-item">策略: ${strategy}</span>
+                </div>
+            </div>
+            <div class="preview-content">
+                <div class="preview-stats">
+                    <div class="stat-group">
+                        ${details.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
+                    </div>
+                </div>
+                <div class="preview-description">
+                    <p>${conversionPlan.description}</p>
+                    <p class="preview-note">
+                        <strong>预期效果：</strong>
+                        ${this.generatePreviewDescription(format, template, details.features)}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * 生成预览描述
+     */
+    generatePreviewDescription(format, template, features) {
+        const descriptions = [];
+
+        if (format === 'docx') {
+            descriptions.push('生成专业的Word文档');
+            if (features.includes('表格')) descriptions.push('表格将使用Word原生表格格式');
+            if (features.includes('代码块')) descriptions.push('代码将保持语法高亮和格式');
+            if (features.includes('列表项')) descriptions.push('列表将使用Word标准列表样式');
+        } else if (format === 'xlsx') {
+            descriptions.push('生成Excel电子表格');
+            if (features.includes('表格')) descriptions.push('表格数据将优化为Excel格式');
+            if (features.includes('货币值')) descriptions.push('货币数据将应用Excel货币格式');
+        } else if (format === 'both') {
+            descriptions.push('同时生成Word文档和Excel表格');
+            descriptions.push('提供文档阅读和数据分析两种视图');
+        }
+
+        return descriptions.join('，') + '。';
+    }
+
+    /**
+     * 获取格式显示名称
+     */
+    getFormatDisplayName(format) {
+        const names = {
+            'docx': 'Word文档',
+            'xlsx': 'Excel表格',
+            'both': 'Word+Excel',
+            'auto': '智能选择'
+        };
+        return names[format] || format;
     }
 
     /**
