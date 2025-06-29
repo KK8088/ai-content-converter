@@ -253,13 +253,13 @@ class MarkdownParser {
     }
 
     /**
-     * 解析表格行
+     * 解析表格行 - 增强版
      * @param {string} line - 行内容
      * @returns {Array} 单元格数组
      */
     parseTableRow(line) {
         if (!line || !line.includes('|')) return [];
-        
+
         // 移除首尾的管道符
         let cleanLine = line.trim();
         if (cleanLine.startsWith('|')) {
@@ -268,17 +268,53 @@ class MarkdownParser {
         if (cleanLine.endsWith('|')) {
             cleanLine = cleanLine.substring(0, cleanLine.length - 1);
         }
-        
+
         // 分割并清理单元格
-        return cleanLine.split('|')
-            .map(cell => Utils.string.cleanCellContent(cell.trim()))
-            .filter((cell, index, arr) => {
-                // 保留空单元格，但移除完全空的尾部单元格
-                if (index === arr.length - 1 && cell === '') {
-                    return false;
-                }
-                return true;
-            });
+        const cells = cleanLine.split('|').map(cell => {
+            let cleanCell = cell.trim();
+
+            // 清理单元格内容
+            cleanCell = this.cleanCellContent(cleanCell);
+
+            return cleanCell;
+        });
+
+        // 过滤掉完全空的尾部单元格
+        while (cells.length > 0 && cells[cells.length - 1] === '') {
+            cells.pop();
+        }
+
+        return cells;
+    }
+
+    /**
+     * 清理单元格内容
+     * @param {string} content - 单元格内容
+     * @returns {string} 清理后的内容
+     */
+    cleanCellContent(content) {
+        if (!content) return '';
+
+        let cleaned = content;
+
+        // 清理多余的空格
+        cleaned = cleaned.replace(/\s+/g, ' ');
+
+        // 清理特殊字符
+        cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, ''); // 零宽字符
+
+        // 标准化引号
+        cleaned = cleaned.replace(/[""]/g, '"');
+        cleaned = cleaned.replace(/['']/g, "'");
+
+        // 清理HTML实体
+        cleaned = cleaned.replace(/&nbsp;/g, ' ');
+        cleaned = cleaned.replace(/&amp;/g, '&');
+        cleaned = cleaned.replace(/&lt;/g, '<');
+        cleaned = cleaned.replace(/&gt;/g, '>');
+        cleaned = cleaned.replace(/&quot;/g, '"');
+
+        return cleaned.trim();
     }
 
     /**

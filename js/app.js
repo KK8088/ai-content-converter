@@ -698,23 +698,28 @@ class AIContentConverter {
             if (detectionResult.type === 'markdown' || this.containsMarkdownElements(cleanedContent)) {
                 // Markdown内容处理
                 const elements = markdownParser.parseMarkdown(cleanedContent);
-                children.push(...this.convertElementsToWord(elements));
+                const cleanedElements = this.postProcessElements(elements);
+                children.push(...this.convertElementsToWord(cleanedElements));
             } else if (detectionResult.type === 'table') {
                 // 表格数据专门处理
                 const tableElements = this.parseTableContent(cleanedContent);
-                children.push(...this.convertElementsToWord(tableElements));
+                const cleanedElements = this.postProcessElements(tableElements);
+                children.push(...this.convertElementsToWord(cleanedElements));
             } else if (detectionResult.type === 'list') {
                 // 列表内容专门处理
                 const listElements = this.parseListContent(cleanedContent);
-                children.push(...this.convertElementsToWord(listElements));
+                const cleanedElements = this.postProcessElements(listElements);
+                children.push(...this.convertElementsToWord(cleanedElements));
             } else if (detectionResult.type === 'code') {
                 // 代码内容专门处理
                 const codeElements = this.parseCodeContent(cleanedContent);
-                children.push(...this.convertElementsToWord(codeElements));
+                const cleanedElements = this.postProcessElements(codeElements);
+                children.push(...this.convertElementsToWord(cleanedElements));
             } else {
                 // 智能文本处理
                 const processedElements = this.parseTextContent(cleanedContent);
-                children.push(...this.convertElementsToWord(processedElements));
+                const cleanedElements = this.postProcessElements(processedElements);
+                children.push(...this.convertElementsToWord(cleanedElements));
             }
 
             // 创建Word文档 - 使用标准设置
@@ -921,51 +926,93 @@ class AIContentConverter {
                     break;
 
                 case 'codeBlock':
-                    // 使用Word标准代码样式
-                    wordElements.push(new Paragraph({
-                        children: [new TextRun({
-                            text: element.content,
-                            font: {
-                                name: this.wordStyles.fonts.code
+                    // 使用Word标准代码样式 - 优化版
+                    const codeLines = element.content.split('\n');
+                    codeLines.forEach((line, index) => {
+                        wordElements.push(new Paragraph({
+                            children: [new TextRun({
+                                text: line || ' ', // 空行用空格占位
+                                font: {
+                                    name: this.wordStyles.fonts.code
+                                },
+                                size: this.wordStyles.fontSizes.code * 2,
+                                color: this.wordStyles.colors.code
+                            })],
+                            shading: { fill: this.wordStyles.colors.codeBg },
+                            spacing: {
+                                before: index === 0 ? this.wordStyles.spacing.codeBlockBefore * 20 : 0,
+                                after: index === codeLines.length - 1 ? this.wordStyles.spacing.codeBlockAfter * 20 : 0,
+                                line: Math.round(this.wordStyles.lineSpacing.code * 240)
                             },
-                            size: this.wordStyles.fontSizes.code * 2,
-                            color: this.wordStyles.colors.code
-                        })],
-                        shading: { fill: this.wordStyles.colors.codeBg },
-                        spacing: {
-                            before: this.wordStyles.spacing.codeBlockBefore * 20,
-                            after: this.wordStyles.spacing.codeBlockAfter * 20,
-                            line: Math.round(this.wordStyles.lineSpacing.code * 240)
-                        },
-                        border: {
-                            top: { style: BorderStyle.SINGLE, size: 1, color: this.wordStyles.colors.border },
-                            bottom: { style: BorderStyle.SINGLE, size: 1, color: this.wordStyles.colors.border },
-                            left: { style: BorderStyle.SINGLE, size: 1, color: this.wordStyles.colors.border },
-                            right: { style: BorderStyle.SINGLE, size: 1, color: this.wordStyles.colors.border }
-                        }
-                    }));
+                            border: index === 0 ? {
+                                top: { style: BorderStyle.SINGLE, size: 2, color: this.wordStyles.colors.border },
+                                left: { style: BorderStyle.SINGLE, size: 2, color: this.wordStyles.colors.border },
+                                right: { style: BorderStyle.SINGLE, size: 2, color: this.wordStyles.colors.border }
+                            } : index === codeLines.length - 1 ? {
+                                bottom: { style: BorderStyle.SINGLE, size: 2, color: this.wordStyles.colors.border },
+                                left: { style: BorderStyle.SINGLE, size: 2, color: this.wordStyles.colors.border },
+                                right: { style: BorderStyle.SINGLE, size: 2, color: this.wordStyles.colors.border }
+                            } : {
+                                left: { style: BorderStyle.SINGLE, size: 2, color: this.wordStyles.colors.border },
+                                right: { style: BorderStyle.SINGLE, size: 2, color: this.wordStyles.colors.border }
+                            },
+                            indent: { left: convertInchesToTwip(0.25) }
+                        }));
+                    });
                     break;
 
                 case 'blockquote':
-                    // 使用Word标准引用样式
+                    // 使用Word标准引用样式 - 优化版
                     wordElements.push(new Paragraph({
-                        children: [new TextRun({
-                            text: element.content,
-                            font: {
-                                name: this.wordStyles.fonts.chinese,
-                                eastAsia: this.wordStyles.fonts.chinese
-                            },
-                            size: this.wordStyles.fontSizes.normal * 2,
-                            italics: true,
-                            color: this.wordStyles.colors.quote
-                        })],
+                        children: [
+                            new TextRun({
+                                text: '"',
+                                font: {
+                                    name: this.wordStyles.fonts.chinese,
+                                    eastAsia: this.wordStyles.fonts.chinese
+                                },
+                                size: (this.wordStyles.fontSizes.normal + 2) * 2,
+                                bold: true,
+                                color: this.wordStyles.colors.primary
+                            }),
+                            new TextRun({
+                                text: element.content,
+                                font: {
+                                    name: this.wordStyles.fonts.chinese,
+                                    eastAsia: this.wordStyles.fonts.chinese
+                                },
+                                size: this.wordStyles.fontSizes.normal * 2,
+                                italics: true,
+                                color: this.wordStyles.colors.quote
+                            }),
+                            new TextRun({
+                                text: '"',
+                                font: {
+                                    name: this.wordStyles.fonts.chinese,
+                                    eastAsia: this.wordStyles.fonts.chinese
+                                },
+                                size: (this.wordStyles.fontSizes.normal + 2) * 2,
+                                bold: true,
+                                color: this.wordStyles.colors.primary
+                            })
+                        ],
                         spacing: {
                             before: this.wordStyles.spacing.paragraphAfter * 20,
                             after: this.wordStyles.spacing.paragraphAfter * 20,
                             line: Math.round(this.wordStyles.lineSpacing.normal * 240)
                         },
-                        indent: { left: convertInchesToTwip(0.5) },
-                        shading: { fill: this.wordStyles.colors.quoteBg }
+                        indent: {
+                            left: convertInchesToTwip(0.5),
+                            right: convertInchesToTwip(0.25)
+                        },
+                        shading: { fill: this.wordStyles.colors.quoteBg },
+                        border: {
+                            left: {
+                                style: BorderStyle.SINGLE,
+                                size: 8,
+                                color: this.wordStyles.colors.primary
+                            }
+                        }
                     }));
                     break;
 
@@ -1090,57 +1137,64 @@ class AIContentConverter {
                 size: 100,
                 type: WidthType.PERCENTAGE
             },
-            // Word标准表格边框样式
+            // Word标准表格边框样式 - 优化版
             borders: {
                 top: {
                     style: BorderStyle.SINGLE,
-                    size: 4,  // Word默认边框粗细（0.5pt = 4 eighths of a point）
+                    size: 6,  // 稍微加粗边框以提高可读性
                     color: this.wordStyles.colors.border
                 },
                 bottom: {
                     style: BorderStyle.SINGLE,
-                    size: 4,
+                    size: 6,
                     color: this.wordStyles.colors.border
                 },
                 left: {
                     style: BorderStyle.SINGLE,
-                    size: 4,
+                    size: 6,
                     color: this.wordStyles.colors.border
                 },
                 right: {
                     style: BorderStyle.SINGLE,
-                    size: 4,
+                    size: 6,
                     color: this.wordStyles.colors.border
                 },
                 insideHorizontal: {
                     style: BorderStyle.SINGLE,
-                    size: 4,
+                    size: 4,  // 内部边框稍细
                     color: this.wordStyles.colors.border
                 },
                 insideVertical: {
                     style: BorderStyle.SINGLE,
-                    size: 4,
+                    size: 4,  // 内部边框稍细
                     color: this.wordStyles.colors.border
                 }
             },
             margins: {
                 top: convertInchesToTwip(this.wordStyles.spacing.tableBefore / 20),
                 bottom: convertInchesToTwip(this.wordStyles.spacing.tableAfter / 20)
-            }
+            },
+            // 添加表格样式
+            style: "TableGrid",
+            layout: "autofit"
         });
     }
 
     /**
-     * 格式化单元格数据
+     * 格式化单元格数据 - 增强版
      */
     formatCellData(cellData) {
         if (!cellData) return '';
 
-        const text = cellData.toString().trim();
+        let text = cellData.toString().trim();
+
+        // 清理单元格内容
+        text = this.cleanCellText(text);
 
         // 处理货币格式
-        if (text.match(/^[¥$€£]\d+([,.]?\d+)*$/)) {
-            return text;
+        if (text.match(/^[¥$€£]\s*\d+([,.]?\d+)*$/)) {
+            // 标准化货币格式，确保符号和数字之间没有空格
+            return text.replace(/([¥$€£])\s+/, '$1');
         }
 
         // 处理百分比
@@ -1148,13 +1202,57 @@ class AIContentConverter {
             return text;
         }
 
+        // 处理带货币符号的复杂格式
+        const currencyMatch = text.match(/^([¥$€£])\s*([0-9,]+\.?\d*)$/);
+        if (currencyMatch) {
+            const symbol = currencyMatch[1];
+            const number = currencyMatch[2];
+            return `${symbol}${number}`;
+        }
+
         // 处理数字（添加千分位分隔符）
         if (text.match(/^\d+(\.\d+)?$/)) {
             const num = parseFloat(text);
-            return num.toLocaleString();
+            return num.toLocaleString('zh-CN');
+        }
+
+        // 处理emoji和特殊符号
+        if (text.match(/^[✅⚠️❌🔴🟢🟡]+/)) {
+            return text; // 保留状态符号
         }
 
         return text;
+    }
+
+    /**
+     * 清理单元格文本
+     */
+    cleanCellText(text) {
+        if (!text) return '';
+
+        let cleaned = text;
+
+        // 清理多余的空格
+        cleaned = cleaned.replace(/\s+/g, ' ');
+
+        // 清理特殊字符
+        cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, ''); // 零宽字符
+
+        // 清理HTML实体
+        cleaned = cleaned.replace(/&nbsp;/g, ' ');
+        cleaned = cleaned.replace(/&amp;/g, '&');
+        cleaned = cleaned.replace(/&lt;/g, '<');
+        cleaned = cleaned.replace(/&gt;/g, '>');
+        cleaned = cleaned.replace(/&quot;/g, '"');
+
+        // 标准化引号
+        cleaned = cleaned.replace(/[""]/g, '"');
+        cleaned = cleaned.replace(/['']/g, "'");
+
+        // 清理多余的标点符号
+        cleaned = cleaned.replace(/\.{3,}/g, '...');
+
+        return cleaned.trim();
     }
 
     /**
@@ -1265,7 +1363,7 @@ class AIContentConverter {
     }
 
     /**
-     * 预处理AI内容，支持多源格式
+     * 预处理AI内容，支持多源格式 - 增强版
      */
     preprocessAIContent(content) {
         if (!content) return '';
@@ -1281,6 +1379,9 @@ class AIContentConverter {
         cleaned = cleaned.replace(/&gt;/g, '>');
         cleaned = cleaned.replace(/&amp;/g, '&');
         cleaned = cleaned.replace(/&quot;/g, '"');
+        cleaned = cleaned.replace(/&apos;/g, "'");
+        cleaned = cleaned.replace(/&#39;/g, "'");
+        cleaned = cleaned.replace(/&#34;/g, '"');
 
         // 3. 标准化换行符
         cleaned = cleaned.replace(/\r\n/g, '\n');
@@ -1288,50 +1389,268 @@ class AIContentConverter {
 
         // 4. 清理多余的空白字符
         cleaned = cleaned.replace(/[ \t]+$/gm, ''); // 行尾空格
+        cleaned = cleaned.replace(/^[ \t]+/gm, ''); // 行首空格（保留代码块缩进）
         cleaned = cleaned.replace(/\n{3,}/g, '\n\n'); // 多余空行
 
-        // 5. 修复表格格式（处理不同AI工具的表格输出）
+        // 5. 清理Markdown残留符号
+        cleaned = this.cleanMarkdownSymbols(cleaned);
+
+        // 6. 修复表格格式（处理不同AI工具的表格输出）
         cleaned = this.normalizeTableFormat(cleaned);
 
-        // 6. 修复代码块格式
+        // 7. 修复代码块格式
         cleaned = this.normalizeCodeBlocks(cleaned);
 
-        // 7. 修复列表格式
+        // 8. 修复列表格式
         cleaned = this.normalizeListFormat(cleaned);
+
+        // 9. 清理特殊字符和符号
+        cleaned = this.cleanSpecialCharacters(cleaned);
+
+        // 10. 最终格式化
+        cleaned = this.finalFormatCleanup(cleaned);
 
         return cleaned.trim();
     }
 
     /**
-     * 标准化表格格式
+     * 后处理解析后的元素，清理残留符号
+     */
+    postProcessElements(elements) {
+        if (!elements || !Array.isArray(elements)) return elements;
+
+        return elements.map(element => {
+            const cleanedElement = { ...element };
+
+            switch (element.type) {
+                case 'heading':
+                    // 清理标题中的#符号
+                    if (cleanedElement.text) {
+                        cleanedElement.text = cleanedElement.text.replace(/^#+\s*/, '').trim();
+                    }
+                    break;
+
+                case 'paragraph':
+                    // 清理段落中的Markdown符号
+                    if (cleanedElement.text) {
+                        cleanedElement.text = this.cleanMarkdownFromText(cleanedElement.text);
+                    }
+                    if (cleanedElement.formatted) {
+                        cleanedElement.formatted = cleanedElement.formatted.map(part => ({
+                            ...part,
+                            text: this.cleanMarkdownFromText(part.text || '')
+                        }));
+                    }
+                    break;
+
+                case 'table':
+                    // 清理表格数据
+                    if (cleanedElement.headers) {
+                        cleanedElement.headers = cleanedElement.headers.map(header =>
+                            this.cleanMarkdownFromText(header)
+                        );
+                    }
+                    if (cleanedElement.rows) {
+                        cleanedElement.rows = cleanedElement.rows.map(row =>
+                            row.map(cell => this.cleanMarkdownFromText(cell))
+                        );
+                    }
+                    break;
+
+                case 'list':
+                case 'orderedList':
+                    // 清理列表项
+                    if (cleanedElement.items) {
+                        cleanedElement.items = cleanedElement.items.map(item => ({
+                            ...item,
+                            text: this.cleanMarkdownFromText(item.text || '')
+                        }));
+                    }
+                    break;
+
+                case 'codeBlock':
+                    // 代码块内容保持原样，但清理包围的```
+                    if (cleanedElement.content) {
+                        cleanedElement.content = cleanedElement.content.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '');
+                    }
+                    break;
+
+                case 'blockquote':
+                    // 清理引用块的>符号
+                    if (cleanedElement.content) {
+                        cleanedElement.content = cleanedElement.content.replace(/^>\s*/, '').trim();
+                    }
+                    break;
+            }
+
+            return cleanedElement;
+        });
+    }
+
+    /**
+     * 从文本中清理Markdown符号
+     */
+    cleanMarkdownFromText(text) {
+        if (!text) return '';
+
+        let cleaned = text;
+
+        // 清理加粗和斜体标记（保留格式效果，但移除符号）
+        cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1'); // **bold**
+        cleaned = cleaned.replace(/\*([^*]+)\*/g, '$1');     // *italic*
+        cleaned = cleaned.replace(/__([^_]+)__/g, '$1');     // __bold__
+        cleaned = cleaned.replace(/_([^_]+)_/g, '$1');       // _italic_
+
+        // 清理行内代码标记
+        cleaned = cleaned.replace(/`([^`]+)`/g, '$1');       // `code`
+
+        // 清理链接标记
+        cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // [text](url)
+
+        // 清理图片标记
+        cleaned = cleaned.replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1'); // ![alt](url)
+
+        // 清理其他Markdown符号
+        cleaned = cleaned.replace(/^[-*+]\s+/, '');          // 列表符号
+        cleaned = cleaned.replace(/^\d+\.\s+/, '');          // 有序列表
+        cleaned = cleaned.replace(/^>\s*/, '');              // 引用符号
+        cleaned = cleaned.replace(/^#+\s*/, '');             // 标题符号
+
+        // 清理分隔线
+        cleaned = cleaned.replace(/^-{3,}$/, '');
+        cleaned = cleaned.replace(/^={3,}$/, '');
+
+        return cleaned.trim();
+    }
+
+    /**
+     * 清理Markdown残留符号
+     */
+    cleanMarkdownSymbols(content) {
+        let cleaned = content;
+
+        // 不要在这里清理Markdown符号，因为我们需要它们来解析格式
+        // 清理工作将在解析后进行
+
+        return cleaned;
+    }
+
+    /**
+     * 清理特殊字符和符号
+     */
+    cleanSpecialCharacters(content) {
+        let cleaned = content;
+
+        // 清理零宽字符
+        cleaned = cleaned.replace(/[\u200B-\u200D\uFEFF]/g, '');
+
+        // 标准化引号
+        cleaned = cleaned.replace(/[""]/g, '"');
+        cleaned = cleaned.replace(/['']/g, "'");
+
+        // 标准化破折号
+        cleaned = cleaned.replace(/[—–]/g, '-');
+
+        // 清理多余的标点符号
+        cleaned = cleaned.replace(/\.{3,}/g, '...');
+        cleaned = cleaned.replace(/-{3,}/g, '---');
+
+        // 标准化空格
+        cleaned = cleaned.replace(/\u00A0/g, ' '); // 不间断空格
+        cleaned = cleaned.replace(/\u2009/g, ' '); // 细空格
+        cleaned = cleaned.replace(/\u2002/g, ' '); // en空格
+        cleaned = cleaned.replace(/\u2003/g, ' '); // em空格
+
+        return cleaned;
+    }
+
+    /**
+     * 最终格式化清理
+     */
+    finalFormatCleanup(content) {
+        let cleaned = content;
+
+        // 清理多余的空格
+        cleaned = cleaned.replace(/ {2,}/g, ' ');
+
+        // 确保段落间有适当的空行
+        cleaned = cleaned.replace(/\n\n+/g, '\n\n');
+
+        // 清理行首行尾空格
+        cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
+
+        // 移除开头和结尾的多余空行
+        cleaned = cleaned.replace(/^\n+/, '').replace(/\n+$/, '');
+
+        return cleaned;
+    }
+
+    /**
+     * 标准化表格格式 - 增强版
      */
     normalizeTableFormat(content) {
         const lines = content.split('\n');
         const normalizedLines = [];
 
         for (let i = 0; i < lines.length; i++) {
-            let line = lines[i];
+            let line = lines[i].trim();
 
-            // 检测表格行
-            if (line.includes('|')) {
+            // 跳过表格分隔符行（如 |---|---|--- 或 :---:|:---: 等）
+            if (this.isTableSeparatorLine(line)) {
+                continue; // 完全跳过分隔符行
+            }
+
+            // 检测表格数据行
+            if (line.includes('|') && !this.isTableSeparatorLine(line)) {
                 // 确保表格行格式正确
-                if (!line.trim().startsWith('|')) {
+                if (!line.startsWith('|')) {
                     line = '|' + line;
                 }
-                if (!line.trim().endsWith('|')) {
+                if (!line.endsWith('|')) {
                     line = line + '|';
                 }
 
                 // 清理单元格内容
                 const cells = line.split('|');
-                const cleanedCells = cells.map(cell => cell.trim());
-                line = cleanedCells.join(' | ');
-            }
+                const cleanedCells = cells.map(cell => {
+                    let cleanCell = cell.trim();
+                    // 清理单元格内的多余空格
+                    cleanCell = cleanCell.replace(/\s+/g, ' ');
+                    return cleanCell;
+                });
 
-            normalizedLines.push(line);
+                // 过滤掉空的首尾单元格
+                const filteredCells = cleanedCells.filter((cell, index) => {
+                    return !(index === 0 && cell === '') && !(index === cleanedCells.length - 1 && cell === '');
+                });
+
+                if (filteredCells.length > 0) {
+                    line = '| ' + filteredCells.join(' | ') + ' |';
+                    normalizedLines.push(line);
+                }
+            } else if (line) {
+                normalizedLines.push(line);
+            }
         }
 
         return normalizedLines.join('\n');
+    }
+
+    /**
+     * 检测表格分隔符行
+     */
+    isTableSeparatorLine(line) {
+        const trimmed = line.trim();
+
+        // 检测各种表格分隔符格式
+        const separatorPatterns = [
+            /^\|?[\s]*:?-+:?[\s]*(\|[\s]*:?-+:?[\s]*)*\|?$/,  // |---|---|
+            /^[\s]*:?-+:?[\s]*(\|[\s]*:?-+:?[\s]*)+$/,        // ---|---|
+            /^\|[\s]*:?-+:?[\s]*\|$/,                         // |---|
+            /^[\s]*[-=]{3,}[\s]*$/                            // --- 或 ===
+        ];
+
+        return separatorPatterns.some(pattern => pattern.test(trimmed));
     }
 
     /**
