@@ -2,7 +2,7 @@
  * AI内容格式转换工具 - 工具函数库
  * 
  * @description 通用工具函数和辅助方法
- * @version 1.0.0
+ * @version 1.4.0
  * @author zk0x01
  */
 

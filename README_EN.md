@@ -4,7 +4,7 @@
 [![GitHub Forks](https://img.shields.io/github/forks/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
 [![GitHub Issues](https://img.shields.io/github/issues/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/issues)
 [![GitHub License](https://img.shields.io/github/license/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/blob/main/LICENSE)
-[![Version](https://img.shields.io/badge/version-v1.1.1-blue)](https://github.com/KK8088/ai-content-converter/releases)
+[![Version](https://img.shields.io/badge/version-v1.4.0-blue)](https://github.com/KK8088/ai-content-converter/releases)
 
 > 🌟 **Perfect conversion of AI dialogue content to professional Word and Excel documents**
 
@@ -16,13 +16,15 @@
 - 📄 **Word Document (.docx)** - Professional document generation with rich formatting
 - 📊 **Excel Spreadsheet (.xlsx)** - Multi-sheet support with intelligent data type recognition
 - 🤖 **Smart Content Detection** - 95%+ accuracy in format recognition
-- 👁️ **Real-time Preview** - Visual preview before conversion (NEW in v1.1.0!)
+- 🎯 **Intelligent Decision System** - 6 professional conversion strategies with auto-selection (NEW in v1.4.0!)
+- 💡 **Format Recommendation System** - Smart format suggestions based on content features (NEW in v1.4.0!)
+- 👁️ **Real-time Preview** - Visual preview before conversion
 
-### 🔥 NEW: Real-time Preview System (v1.1.0)
-- **Structure Preview** - Smart detection results and table structure display
-- **Word Preview** - Professional Word document style simulation
-- **Excel Preview** - Complete Excel worksheet format preview
-- **Seamless Switching** - Smooth transition between three preview modes
+### 🔥 NEW: Intelligent Decision System (v1.4.0)
+- **Strategy Engine** - 6 specialized conversion strategies (Data-heavy, Code-heavy, Conversational, etc.)
+- **Smart Selection** - Automatic strategy selection with up to 95% confidence
+- **Format Recommendations** - Primary, secondary, and alternative format suggestions
+- **Preview System** - Real-time conversion plan preview with strategy reasoning
 
 ### 📋 Supported Formats
 - **Markdown Tables** - Standard and non-standard table formats

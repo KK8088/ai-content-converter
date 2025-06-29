@@ -2,7 +2,7 @@
  * AI内容格式转换工具 - Markdown解析模块
  * 
  * @description 解析Markdown内容为结构化数据
- * @version 1.0.0
+ * @version 1.4.0
  * @author zk0x01
  */
 

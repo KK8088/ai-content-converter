@@ -2,7 +2,7 @@
  * AI内容格式转换工具 - 主应用模块
  * 
  * @description 应用程序主入口和控制器
- * @version 1.0.0
+ * @version 1.4.0
  * @author zk0x01
  */
 

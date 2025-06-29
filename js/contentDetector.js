@@ -2,7 +2,7 @@
  * AI内容格式转换工具 - 内容检测模块
  * 
  * @description 智能检测内容类型和格式
- * @version 1.0.0
+ * @version 1.4.0
  * @author zk0x01
  */
 

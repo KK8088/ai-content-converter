@@ -2,7 +2,7 @@
  * AI内容格式转换工具 - 配置文件
  * 
  * @description 全局配置和常量定义
- * @version 1.3.0
+ * @version 1.4.0
  * @author AI Content Converter Team
  */
 
