@@ -104,6 +104,33 @@ const Utils = {
         },
 
         /**
+         * 转义HTML字符
+         * @param {string} text - 原始文本
+         * @returns {string} 转义后的文本
+         */
+        escapeHtml(text) {
+            if (!text) return '';
+            const entityMap = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return String(text).replace(/[&<>"']/g, (s) => entityMap[s]);
+        },
+
+        /**
+         * 清理文本（移除前后空白）
+         * @param {string} text - 原始文本
+         * @returns {string} 清理后的文本
+         */
+        clean(text) {
+            if (!text) return '';
+            return String(text).trim();
+        },
+
+        /**
          * 统计文本信息 - 增强版
          * @param {string} text - 文本内容
          * @returns {object} 统计信息
@@ -157,6 +184,127 @@ const Utils = {
                 headings,
                 lists
             };
+        }
+    },
+
+    /**
+     * 数组处理工具
+     */
+    array: {
+        /**
+         * 数组去重
+         * @param {Array} arr - 原始数组
+         * @returns {Array} 去重后的数组
+         */
+        unique(arr) {
+            if (!Array.isArray(arr)) return [];
+            return [...new Set(arr)];
+        },
+
+        /**
+         * 数组分块
+         * @param {Array} arr - 原始数组
+         * @param {number} size - 块大小
+         * @returns {Array} 分块后的数组
+         */
+        chunk(arr, size) {
+            if (!Array.isArray(arr) || size <= 0) return [];
+            const chunks = [];
+            for (let i = 0; i < arr.length; i += size) {
+                chunks.push(arr.slice(i, i + size));
+            }
+            return chunks;
+        },
+
+        /**
+         * 扁平化数组
+         * @param {Array} arr - 原始数组
+         * @returns {Array} 扁平化后的数组
+         */
+        flatten(arr) {
+            if (!Array.isArray(arr)) return [];
+            return arr.reduce((flat, item) => {
+                return flat.concat(Array.isArray(item) ? this.flatten(item) : item);
+            }, []);
+        }
+    },
+
+    /**
+     * 对象处理工具
+     */
+    object: {
+        /**
+         * 合并对象
+         * @param {Object} target - 目标对象
+         * @param {Object} source - 源对象
+         * @returns {Object} 合并后的对象
+         */
+        merge(target, source) {
+            return { ...target, ...source };
+        },
+
+        /**
+         * 获取嵌套属性
+         * @param {Object} obj - 对象
+         * @param {string} path - 属性路径
+         * @param {*} defaultValue - 默认值
+         * @returns {*} 属性值
+         */
+        get(obj, path, defaultValue = undefined) {
+            if (!obj || !path) return defaultValue;
+            const keys = path.split('.');
+            let result = obj;
+            for (const key of keys) {
+                if (result == null || typeof result !== 'object') {
+                    return defaultValue;
+                }
+                result = result[key];
+            }
+            return result !== undefined ? result : defaultValue;
+        }
+    },
+
+    /**
+     * 验证工具
+     */
+    validation: {
+        /**
+         * 验证邮箱
+         * @param {string} email - 邮箱地址
+         * @returns {boolean} 是否有效
+         */
+        isEmail(email) {
+            if (!email) return false;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        },
+
+        /**
+         * 验证URL
+         * @param {string} url - URL地址
+         * @returns {boolean} 是否有效
+         */
+        isUrl(url) {
+            if (!url) return false;
+            try {
+                new URL(url);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+
+        /**
+         * 验证是否为空
+         * @param {*} value - 值
+         * @returns {boolean} 是否为空
+         */
+        isEmpty(value) {
+            if (value == null) return true;
+            if (typeof value === 'string') return value.trim() === '';
+            if (Array.isArray(value)) return value.length === 0;
+            if (typeof value === 'object') return Object.keys(value).length === 0;
+            return false;
         }
     },
 
@@ -341,6 +489,127 @@ const Utils = {
     },
 
     /**
+     * 数组处理工具
+     */
+    array: {
+        /**
+         * 数组去重
+         * @param {Array} arr - 原始数组
+         * @returns {Array} 去重后的数组
+         */
+        unique(arr) {
+            if (!Array.isArray(arr)) return [];
+            return [...new Set(arr)];
+        },
+
+        /**
+         * 数组分块
+         * @param {Array} arr - 原始数组
+         * @param {number} size - 块大小
+         * @returns {Array} 分块后的数组
+         */
+        chunk(arr, size) {
+            if (!Array.isArray(arr) || size <= 0) return [];
+            const chunks = [];
+            for (let i = 0; i < arr.length; i += size) {
+                chunks.push(arr.slice(i, i + size));
+            }
+            return chunks;
+        },
+
+        /**
+         * 扁平化数组
+         * @param {Array} arr - 原始数组
+         * @returns {Array} 扁平化后的数组
+         */
+        flatten(arr) {
+            if (!Array.isArray(arr)) return [];
+            return arr.reduce((flat, item) => {
+                return flat.concat(Array.isArray(item) ? this.flatten(item) : item);
+            }, []);
+        }
+    },
+
+    /**
+     * 对象处理工具
+     */
+    object: {
+        /**
+         * 合并对象
+         * @param {Object} target - 目标对象
+         * @param {Object} source - 源对象
+         * @returns {Object} 合并后的对象
+         */
+        merge(target, source) {
+            return { ...target, ...source };
+        },
+
+        /**
+         * 获取嵌套属性
+         * @param {Object} obj - 对象
+         * @param {string} path - 属性路径
+         * @param {*} defaultValue - 默认值
+         * @returns {*} 属性值
+         */
+        get(obj, path, defaultValue = undefined) {
+            if (!obj || !path) return defaultValue;
+            const keys = path.split('.');
+            let result = obj;
+            for (const key of keys) {
+                if (result == null || typeof result !== 'object') {
+                    return defaultValue;
+                }
+                result = result[key];
+            }
+            return result !== undefined ? result : defaultValue;
+        }
+    },
+
+    /**
+     * 验证工具
+     */
+    validation: {
+        /**
+         * 验证邮箱
+         * @param {string} email - 邮箱地址
+         * @returns {boolean} 是否有效
+         */
+        isEmail(email) {
+            if (!email) return false;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        },
+
+        /**
+         * 验证URL
+         * @param {string} url - URL地址
+         * @returns {boolean} 是否有效
+         */
+        isUrl(url) {
+            if (!url) return false;
+            try {
+                new URL(url);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+
+        /**
+         * 验证是否为空
+         * @param {*} value - 值
+         * @returns {boolean} 是否为空
+         */
+        isEmpty(value) {
+            if (value == null) return true;
+            if (typeof value === 'string') return value.trim() === '';
+            if (Array.isArray(value)) return value.length === 0;
+            if (typeof value === 'object') return Object.keys(value).length === 0;
+            return false;
+        }
+    },
+
+    /**
      * 文件处理工具
      */
     file: {
@@ -393,6 +662,127 @@ const Utils = {
                 reader.onerror = () => reject(new Error('文件读取失败'));
                 reader.readAsText(file, 'UTF-8');
             });
+        },
+
+        /**
+         * 大文件分片读取 - 新增
+         * @param {File} file - 文件对象
+         * @param {Function} progressCallback - 进度回调
+         * @returns {Promise<string>} 文件内容
+         */
+        async readLargeFileContent(file, progressCallback = null) {
+            if (!file || !(file instanceof File)) {
+                throw new Error('无效的文件对象');
+            }
+
+            const chunkSize = APP_CONFIG.limits.chunkSize;
+            const totalChunks = Math.ceil(file.size / chunkSize);
+
+            if (totalChunks > APP_CONFIG.limits.maxChunks) {
+                throw new Error(`文件过大，超过最大分片数量限制（${APP_CONFIG.limits.maxChunks}）`);
+            }
+
+            let content = '';
+            let processedChunks = 0;
+
+            for (let start = 0; start < file.size; start += chunkSize) {
+                const end = Math.min(start + chunkSize, file.size);
+                const chunk = file.slice(start, end);
+
+                try {
+                    const chunkContent = await this.readFileChunk(chunk);
+                    content += chunkContent;
+                    processedChunks++;
+
+                    // 更新进度
+                    if (progressCallback) {
+                        const progress = (processedChunks / totalChunks) * 100;
+                        progressCallback({
+                            progress: Math.round(progress),
+                            processedChunks,
+                            totalChunks,
+                            processedBytes: end,
+                            totalBytes: file.size
+                        });
+                    }
+
+                    // 内存管理：定期触发垃圾回收
+                    if (processedChunks % 10 === 0) {
+                        await this.yieldToMainThread();
+                    }
+
+                } catch (error) {
+                    throw new Error(`读取文件分片失败: ${error.message}`);
+                }
+            }
+
+            return content;
+        },
+
+        /**
+         * 读取文件分片
+         * @param {Blob} chunk - 文件分片
+         * @returns {Promise<string>} 分片内容
+         */
+        readFileChunk(chunk) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (e.target && e.target.result) {
+                        resolve(e.target.result);
+                    } else {
+                        reject(new Error('分片内容为空'));
+                    }
+                };
+                reader.onerror = () => reject(new Error('分片读取失败'));
+                reader.readAsText(chunk, 'UTF-8');
+            });
+        },
+
+        /**
+         * 让出主线程控制权
+         * @returns {Promise<void>}
+         */
+        yieldToMainThread() {
+            return new Promise(resolve => {
+                setTimeout(resolve, 0);
+            });
+        },
+
+        /**
+         * 检查是否为大文件
+         * @param {File} file - 文件对象
+         * @returns {boolean} 是否为大文件
+         */
+        isLargeFile(file) {
+            return file && file.size > APP_CONFIG.limits.chunkSize;
+        },
+
+        /**
+         * 获取内存使用情况
+         * @returns {Object} 内存信息
+         */
+        getMemoryInfo() {
+            if (performance.memory) {
+                return {
+                    used: performance.memory.usedJSHeapSize,
+                    total: performance.memory.totalJSHeapSize,
+                    limit: performance.memory.jsHeapSizeLimit,
+                    usage: (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100
+                };
+            }
+            return null;
+        },
+
+        /**
+         * 检查内存使用是否超过阈值
+         * @returns {boolean} 是否超过阈值
+         */
+        isMemoryThresholdExceeded() {
+            const memInfo = this.getMemoryInfo();
+            if (!memInfo) return false;
+
+            return memInfo.used > APP_CONFIG.limits.memoryThreshold;
         }
     },
 

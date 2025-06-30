@@ -1406,71 +1406,669 @@ pre {
     color: #dc2626;
 }
 
+/* 文件处理进度条样式 */
+.file-progress-container {
+    margin: 15px 0;
+    padding: 20px;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: none;
+}
+
+.file-progress-content {
+    text-align: center;
+}
+
+.file-progress-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 15px;
+}
+
+.file-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.file-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.file-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: progress-shine 2s infinite;
+}
+
+@keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.file-progress-details {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+}
+
+/* 移动端触控优化 */
+@media (hover: none) and (pointer: coarse) {
+    /* 触控设备专用样式 */
+    button, .btn, .tab-button, .example-tab {
+        min-height: 44px; /* iOS人机界面指南推荐的最小触控目标 */
+        min-width: 44px;
+        padding: 12px 20px;
+        font-size: 16px; /* 防止iOS缩放 */
+    }
+
+    /* 增大可点击区域 */
+    .theme-toggle, .help-button {
+        padding: 12px;
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* 触控反馈增强 */
+    button:active, .btn:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+
+    /* 移除hover效果，避免触控设备的粘滞状态 */
+    button:hover, .btn:hover {
+        transform: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     body {
         padding: var(--spacing-sm);
+        /* 防止横向滚动 */
+        overflow-x: hidden;
     }
 
     .header {
         padding: var(--spacing-xl) var(--spacing-md);
+        /* 移动端头部优化 */
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--background-color);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border-color);
     }
 
     .header h1 {
         font-size: 2rem;
+        line-height: 1.2;
     }
 
     .main-content {
         padding: var(--spacing-md);
+        /* 改善滚动性能 */
+        -webkit-overflow-scrolling: touch;
     }
 
     .options-grid {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
     }
 
     .btn-group {
         flex-direction: column;
+        gap: var(--spacing-sm);
     }
 
     button {
         min-width: auto;
+        width: 100%;
+        /* 触控优化 */
+        min-height: 48px;
+        font-size: 16px; /* 防止iOS自动缩放 */
+        -webkit-tap-highlight-color: transparent;
     }
 
     textarea {
         min-height: 250px;
-        font-size: 0.8rem;
+        font-size: 16px; /* 防止iOS自动缩放 */
+        /* 改善移动端输入体验 */
+        -webkit-appearance: none;
+        border-radius: 8px;
+        resize: vertical;
+    }
+
+    /* 虚拟键盘适配 */
+    textarea:focus {
+        /* 确保输入框在虚拟键盘弹出时可见 */
+        transform: translateY(0);
+        transition: transform 0.3s ease;
     }
 
     .example-tabs {
         justify-content: center;
+        /* 移动端标签页优化 */
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .example-tabs::-webkit-scrollbar {
+        display: none;
     }
 
     .footer-content {
         grid-template-columns: 1fr;
         text-align: center;
     }
+
+    /* 文件上传区域移动端优化 */
+    .file-upload-area {
+        padding: var(--spacing-xl);
+        min-height: 120px;
+        /* 增大触控区域 */
+        border-width: 2px;
+        border-style: dashed;
+    }
+
+    /* 进度条移动端优化 */
+    .file-progress-container {
+        margin: 10px 0;
+        padding: 15px;
+    }
+
+    .file-progress-details {
+        font-size: 12px;
+        word-break: break-all;
+    }
 }
 
 @media (max-width: 480px) {
     .header h1 {
         font-size: 1.75rem;
+        margin-bottom: var(--spacing-sm);
     }
 
     .header .subtitle {
         font-size: 1rem;
+        line-height: 1.4;
     }
 
     .card {
         padding: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+        /* 小屏幕优化 */
+        border-radius: 6px;
     }
 
     .section-title {
         font-size: 1.125rem;
+        margin-bottom: var(--spacing-md);
     }
 
     .download-links {
         flex-direction: column;
+        gap: var(--spacing-sm);
     }
+
+    /* 小屏幕专用优化 */
+    .main-content {
+        padding: var(--spacing-sm);
+    }
+
+    .options-grid {
+        gap: var(--spacing-sm);
+    }
+
+    /* 输入区域优化 */
+    textarea {
+        min-height: 200px;
+        padding: var(--spacing-md);
+    }
+
+    /* 按钮组优化 */
+    .btn-group {
+        gap: var(--spacing-xs);
+    }
+
+    button {
+        padding: 14px 20px;
+        font-size: 15px;
+        min-height: 50px;
+    }
+
+    /* 统计信息优化 */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    .stat-item {
+        padding: var(--spacing-sm);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+    }
+
+    /* 示例内容优化 */
+    .example-content {
+        font-size: 14px;
+        padding: var(--spacing-sm);
+    }
+
+    /* 消息提示优化 */
+    .message {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 14px;
+        border-radius: 6px;
+    }
+}
+
+/* 移动端专用样式 */
+.mobile-device {
+    /* 减少动画复杂度以提升性能 */
+    --transition-duration: 0.2s;
+}
+
+.mobile-device * {
+    /* 优化触控滚动 */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 虚拟键盘弹出时的样式调整 */
+.keyboard-open {
+    /* 防止页面跳动 */
+    position: fixed;
+    width: 100%;
+}
+
+.keyboard-open .header {
+    /* 键盘弹出时隐藏头部以节省空间 */
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+}
+
+.keyboard-open .footer {
+    /* 键盘弹出时隐藏底部 */
+    display: none;
+}
+
+/* 触控设备专用交互样式 */
+@media (hover: none) and (pointer: coarse) {
+    /* 移除所有hover效果，避免触控设备的粘滞状态 */
+    *:hover {
+        /* 重置所有hover样式 */
+    }
+
+    /* 增强触控反馈 */
+    button:active, .btn:active, .tab-button:active {
+        background-color: var(--primary-color-dark);
+        transform: scale(0.98);
+    }
+
+    /* 优化选择框在触控设备上的表现 */
+    select {
+        font-size: 16px; /* 防止iOS缩放 */
+        padding: 12px;
+        min-height: 44px;
+    }
+
+    /* 优化输入框 */
+    input, textarea {
+        font-size: 16px; /* 防止iOS缩放 */
+        -webkit-appearance: none;
+        border-radius: 8px;
+    }
+}
+
+/* 横屏模式优化 */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+    .header {
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .header .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .main-content {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    textarea {
+        min-height: 150px;
+    }
+
+    .card {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* 增强的错误处理样式 */
+.error-message {
+    margin: 15px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    animation: slideInFromTop 0.3s ease-out;
+    max-width: 600px;
+}
+
+.error-message.error-info {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-left: 4px solid #2196F3;
+}
+
+.error-message.error-warning {
+    background: linear-gradient(135deg, #fff3e0, #ffcc02);
+    border-left: 4px solid #ff9800;
+}
+
+.error-message.error-error {
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border-left: 4px solid #f44336;
+}
+
+.error-message.error-critical {
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    border-left: 4px solid #e91e63;
+    animation: pulse 2s infinite;
+}
+
+.error-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.error-icon {
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+.error-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+.error-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 5px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.error-content {
+    padding: 15px 20px;
+}
+
+.error-message-text {
+    margin: 0 0 15px 0;
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+.error-suggestions {
+    margin: 15px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 6px;
+}
+
+.suggestions-title {
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.suggestions-list {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.suggestions-list li {
+    margin: 5px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.error-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.error-action-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.retry-btn {
+    background: #4CAF50;
+    color: white;
+}
+
+.retry-btn:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.fallback-btn {
+    background: #2196F3;
+    color: white;
+}
+
+.fallback-btn:hover {
+    background: #1976D2;
+    transform: translateY(-1px);
+}
+
+.reload-btn {
+    background: #ff9800;
+    color: white;
+}
+
+.reload-btn:hover {
+    background: #f57c00;
+    transform: translateY(-1px);
+}
+
+.help-btn {
+    background: #9c27b0;
+    color: white;
+}
+
+.help-btn:hover {
+    background: #7b1fa2;
+    transform: translateY(-1px);
+}
+
+.error-details {
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.error-toggle-details {
+    width: 100%;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: background 0.2s ease;
+}
+
+.error-toggle-details:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* 帮助对话框样式 */
+.help-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.help-dialog-content {
+    background: var(--card-background);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: slideInFromTop 0.3s ease-out;
+}
+
+.help-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.help-dialog-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.help-dialog-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.help-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.help-dialog-body {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+.help-dialog-body h4 {
+    margin: 0 0 15px 0;
+    color: var(--primary-color);
+}
+
+.help-dialog-body ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.help-dialog-body li {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.help-dialog-footer {
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: right;
+}
+
+.help-dialog-btn {
+    padding: 10px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.help-dialog-btn:hover {
+    background: var(--primary-color-dark);
 }
 
 /* 动画效果 */
@@ -1482,6 +2080,26 @@ pre {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
     }
 }
 

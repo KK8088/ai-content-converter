@@ -131,6 +131,7 @@ class AIContentConverter {
         this.bindEvents();
         this.loadSettings();
         this.initTheme();
+        this.initializeMobileOptimizations();
         this.showWelcomeMessage();
     }
 
@@ -223,20 +224,68 @@ class AIContentConverter {
      * 处理内容变化 - 增强版智能识别
      */
     handleContentChange(content) {
-        this.currentContent = content;
-        this.updateStats(content);
+        try {
+            // 输入验证
+            const validationResult = this.validateInput(content);
+            if (!validationResult.isValid) {
+                errorHandler.error(validationResult.message, errorHandler.errorTypes.VALIDATION);
+                return;
+            }
 
-        // 智能检测内容类型 - 使用增强算法
-        const detectionResult = this.intelligentContentDetection(content);
-        this.currentContentType = detectionResult.type;
-        this.detectionConfidence = detectionResult.confidence;
-        this.detectionDetails = detectionResult.details;
+            this.currentContent = content;
+            this.updateStats(content);
 
-        // 更新UI显示
-        this.updateContentTypeDisplay();
-        this.updateDetectionResultDisplay(detectionResult);
-        this.updatePreview();
-        this.saveToStorage();
+            // 智能检测内容类型 - 使用增强算法
+            const detectionResult = this.intelligentContentDetection(content);
+            this.currentContentType = detectionResult.type;
+            this.detectionConfidence = detectionResult.confidence;
+            this.detectionDetails = detectionResult.details;
+
+            // 更新UI显示
+            this.updateContentTypeDisplay();
+            this.updateDetectionResultDisplay(detectionResult);
+            this.updatePreview();
+            this.saveToStorage();
+        } catch (error) {
+            errorHandler.error(`内容处理失败: ${error.message}`, errorHandler.errorTypes.SYSTEM);
+            console.error('内容变化处理错误:', error);
+        }
+    }
+
+    /**
+     * 验证输入内容
+     * @param {string} content - 输入内容
+     * @returns {Object} 验证结果
+     */
+    validateInput(content) {
+        // 检查内容长度
+        if (content && content.length > APP_CONFIG.limits.maxCharacters) {
+            return {
+                isValid: false,
+                message: `内容长度超过限制（最大${APP_CONFIG.limits.maxCharacters.toLocaleString()}字符）`
+            };
+        }
+
+        // 检查是否包含恶意脚本
+        if (content && /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi.test(content)) {
+            return {
+                isValid: false,
+                message: '检测到不安全的脚本内容，请移除后重试'
+            };
+        }
+
+        // 检查是否为空或只有空白字符
+        if (!content || !content.trim()) {
+            return {
+                isValid: true,
+                message: '内容为空'
+            };
+        }
+
+        return {
+            isValid: true,
+            message: '验证通过'
+        };
     }
 
     /**
@@ -1311,12 +1360,15 @@ class AIContentConverter {
      * 处理转换 - 智能策略版
      */
     async handleConvert() {
+        console.log('🚀 开始转换流程...');
+
         if (!this.currentContent.trim()) {
             this.showMessage('请输入要转换的内容', 'warning');
             return;
         }
 
         if (this.isProcessing) {
+            console.log('⚠️ 转换正在进行中，跳过重复请求');
             return;
         }
 
@@ -1325,8 +1377,10 @@ class AIContentConverter {
             this.showLoading(true);
 
             // 1. 智能内容分析
+            console.log('🧠 开始智能内容分析...');
             this.showMessage('🧠 正在智能分析内容...', 'info');
             const analysisResult = this.intelligentContentDetection(this.currentContent);
+            console.log('📊 分析结果:', analysisResult);
 
             // 2. 策略选择
             const strategyResult = this.selectOptimalStrategy(analysisResult);
@@ -1345,7 +1399,9 @@ class AIContentConverter {
             const templateRecommendation = this.generateTemplateRecommendation(analysisResult);
 
             // 6. 应用智能策略和推荐
+            console.log('📋 创建转换计划...');
             const conversionPlan = this.createConversionPlan(strategyResult, outputFormat, templateStyle, fileName, formatRecommendations, templateRecommendation);
+            console.log('📋 转换计划:', conversionPlan);
 
             // 7. 显示智能预览
             this.showIntelligentPreview(conversionPlan, analysisResult, formatRecommendations);
@@ -1354,7 +1410,9 @@ class AIContentConverter {
             this.showMessage(`📋 转换计划：${conversionPlan.description}`, 'info');
 
             // 9. 执行转换
+            console.log('⚡ 开始执行转换计划...');
             await this.executeConversionPlan(conversionPlan, analysisResult);
+            console.log('✅ 转换计划执行完成');
 
             // 8. 完成提示
             this.showMessage('✅ 智能转换完成！文件已开始下载', 'success');
@@ -1362,7 +1420,39 @@ class AIContentConverter {
 
         } catch (error) {
             this.logger.error('智能转换失败: ' + error.message);
-            this.showMessage('❌ 转换失败：' + error.message, 'error');
+
+            // 使用增强的错误处理
+            let errorMessage = '转换过程中发生错误';
+            let errorType = errorHandler.errorTypes.CONVERSION;
+
+            // 根据错误类型提供更具体的错误信息
+            if (error.name === 'QuotaExceededError') {
+                errorMessage = '存储空间不足，请清理浏览器缓存后重试';
+                errorType = errorHandler.errorTypes.STORAGE;
+            } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                errorMessage = '网络连接问题，请检查网络后重试';
+                errorType = errorHandler.errorTypes.NETWORK;
+            } else if (error.message.includes('permission') || error.message.includes('denied')) {
+                errorMessage = '权限不足，请检查浏览器设置';
+                errorType = errorHandler.errorTypes.SYSTEM;
+            } else if (error.message.includes('format') || error.message.includes('parse')) {
+                errorMessage = '内容格式错误，请检查输入内容';
+                errorType = errorHandler.errorTypes.USER_INPUT;
+            } else {
+                errorMessage = `转换失败: ${error.message}`;
+            }
+
+            errorHandler.error(errorMessage, errorType);
+
+            // 记录详细错误信息用于调试
+            console.error('转换错误详情:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name,
+                currentContent: this.currentContent?.substring(0, 100) + '...',
+                contentType: this.currentContentType
+            });
+
         } finally {
             this.isProcessing = false;
             this.showLoading(false);
@@ -1419,7 +1509,9 @@ class AIContentConverter {
         const formatNames = {
             'docx': 'Word文档',
             'xlsx': 'Excel表格',
-            'both': 'Word和Excel'
+            'pdf': 'PDF文档',
+            'both': 'Word和Excel',
+            'all': 'Word、Excel和PDF'
         };
 
         const templateNames = {
@@ -1447,12 +1539,16 @@ class AIContentConverter {
         // 根据策略应用特殊选项
         this.applyStrategyOptions(options);
 
-        if (format === 'docx' || format === 'both') {
+        if (format === 'docx' || format === 'both' || format === 'all') {
             await this.generateWordWithStrategy(this.currentContent, plan, analysisResult, fileName);
         }
 
-        if (format === 'xlsx' || format === 'both') {
+        if (format === 'xlsx' || format === 'both' || format === 'all') {
             await this.generateExcelWithStrategy(this.currentContent, plan, analysisResult, fileName);
+        }
+
+        if (format === 'pdf' || format === 'all') {
+            await this.generatePDFWithStrategy(this.currentContent, plan, analysisResult, fileName);
         }
     }
 
@@ -3227,7 +3323,7 @@ class AIContentConverter {
     }
 
     /**
-     * 处理文件上传
+     * 处理文件上传 - 大文件优化版
      */
     async handleFileUpload(event) {
         if (!event || !event.target || !event.target.files) {
@@ -3249,17 +3345,51 @@ class AIContentConverter {
                 return;
             }
 
-            const content = await Utils.file.readFileContent(file);
+            // 检查内存使用情况
+            if (Utils.file.isMemoryThresholdExceeded()) {
+                this.showMessage('内存使用过高，请刷新页面后重试', 'warning');
+                return;
+            }
+
             const textarea = document.getElementById('ai-content');
-            if (textarea) {
-                textarea.value = content;
-                this.handleContentChange(content);
-                this.showMessage('文件上传成功', 'success');
-            } else {
+            if (!textarea) {
                 throw new Error('找不到文本输入区域');
             }
 
+            // 根据文件大小选择读取方式
+            let content;
+            if (Utils.file.isLargeFile(file)) {
+                // 大文件分片读取
+                this.showMessage('正在读取大文件，请稍候...', 'info');
+                this.showFileProgress(true);
+
+                content = await Utils.file.readLargeFileContent(file, (progress) => {
+                    this.updateFileProgress(progress);
+                });
+
+                this.showFileProgress(false);
+                this.showMessage(`大文件读取完成（${Utils.file.formatFileSize(file.size)}）`, 'success');
+            } else {
+                // 小文件直接读取
+                content = await Utils.file.readFileContent(file);
+                this.showMessage('文件上传成功', 'success');
+            }
+
+            textarea.value = content;
+            this.handleContentChange(content);
+
+            // 记录文件处理性能
+            if (this.performanceMonitor) {
+                this.performanceMonitor.recordMetric('file_upload', {
+                    fileSize: file.size,
+                    fileName: file.name,
+                    isLargeFile: Utils.file.isLargeFile(file),
+                    processingTime: Date.now()
+                });
+            }
+
         } catch (error) {
+            this.showFileProgress(false); // 确保隐藏进度条
             this.logger.error('文件上传错误: ' + error.message);
             this.showMessage('文件读取失败：' + error.message, 'error');
         } finally {
@@ -3267,6 +3397,59 @@ class AIContentConverter {
             if (event.target) {
                 event.target.value = '';
             }
+        }
+    }
+
+    /**
+     * 显示/隐藏文件处理进度
+     * @param {boolean} show - 是否显示
+     */
+    showFileProgress(show) {
+        let progressContainer = document.getElementById('file-progress-container');
+
+        if (show && !progressContainer) {
+            // 创建进度容器
+            progressContainer = document.createElement('div');
+            progressContainer.id = 'file-progress-container';
+            progressContainer.className = 'file-progress-container';
+            progressContainer.innerHTML = `
+                <div class="file-progress-content">
+                    <div class="file-progress-text">正在处理文件...</div>
+                    <div class="file-progress-bar">
+                        <div class="file-progress-fill" id="file-progress-fill"></div>
+                    </div>
+                    <div class="file-progress-details" id="file-progress-details">准备中...</div>
+                </div>
+            `;
+
+            // 插入到输入区域后面
+            const inputSection = document.querySelector('.input-section');
+            if (inputSection) {
+                inputSection.appendChild(progressContainer);
+            }
+        }
+
+        if (progressContainer) {
+            progressContainer.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    /**
+     * 更新文件处理进度
+     * @param {Object} progress - 进度信息
+     */
+    updateFileProgress(progress) {
+        const progressFill = document.getElementById('file-progress-fill');
+        const progressDetails = document.getElementById('file-progress-details');
+
+        if (progressFill) {
+            progressFill.style.width = `${progress.progress}%`;
+        }
+
+        if (progressDetails) {
+            const processedSize = Utils.file.formatFileSize(progress.processedBytes);
+            const totalSize = Utils.file.formatFileSize(progress.totalBytes);
+            progressDetails.textContent = `${progress.progress}% - ${processedSize} / ${totalSize} (${progress.processedChunks}/${progress.totalChunks} 分片)`;
         }
     }
 
@@ -3436,17 +3619,34 @@ class AIContentConverter {
     }
 
     /**
-     * 显示消息
+     * 显示消息 - 使用增强的错误处理系统
      */
     showMessage(message, type = 'info') {
         // 使用日志系统记录消息
         this.logger.info(`${type.toUpperCase()}: ${message}`);
 
-        // 可以在这里添加更复杂的消息显示逻辑
-        if (type === 'error') {
-            alert('错误: ' + message);
-        } else if (type === 'success') {
-            alert('成功: ' + message);
+        // 使用新的错误处理系统
+        if (typeof errorHandler !== 'undefined') {
+            switch (type) {
+                case 'error':
+                    errorHandler.error(message, errorHandler.errorTypes.CONVERSION);
+                    break;
+                case 'warning':
+                    errorHandler.warn(message);
+                    break;
+                case 'success':
+                    errorHandler.info(`✅ ${message}`);
+                    break;
+                default:
+                    errorHandler.info(message);
+            }
+        } else {
+            // 降级处理
+            if (type === 'error') {
+                alert('错误: ' + message);
+            } else if (type === 'success') {
+                alert('成功: ' + message);
+            }
         }
     }
 
@@ -3461,7 +3661,7 @@ class AIContentConverter {
     }
 
     /**
-     * 下载文件
+     * 下载文件 - Chrome兼容性增强版
      */
     downloadFile(blob, fileName) {
         if (!blob || !fileName) {
@@ -3470,19 +3670,106 @@ class AIContentConverter {
         }
 
         try {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.style.display = 'none'; // 隐藏元素
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            console.log('📥 开始下载文件:', { fileName, size: blob.size, type: blob.type });
+
+            // 确保文件名安全
+            const safeFileName = this.sanitizeFileName(fileName);
+
+            // 检测浏览器类型
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            const isEdge = /Edg/.test(navigator.userAgent);
+
+            if (isChrome) {
+                // Chrome浏览器特殊处理
+                this.downloadFileChrome(blob, safeFileName);
+            } else {
+                // 其他浏览器使用标准方法
+                this.downloadFileStandard(blob, safeFileName);
+            }
+
+            console.log('✅ 文件下载触发成功:', safeFileName);
+
         } catch (error) {
+            console.error('❌ 文件下载失败:', error);
             this.logger.error('文件下载失败: ' + error.message);
-            this.showMessage('文件下载失败', 'error');
+            this.showMessage('文件下载失败，请重试', 'error');
         }
+    }
+
+    /**
+     * Chrome浏览器专用下载方法
+     */
+    downloadFileChrome(blob, fileName) {
+        // 创建一个新的Blob，确保MIME类型正确
+        const mimeType = this.getMimeTypeByExtension(fileName);
+        const enhancedBlob = new Blob([blob], { type: mimeType });
+
+        // 使用更兼容的下载方式
+        const url = URL.createObjectURL(enhancedBlob);
+
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        link.href = url;
+        link.download = fileName;
+
+        // 添加到DOM并触发点击
+        document.body.appendChild(link);
+
+        // 使用setTimeout确保DOM更新完成
+        setTimeout(() => {
+            link.click();
+
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }, 10);
+    }
+
+    /**
+     * 标准浏览器下载方法
+     */
+    downloadFileStandard(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    /**
+     * 根据文件扩展名获取MIME类型
+     */
+    getMimeTypeByExtension(fileName) {
+        const extension = fileName.toLowerCase().split('.').pop();
+        const mimeTypes = {
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'pdf': 'application/pdf',
+            'txt': 'text/plain',
+            'json': 'application/json'
+        };
+
+        return mimeTypes[extension] || 'application/octet-stream';
+    }
+
+    /**
+     * 清理文件名，确保安全
+     */
+    sanitizeFileName(fileName) {
+        // 移除或替换不安全的字符
+        return fileName
+            .replace(/[<>:"/\\|?*]/g, '_')  // 替换不安全字符
+            .replace(/\s+/g, '_')          // 替换空格
+            .replace(/_{2,}/g, '_')        // 合并多个下划线
+            .substring(0, 255);            // 限制长度
     }
 
     /**
@@ -3904,6 +4191,321 @@ class AIContentConverter {
     handleExampleTab(e) { /* 示例切换逻辑 */ }
     handleThemeChange(e) { /* 主题切换逻辑 */ }
     updateUsageStats() { /* 使用统计更新 */ }
+
+    /**
+     * 使用策略生成PDF文档
+     * @param {string} content - 内容
+     * @param {Object} plan - 转换计划
+     * @param {Object} analysisResult - 分析结果
+     * @param {string} fileName - 文件名
+     */
+    async generatePDFWithStrategy(content, plan, analysisResult, fileName) {
+        console.log('📄 开始PDF生成流程...');
+        console.log('📄 PDF生成参数:', { fileName, template: plan.template, strategy: plan.strategy });
+
+        try {
+            // 记录性能开始
+            const startTime = performance.now();
+
+            // 确保PDF生成器已初始化
+            console.log('🔍 检查PDF生成器状态...');
+            if (typeof pdfGenerator === 'undefined') {
+                console.error('❌ PDF生成器未定义');
+                throw new Error('PDF生成器未加载');
+            }
+            console.log('✅ PDF生成器已加载');
+
+            // 根据模板选择PDF选项
+            const pdfOptions = this.getPDFOptionsForTemplate(plan.template);
+
+            // 应用策略特定的PDF选项
+            if (plan.options) {
+                if (plan.options.technicalLayout) {
+                    pdfOptions.fontFamily = 'Courier';
+                    pdfOptions.fontSize = 10;
+                }
+                if (plan.options.enhancedFormatting) {
+                    pdfOptions.lineHeight = 1.6;
+                }
+            }
+
+            // 生成PDF
+            const pdfBlob = await pdfGenerator.generatePDF(content, pdfOptions);
+
+            // 下载PDF文件
+            const pdfFileName = fileName.replace(/\.[^/.]+$/, '') + '.pdf';
+            pdfGenerator.downloadPDF(pdfBlob, pdfFileName);
+
+            // 记录性能
+            const endTime = performance.now();
+            const processingTime = endTime - startTime;
+
+            performanceMonitor.recordMetric('pdf_generation', {
+                processingTime,
+                contentLength: content.length,
+                strategy: plan.strategy,
+                template: plan.template
+            });
+
+            console.log(`📄 PDF文档生成完成: ${pdfFileName} (${processingTime.toFixed(2)}ms)`);
+
+        } catch (error) {
+            console.error('PDF生成失败:', error);
+            throw new Error(`PDF生成失败: ${error.message}`);
+        }
+    }
+
+    /**
+     * 根据模板获取PDF选项
+     * @param {string} template - 模板名称
+     * @returns {Object} PDF选项
+     */
+    getPDFOptionsForTemplate(template) {
+        const baseOptions = {
+            format: 'a4',
+            orientation: 'portrait',
+            margin: {
+                top: 20,
+                right: 20,
+                bottom: 20,
+                left: 20
+            }
+        };
+
+        switch (template) {
+            case 'professional':
+                return {
+                    ...baseOptions,
+                    fontSize: 12,
+                    fontFamily: 'Arial',
+                    lineHeight: 1.5
+                };
+
+            case 'academic':
+                return {
+                    ...baseOptions,
+                    fontSize: 11,
+                    fontFamily: 'Times',
+                    lineHeight: 1.6,
+                    margin: {
+                        top: 25,
+                        right: 25,
+                        bottom: 25,
+                        left: 25
+                    }
+                };
+
+            case 'simple':
+                return {
+                    ...baseOptions,
+                    fontSize: 11,
+                    fontFamily: 'Arial',
+                    lineHeight: 1.4
+                };
+
+            case 'colorful':
+                return {
+                    ...baseOptions,
+                    fontSize: 12,
+                    fontFamily: 'Arial',
+                    lineHeight: 1.5
+                };
+
+            default:
+                return {
+                    ...baseOptions,
+                    fontSize: 12,
+                    fontFamily: 'Arial',
+                    lineHeight: 1.5
+                };
+        }
+    }
+
+    /**
+     * 初始化移动端优化
+     */
+    initializeMobileOptimizations() {
+        // 检测设备类型
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        if (this.isMobile || this.isTouchDevice) {
+            this.setupMobileInteractions();
+            this.setupVirtualKeyboardHandling();
+            this.setupTouchGestures();
+            this.optimizeMobilePerformance();
+        }
+    }
+
+    /**
+     * 设置移动端交互
+     */
+    setupMobileInteractions() {
+        // 防止双击缩放
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        // 优化按钮触控反馈
+        const buttons = document.querySelectorAll('button, .btn');
+        buttons.forEach(button => {
+            button.addEventListener('touchstart', () => {
+                button.style.transform = 'scale(0.98)';
+            }, { passive: true });
+
+            button.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    button.style.transform = '';
+                }, 150);
+            }, { passive: true });
+        });
+    }
+
+    /**
+     * 设置虚拟键盘处理
+     */
+    setupVirtualKeyboardHandling() {
+        const textarea = document.getElementById('ai-content');
+        if (!textarea) return;
+
+        // 虚拟键盘弹出时的处理
+        textarea.addEventListener('focus', () => {
+            // 延迟执行，等待虚拟键盘完全弹出
+            setTimeout(() => {
+                // 滚动到输入框位置
+                textarea.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 300);
+        });
+
+        // 监听视口变化（虚拟键盘弹出/收起）
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const viewportHeight = window.visualViewport.height;
+                const windowHeight = window.innerHeight;
+
+                if (viewportHeight < windowHeight * 0.75) {
+                    // 虚拟键盘弹出
+                    document.body.classList.add('keyboard-open');
+                } else {
+                    // 虚拟键盘收起
+                    document.body.classList.remove('keyboard-open');
+                }
+            });
+        }
+    }
+
+    /**
+     * 设置触控手势
+     */
+    setupTouchGestures() {
+        const textarea = document.getElementById('ai-content');
+        if (!textarea) return;
+
+        let startY = 0;
+        let startX = 0;
+
+        textarea.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
+        }, { passive: true });
+
+        textarea.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const currentX = e.touches[0].clientX;
+            const deltaY = currentY - startY;
+            const deltaX = currentX - startX;
+
+            // 如果是水平滑动且距离足够，可以考虑添加手势功能
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                // 可以在这里添加左右滑动手势功能
+                // 例如：切换示例内容、撤销/重做等
+            }
+        }, { passive: true });
+    }
+
+    /**
+     * 优化移动端性能
+     */
+    optimizeMobilePerformance() {
+        // 减少动画和过渡效果的复杂度
+        if (this.isMobile) {
+            document.body.classList.add('mobile-device');
+        }
+
+        // 优化滚动性能
+        const scrollElements = document.querySelectorAll('.scrollable, textarea');
+        scrollElements.forEach(element => {
+            element.style.webkitOverflowScrolling = 'touch';
+        });
+
+        // 延迟加载非关键功能
+        setTimeout(() => {
+            this.loadNonCriticalMobileFeatures();
+        }, 1000);
+    }
+
+    /**
+     * 加载非关键移动端功能
+     */
+    loadNonCriticalMobileFeatures() {
+        // 添加移动端特有的功能
+        // 例如：震动反馈、设备方向检测等
+
+        if ('vibrate' in navigator) {
+            // 为重要操作添加震动反馈
+            const convertButton = document.getElementById('convert-btn');
+            if (convertButton) {
+                convertButton.addEventListener('click', () => {
+                    navigator.vibrate(50); // 轻微震动50ms
+                });
+            }
+        }
+
+        // 设备方向变化处理
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                // 重新计算布局
+                this.handleOrientationChange();
+            }, 100);
+        });
+    }
+
+    /**
+     * 处理设备方向变化
+     */
+    handleOrientationChange() {
+        // 重新调整某些元素的尺寸
+        const textarea = document.getElementById('ai-content');
+        if (textarea) {
+            // 横屏时增加文本区域高度
+            if (window.orientation === 90 || window.orientation === -90) {
+                textarea.style.minHeight = '200px';
+            } else {
+                textarea.style.minHeight = '250px';
+            }
+        }
+
+        // 重新计算进度条位置
+        const progressContainer = document.getElementById('file-progress-container');
+        if (progressContainer && progressContainer.style.display !== 'none') {
+            // 确保进度条在视口内可见
+            progressContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
 }
 
 // 应用启动

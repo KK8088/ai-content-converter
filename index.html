@@ -23,7 +23,7 @@
         <div class="header">
             <h1>AI内容格式转换工具</h1>
             <p class="subtitle">将AI对话内容完美转换为专业的Word和Excel文档</p>
-            <div class="version-badge">开源版 v1.4.0</div>
+            <div class="version-badge">开源版 v1.5.1</div>
         </div>
         
         <!-- 主要内容区域 -->
@@ -127,7 +127,9 @@
                         <select id="output-format">
                             <option value="docx">📄 Microsoft Word (.docx)</option>
                             <option value="xlsx">📊 Microsoft Excel (.xlsx)</option>
+                            <option value="pdf">📄 PDF文档 (.pdf)</option>
                             <option value="both">📄📊 Word和Excel</option>
+                            <option value="all">📄📊📄 Word、Excel和PDF</option>
                         </select>
                     </div>
 
@@ -256,8 +258,11 @@
     <!-- JavaScript模块 -->
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/errorHandler.js"></script>
+    <script src="js/performanceMonitor.js"></script>
     <script src="js/contentDetector.js"></script>
     <script src="js/markdownParser.js"></script>
+    <script src="js/pdfGenerator.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

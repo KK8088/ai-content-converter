@@ -1,11 +1,19 @@
 {
   "name": "ai-content-converter",
-  "version": "1.4.0",
+  "version": "1.5.1",
   "description": "将AI对话内容完美转换为专业的Word和Excel文档",
   "main": "index.html",
   "scripts": {
     "start": "python -m http.server 8080",
-    "serve": "python -m http.server 8080"
+    "serve": "python -m http.server 8080",
+    "test": "echo \"🧪 完整测试套件: http://localhost:8080/tests/fixed-test.html\" && echo \"📋 原始测试框架: http://localhost:8080/tests/test-runner.html\" && python -m http.server 8080",
+    "test:full": "echo \"打开完整测试套件...\" && start http://localhost:8080/tests/fixed-test.html",
+    "test:original": "echo \"打开原始测试框架...\" && start http://localhost:8080/tests/test-runner.html",
+    "quality": "node tools/code-quality-check.js",
+    "dev": "python -m http.server 8080",
+    "build": "echo \"纯前端项目，无需构建\"",
+    "lint": "echo \"代码质量检查请运行 npm run quality\"",
+    "validate": "echo \"验证项目完整性...\" && node tools/validate-project.js"
   },
   "repository": {
     "type": "git",

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容格式转换工具 - 单元测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .test-case {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .test-case.passed {
+            border-left-color: #4CAF50;
+            background-color: #f1f8e9;
+        }
+        .test-case.failed {
+            border-left-color: #f44336;
+            background-color: #ffebee;
+        }
+        .test-case.running {
+            border-left-color: #ff9800;
+            background-color: #fff3e0;
+        }
+        .test-result {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .test-result.passed { color: #4CAF50; }
+        .test-result.failed { color: #f44336; }
+        .test-result.running { color: #ff9800; }
+        .test-summary {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .run-tests-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .run-tests-btn:hover {
+            background: #1976D2;
+        }
+        .clear-btn {
+            background: #757575;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .clear-btn:hover {
+            background: #424242;
+        }
+        .error-details {
+            background: #ffcdd2;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🧪 AI内容格式转换工具 - 单元测试</h1>
+            <p>测试核心功能模块的正确性和稳定性</p>
+            <button class="run-tests-btn" onclick="runAllTests()">🚀 运行所有测试</button>
+            <button class="clear-btn" onclick="clearResults()">🗑️ 清空结果</button>
+        </div>
+
+        <div class="test-section" id="utils-tests">
+            <h3>🔧 工具函数测试</h3>
+            <div id="utils-test-results"></div>
+        </div>
+
+        <div class="test-section" id="detector-tests">
+            <h3>🤖 内容检测器测试</h3>
+            <div id="detector-test-results"></div>
+        </div>
+
+        <div class="test-section" id="parser-tests">
+            <h3>📝 Markdown解析器测试</h3>
+            <div id="parser-test-results"></div>
+        </div>
+
+        <div class="test-section" id="integration-tests">
+            <h3>🔗 集成测试</h3>
+            <div id="integration-test-results"></div>
+        </div>
+
+        <div class="test-summary" id="test-summary" style="display: none;">
+            <h3>📊 测试总结</h3>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <!-- 引入被测试的模块 -->
+    <script src="../js/config.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/contentDetector.js"></script>
+    <script src="../js/markdownParser.js"></script>
+
+    <!-- 测试框架 -->
+    <script src="test-framework.js"></script>
+    
+    <!-- 具体测试用例 -->
+    <script src="utils.test.js"></script>
+    <script src="contentDetector.test.js"></script>
+    <script src="markdownParser.test.js"></script>
+    <script src="integration.test.js"></script>
+
+    <script>
+        // 全局测试状态
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            running: 0
+        };
+
+        // 运行所有测试
+        async function runAllTests() {
+            clearResults();
+
+            console.log('🚀 开始运行所有测试...');
+
+            try {
+                // 运行各模块测试
+                if (typeof runUtilsTests === 'function') {
+                    await runUtilsTests();
+                } else {
+                    console.warn('runUtilsTests 函数未定义');
+                }
+
+                if (typeof runContentDetectorTests === 'function') {
+                    await runContentDetectorTests();
+                } else {
+                    console.warn('runContentDetectorTests 函数未定义');
+                }
+
+                if (typeof runMarkdownParserTests === 'function') {
+                    await runMarkdownParserTests();
+                } else {
+                    console.warn('runMarkdownParserTests 函数未定义');
+                }
+
+                if (typeof runIntegrationTests === 'function') {
+                    await runIntegrationTests();
+                } else {
+                    console.warn('runIntegrationTests 函数未定义');
+                }
+
+                // 显示测试总结
+                showTestSummary();
+
+                console.log('✅ 所有测试完成');
+            } catch (error) {
+                console.error('❌ 测试运行出错:', error);
+            }
+        }
+
+        // 清空测试结果
+        function clearResults() {
+            document.getElementById('utils-test-results').innerHTML = '';
+            document.getElementById('detector-test-results').innerHTML = '';
+            document.getElementById('parser-test-results').innerHTML = '';
+            document.getElementById('integration-test-results').innerHTML = '';
+            document.getElementById('test-summary').style.display = 'none';
+            
+            testResults = { total: 0, passed: 0, failed: 0, running: 0 };
+        }
+
+        // 显示测试总结
+        function showTestSummary() {
+            const summaryDiv = document.getElementById('test-summary');
+            const contentDiv = document.getElementById('summary-content');
+            
+            const passRate = testResults.total > 0 ? 
+                ((testResults.passed / testResults.total) * 100).toFixed(1) : 0;
+            
+            contentDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #2196F3;">${testResults.total}</div>
+                        <div>总测试数</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;">${testResults.passed}</div>
+                        <div>通过</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #f44336;">${testResults.failed}</div>
+                        <div>失败</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;">${passRate}%</div>
+                        <div>通过率</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; text-align: center;">
+                    ${testResults.failed === 0 ? 
+                        '<span style="color: #4CAF50; font-weight: bold;">🎉 所有测试通过！</span>' : 
+                        '<span style="color: #f44336; font-weight: bold;">⚠️ 存在失败的测试，请检查代码</span>'
+                    }
+                </div>
+            `;
+            
+            summaryDiv.style.display = 'block';
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 测试环境初始化完成');
+            console.log('💡 点击"运行所有测试"按钮开始测试');
+        });
+    </script>
+</body>
+</html>

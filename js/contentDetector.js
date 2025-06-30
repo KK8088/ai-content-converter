@@ -129,7 +129,7 @@ class ContentDetector {
         }
         
         // 如果主要是列表内容
-        if (listScore >= this.scoreThresholds.list && totalListLines / totalLines > 0.5) {
+        if (listScore >= this.scoreThresholds.list && (totalListLines / totalLines > 0.4 || totalListLines >= 3)) {
             return 'list';
         }
         
