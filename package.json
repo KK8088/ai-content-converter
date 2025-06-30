@@ -1,6 +1,6 @@
 {
   "name": "ai-content-converter",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "将AI对话内容完美转换为专业的Word和Excel文档",
   "main": "index.html",
   "scripts": {

@@ -3689,43 +3689,122 @@ class AIContentConverter {
 
             console.log('✅ 文件下载触发成功:', safeFileName);
 
+            // 显示下载成功提示和用户指导
+            this.showDownloadSuccess(safeFileName);
+
         } catch (error) {
             console.error('❌ 文件下载失败:', error);
             this.logger.error('文件下载失败: ' + error.message);
             this.showMessage('文件下载失败，请重试', 'error');
+
+            // 显示下载错误帮助
+            this.showDownloadErrorHelp(error);
         }
     }
 
     /**
-     * Chrome浏览器专用下载方法
+     * Chrome浏览器专用下载方法 - 增强版
      */
     downloadFileChrome(blob, fileName) {
-        // 创建一个新的Blob，确保MIME类型正确
-        const mimeType = this.getMimeTypeByExtension(fileName);
-        const enhancedBlob = new Blob([blob], { type: mimeType });
+        try {
+            console.log('🔧 Chrome专用下载开始:', { fileName, size: blob.size });
 
-        // 使用更兼容的下载方式
-        const url = URL.createObjectURL(enhancedBlob);
+            // 验证输入参数
+            if (!blob || !fileName) {
+                throw new Error('无效的下载参数');
+            }
 
-        // 创建下载链接
-        const link = document.createElement('a');
-        link.style.display = 'none';
-        link.href = url;
-        link.download = fileName;
+            // 创建一个新的Blob，确保MIME类型正确
+            const mimeType = this.getMimeTypeByExtension(fileName);
+            console.log('📦 MIME类型:', mimeType);
 
-        // 添加到DOM并触发点击
-        document.body.appendChild(link);
+            // 多重验证的Blob创建
+            let enhancedBlob;
+            try {
+                enhancedBlob = new Blob([blob], { type: mimeType });
+            } catch (blobError) {
+                console.warn('⚠️ Blob创建失败，使用原始blob:', blobError);
+                enhancedBlob = blob;
+            }
 
-        // 使用setTimeout确保DOM更新完成
-        setTimeout(() => {
-            link.click();
+            // 验证Blob大小
+            if (enhancedBlob.size === 0) {
+                throw new Error('生成的文件为空');
+            }
 
-            // 清理
+            // 使用更兼容的下载方式
+            const url = URL.createObjectURL(enhancedBlob);
+            console.log('🔗 Blob URL创建成功:', url);
+
+            // 创建下载链接
+            const link = document.createElement('a');
+            link.style.display = 'none';
+            link.style.position = 'absolute';
+            link.style.left = '-9999px';
+            link.href = url;
+            link.download = fileName;
+
+            // 添加额外属性以提高兼容性
+            link.setAttribute('target', '_blank');
+            link.setAttribute('rel', 'noopener noreferrer');
+
+            // 添加到DOM并触发点击
+            document.body.appendChild(link);
+            console.log('🔗 下载链接已添加到DOM');
+
+            // 使用多重触发机制确保下载
             setTimeout(() => {
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            }, 100);
-        }, 10);
+                try {
+                    // 方法1: 标准点击
+                    link.click();
+                    console.log('✅ 标准点击触发成功');
+                } catch (clickError) {
+                    console.warn('⚠️ 标准点击失败，尝试备用方法:', clickError);
+
+                    // 方法2: 事件触发
+                    try {
+                        const clickEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                        });
+                        link.dispatchEvent(clickEvent);
+                        console.log('✅ 事件触发成功');
+                    } catch (eventError) {
+                        console.error('❌ 事件触发也失败:', eventError);
+
+                        // 方法3: 直接导航（最后手段）
+                        try {
+                            window.location.href = url;
+                            console.log('✅ 直接导航触发');
+                        } catch (navError) {
+                            console.error('❌ 所有下载方法都失败:', navError);
+                            throw new Error('下载触发失败');
+                        }
+                    }
+                }
+
+                // 延迟清理
+                setTimeout(() => {
+                    try {
+                        if (document.body.contains(link)) {
+                            document.body.removeChild(link);
+                        }
+                        URL.revokeObjectURL(url);
+                        console.log('🧹 下载资源清理完成');
+                    } catch (cleanupError) {
+                        console.warn('⚠️ 资源清理失败:', cleanupError);
+                    }
+                }, 100);
+            }, 10);
+
+        } catch (error) {
+            console.error('❌ Chrome下载失败:', error);
+
+            // 回退到标准下载方法
+            console.log('🔄 回退到标准下载方法');
+            this.downloadFileStandard(blob, fileName);
+        }
     }
 
     /**
@@ -3770,6 +3849,64 @@ class AIContentConverter {
             .replace(/\s+/g, '_')          // 替换空格
             .replace(/_{2,}/g, '_')        // 合并多个下划线
             .substring(0, 255);            // 限制长度
+    }
+
+    /**
+     * 显示下载成功提示
+     */
+    showDownloadSuccess(fileName) {
+        // 延迟显示成功消息，给下载一些时间
+        setTimeout(() => {
+            this.showMessage(`✅ 文件下载已开始: ${fileName}`, 'success');
+
+            // 在控制台显示详细的下载指导
+            console.log(`
+📁 下载完成指导:
+1. 文件名: ${fileName}
+2. 保存位置: 浏览器默认下载文件夹
+3. 如果下载没有开始，请检查:
+   - 浏览器下载设置
+   - 弹窗拦截设置
+   - 下载权限设置
+4. 如果找不到文件，请查看浏览器下载历史记录
+            `);
+
+            // 检查是否为Chrome浏览器，提供特殊提示
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            if (isChrome) {
+                console.log(`
+🔧 Chrome浏览器特别提示:
+- 如果下载的文件无法打开，请确保文件扩展名正确
+- 检查Chrome的下载设置中是否启用了"下载前询问每个文件的保存位置"
+- 如果问题持续，请尝试清除浏览器缓存后重试
+                `);
+            }
+        }, 500);
+    }
+
+    /**
+     * 显示下载错误帮助
+     */
+    showDownloadErrorHelp(error) {
+        const helpMessage = `
+🆘 下载失败解决方案:
+1. 刷新页面后重试
+2. 检查浏览器下载设置
+3. 确保浏览器允许文件下载
+4. 尝试使用其他浏览器 (推荐Chrome、Edge、Firefox)
+5. 检查网络连接是否正常
+6. 清除浏览器缓存和Cookie
+7. 禁用可能干扰的浏览器扩展
+
+错误详情: ${error.message}
+        `;
+
+        console.error(helpMessage);
+
+        // 延迟显示帮助提示
+        setTimeout(() => {
+            this.showMessage('下载失败，请查看控制台获取详细解决方案', 'warning');
+        }, 1000);
     }
 
     /**

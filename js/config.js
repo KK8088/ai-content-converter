@@ -10,7 +10,7 @@
 const APP_CONFIG = {
     // 应用信息
     name: 'AI内容格式转换工具',
-    version: '1.5.1',
+    version: '1.5.2',
     description: '将AI对话内容完美转换为专业的Word和Excel文档',
     author: 'zk0x01',
     license: 'MIT',
