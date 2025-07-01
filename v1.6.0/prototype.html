@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容格式转换工具 v1.6.0 原型</title>
+    
+    <!-- Fluid Design 2025 样式 -->
+    <link rel="stylesheet" href="css/fluid-design.css">
+    
+    <!-- 双模式UI样式 -->
+    <style>
+        /* 双模式UI专用样式 */
+        .app-layout {
+            min-height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        .app-header {
+            padding: var(--space-xl) 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--space-lg);
+        }
+
+        .brand {
+            flex: 1;
+        }
+
+        .app-title {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-sm);
+        }
+
+        .version-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .version-badge {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: var(--radius-full);
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+        }
+
+        .mode-indicator {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--glass-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-full);
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+        }
+
+        .mode-indicator[data-mode="simple"] {
+            color: var(--success-solid);
+            border-color: var(--success-solid);
+        }
+
+        .mode-indicator[data-mode="advanced"] {
+            color: var(--primary-solid);
+            border-color: var(--primary-solid);
+        }
+
+        .app-main {
+            padding: var(--space-2xl) 0;
+        }
+
+        .input-section {
+            margin-bottom: var(--space-xl);
+        }
+
+        .input-header {
+            margin-bottom: var(--space-lg);
+            text-align: center;
+        }
+
+        .smart-input-wrapper {
+            position: relative;
+        }
+
+        .input-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--space-md);
+            padding: 0 var(--space-md);
+        }
+
+        .format-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all var(--transition-normal);
+        }
+
+        .indicator-dot.analyzing {
+            background: var(--warning-solid);
+            animation: pulse 1.5s infinite;
+        }
+
+        .indicator-dot.ready {
+            background: var(--success-solid);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .action-section {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .action-buttons {
+            margin-bottom: var(--space-lg);
+        }
+
+        .gap-md {
+            gap: var(--space-md);
+        }
+
+        .mode-switch-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color var(--transition-normal);
+        }
+
+        .mode-switch-btn:hover {
+            color: var(--primary-solid);
+        }
+
+        .suggestion-section {
+            margin-bottom: var(--space-xl);
+        }
+
+        .suggestion-card {
+            background: var(--success-gradient);
+            color: white;
+            border: none;
+        }
+
+        .advanced-panel {
+            transition: all var(--transition-normal);
+        }
+
+        .panel-header {
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .option-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .option-label {
+            display: block;
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+        }
+
+        .format-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .format-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .format-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .option-content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md);
+            background: var(--glass-bg);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-normal);
+        }
+
+        .format-option input:checked + .option-content {
+            border-color: var(--primary-solid);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .option-icon {
+            font-size: var(--text-lg);
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            cursor: pointer;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-solid);
+        }
+
+        .app-footer {
+            padding: var(--space-lg) 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 动画效果 */
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 消息提示样式 */
+        .message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            color: white;
+            font-weight: var(--font-medium);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message-success {
+            background: var(--success-gradient);
+        }
+
+        .message-warning {
+            background: var(--warning-gradient);
+        }
+
+        .message-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .message-info {
+            background: var(--primary-gradient);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .format-options {
+                grid-template-columns: 1fr;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: var(--space-sm);
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 双模式UI将在这里渲染 -->
+    </div>
+
+    <!-- 加载脚本 -->
+    <script src="js/ai/ContentAnalyzer.js"></script>
+    <script src="js/components/DualMode.js"></script>
+    
+    <script>
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 AI内容格式转换工具 v1.6.0 原型启动');
+            
+            // 创建双模式控制器
+            const dualMode = new DualModeController();
+            
+            // 创建内容分析器
+            const analyzer = new ContentAnalyzer();
+            
+            // 监听模式切换
+            dualMode.on('onModeChange', (mode) => {
+                console.log('模式切换:', mode);
+                
+                // 显示模式切换消息
+                const message = mode === 'simple' ? '已切换到简单模式' : '已切换到高级模式';
+                showMessage(message, 'info');
+            });
+            
+            // 监听转换事件
+            dualMode.on('onConvert', async (data) => {
+                console.log('开始转换:', data);
+                
+                try {
+                    // 分析内容
+                    const analysis = await analyzer.analyze(data.content);
+                    console.log('内容分析结果:', analysis);
+                    
+                    // 模拟转换过程
+                    await simulateConversion(data, analysis);
+                    
+                } catch (error) {
+                    console.error('转换失败:', error);
+                    showMessage('转换失败，请重试', 'error');
+                }
+            });
+            
+            // 模拟转换过程
+            async function simulateConversion(data, analysis) {
+                const format = analysis.recommendation.format;
+                const formatName = getFormatDisplayName(format);
+                
+                // 显示开始消息
+                showMessage(`开始生成${formatName}...`, 'info');
+                
+                // 模拟转换时间
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // 显示完成消息
+                showMessage(`${formatName}生成完成！`, 'success');
+                
+                // 模拟文件下载
+                downloadSimulatedFile(format);
+            }
+            
+            // 模拟文件下载
+            function downloadSimulatedFile(format) {
+                const filename = `AI转换文档_${new Date().toISOString().slice(0, 10)}.${format}`;
+                console.log('模拟下载文件:', filename);
+                
+                // 在实际应用中，这里会触发真实的文件下载
+                setTimeout(() => {
+                    showMessage('文件下载已开始', 'success');
+                }, 500);
+            }
+            
+            // 获取格式显示名称
+            function getFormatDisplayName(format) {
+                const names = {
+                    'docx': 'Word文档',
+                    'xlsx': 'Excel表格',
+                    'pdf': 'PDF文档'
+                };
+                return names[format] || format.toUpperCase();
+            }
+            
+            // 显示消息
+            function showMessage(message, type = 'info') {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message message-${type}`;
+                messageEl.textContent = message;
+                
+                document.body.appendChild(messageEl);
+                
+                setTimeout(() => {
+                    messageEl.remove();
+                }, 3000);
+            }
+            
+            // 添加一些测试数据
+            window.testData = {
+                conversation: `用户：请帮我分析一下这个数据表格
+                
+| 产品名称 | 销量 | 价格 |
+|---------|------|------|
+| 产品A   | 100  | 50   |
+| 产品B   | 200  | 80   |
+| 产品C   | 150  | 60   |
+
+助手：好的，我来为您分析这个销售数据表格...`,
+                
+                document: `# AI内容格式转换工具使用指南
+
+## 简介
+这是一个强大的AI内容格式转换工具，支持多种输出格式。
+
+## 主要功能
+- Word文档生成
+- Excel表格生成  
+- PDF文档生成
+
+## 使用方法
+1. 粘贴内容
+2. 选择格式
+3. 开始转换`,
+                
+                code: `\`\`\`javascript
+function convertContent(content, format) {
+    const analyzer = new ContentAnalyzer();
+    const result = analyzer.analyze(content);
+    return generateFile(result, format);
+}
+\`\`\``
+            };
+            
+            console.log('测试数据已准备，可在控制台使用 testData 访问');
+            console.log('原型初始化完成！');
+        });
+    </script>
+</body>
+</html>
