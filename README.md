@@ -10,7 +10,7 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-v1.4.0-blue.svg)](https://github.com/KK8088/ai-content-converter/releases)
+[![Version](https://img.shields.io/badge/version-v1.5.5-blue.svg)](https://github.com/KK8088/ai-content-converter/releases)
 [![GitHub Issues](https://img.shields.io/github/issues/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/issues)
 [![GitHub Forks](https://img.shields.io/github/forks/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/network)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
@@ -26,10 +26,17 @@
 ### 🎯 核心功能
 - 📄 **Word文档(.docx)** - 专业文档生成，支持丰富格式
 - 📊 **Excel表格(.xlsx)** - 多工作表支持，智能数据类型识别
+- 📄 **PDF文档(.pdf)** - 完美中文支持，html2canvas高清渲染 (v1.5.5新增!)
 - 🤖 **智能内容检测** - 95%+准确率的格式识别
 - 🎯 **智能决策系统** - 6种专业转换策略自动选择 (v1.4.0新增!)
 - 💡 **格式推荐系统** - 基于内容特征的智能格式推荐 (v1.4.0新增!)
 - 👁️ **实时预览** - 转换前可视化预览效果
+
+### 🚨 PDF中文乱码彻底修复 (v1.5.5)
+- **html2canvas集成** - 完美的中文字符渲染技术
+- **智能方案选择** - 中文内容自动使用高级渲染，英文内容使用高效方案
+- **高清显示** - 2倍缩放确保PDF中文字清晰度
+- **完美兼容** - 简体中文、繁体中文、中英混合全支持
 
 ### 🔥 实时预览系统 (v1.1.0)
 - **结构预览** - 智能检测结果和表格结构展示

@@ -4,7 +4,7 @@
 [![GitHub Forks](https://img.shields.io/github/forks/KK8088/ai-content-converter?style=social)](https://github.com/KK8088/ai-content-converter)
 [![GitHub Issues](https://img.shields.io/github/issues/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/issues)
 [![GitHub License](https://img.shields.io/github/license/KK8088/ai-content-converter)](https://github.com/KK8088/ai-content-converter/blob/main/LICENSE)
-[![Version](https://img.shields.io/badge/version-v1.4.0-blue)](https://github.com/KK8088/ai-content-converter/releases)
+[![Version](https://img.shields.io/badge/version-v1.5.5-blue)](https://github.com/KK8088/ai-content-converter/releases)
 
 > 🌟 **Perfect conversion of AI dialogue content to professional Word and Excel documents**
 
@@ -15,10 +15,17 @@
 ### 🎯 Core Functions
 - 📄 **Word Document (.docx)** - Professional document generation with rich formatting
 - 📊 **Excel Spreadsheet (.xlsx)** - Multi-sheet support with intelligent data type recognition
+- 📄 **PDF Document (.pdf)** - Perfect Chinese support with html2canvas high-quality rendering (NEW in v1.5.5!)
 - 🤖 **Smart Content Detection** - 95%+ accuracy in format recognition
 - 🎯 **Intelligent Decision System** - 6 professional conversion strategies with auto-selection (NEW in v1.4.0!)
 - 💡 **Format Recommendation System** - Smart format suggestions based on content features (NEW in v1.4.0!)
 - 👁️ **Real-time Preview** - Visual preview before conversion
+
+### 🚨 BREAKTHROUGH: PDF Chinese Character Fix (v1.5.5)
+- **html2canvas Integration** - Perfect Chinese character rendering technology
+- **Smart Dual Approach** - Chinese content uses advanced rendering, English content uses efficient approach
+- **High-Definition Display** - 2x scaling ensures PDF Chinese text clarity
+- **Perfect Compatibility** - Full support for Simplified Chinese, Traditional Chinese, and mixed content
 
 ### 🔥 NEW: Intelligent Decision System (v1.4.0)
 - **Strategy Engine** - 6 specialized conversion strategies (Data-heavy, Code-heavy, Conversational, etc.)
