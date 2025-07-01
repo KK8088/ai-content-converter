@@ -1,0 +1,550 @@
+/**
+ * Dark Cyber 2025 - 酷炫黑色主题
+ * v1.6.0 "简约革命" 黑色版本
+ */
+
+/* ===== 黑色主题色彩系统 ===== */
+:root {
+    /* 主要背景色 */
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #111111;
+    --bg-tertiary: #1a1a1a;
+    --bg-card: #161616;
+    --bg-elevated: #1f1f1f;
+    
+    /* 霓虹色彩系统 */
+    --neon-blue: #00d4ff;
+    --neon-purple: #8b5cf6;
+    --neon-cyan: #06ffa5;
+    --neon-pink: #ff006e;
+    --neon-orange: #ff8500;
+    
+    /* 主题渐变 */
+    --primary-gradient: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 50%, #ff006e 100%);
+    --secondary-gradient: linear-gradient(135deg, #06ffa5 0%, #00d4ff 100%);
+    --danger-gradient: linear-gradient(135deg, #ff006e 0%, #ff8500 100%);
+    --success-gradient: linear-gradient(135deg, #06ffa5 0%, #00d4ff 100%);
+    
+    /* 文本色彩 */
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-muted: #666666;
+    --text-accent: #00d4ff;
+    --text-success: #06ffa5;
+    --text-warning: #ff8500;
+    --text-danger: #ff006e;
+    
+    /* 边框和分割线 */
+    --border-primary: #333333;
+    --border-secondary: #2a2a2a;
+    --border-accent: #00d4ff;
+    --border-glow: rgba(0, 212, 255, 0.5);
+    
+    /* 玻璃态效果 - 黑色版本 */
+    --glass-bg: rgba(22, 22, 22, 0.8);
+    --glass-bg-dark: rgba(10, 10, 10, 0.9);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.7);
+    
+    /* 发光效果 */
+    --glow-blue: 0 0 20px rgba(0, 212, 255, 0.5);
+    --glow-purple: 0 0 20px rgba(139, 92, 246, 0.5);
+    --glow-cyan: 0 0 20px rgba(6, 255, 165, 0.5);
+    --glow-pink: 0 0 20px rgba(255, 0, 110, 0.5);
+    
+    /* 阴影系统 - 黑色主题 */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.6);
+    --shadow-2xl: 0 24px 48px rgba(0, 0, 0, 0.8);
+    
+    /* 动画和过渡 */
+    --transition-glow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-cyber: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ===== 基础样式重置 - 黑色主题 ===== */
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    overflow-x: hidden;
+}
+
+/* 添加动态背景效果 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(6, 255, 165, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ===== 酷炫玻璃态组件 ===== */
+.glass-cyber {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    position: relative;
+}
+
+.glass-cyber::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--primary-gradient);
+    opacity: 0.6;
+}
+
+.glass-cyber:hover {
+    box-shadow: var(--glass-shadow-hover);
+    border-color: var(--border-glow);
+}
+
+/* ===== 霓虹按钮系统 ===== */
+.btn-cyber {
+    background: var(--glass-bg);
+    border: 2px solid var(--border-accent);
+    color: var(--text-accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-cyber);
+}
+
+.btn-cyber::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-cyber:hover {
+    box-shadow: var(--glow-blue);
+    transform: translateY(-2px);
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+}
+
+.btn-cyber:hover::before {
+    left: 100%;
+}
+
+.btn-cyber:active {
+    transform: translateY(0);
+    box-shadow: var(--glow-blue), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 主要霓虹按钮 */
+.btn-primary-cyber {
+    background: var(--primary-gradient);
+    border: 2px solid transparent;
+    color: var(--text-primary);
+    box-shadow: var(--glow-blue);
+    position: relative;
+}
+
+.btn-primary-cyber::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: var(--bg-card);
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.btn-primary-cyber:hover {
+    box-shadow: var(--glow-blue), var(--glow-purple);
+    transform: translateY(-3px);
+}
+
+/* 成功按钮 */
+.btn-success-cyber {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+
+.btn-success-cyber:hover {
+    box-shadow: var(--glow-cyan);
+    border-color: var(--neon-cyan);
+}
+
+/* ===== 霓虹输入框 ===== */
+.input-cyber {
+    background: var(--glass-bg);
+    border: 2px solid var(--border-primary);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    transition: var(--transition-glow);
+    position: relative;
+}
+
+.input-cyber:focus {
+    outline: none;
+    border-color: var(--neon-blue);
+    box-shadow: var(--glow-blue);
+    background: var(--glass-bg-dark);
+}
+
+.input-cyber::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* 智能输入框特效 */
+.smart-input-cyber {
+    position: relative;
+    min-height: 200px;
+}
+
+.smart-input-cyber.analyzing {
+    border-color: var(--neon-purple);
+    box-shadow: var(--glow-purple);
+    animation: cyber-pulse 2s infinite;
+}
+
+@keyframes cyber-pulse {
+    0%, 100% { 
+        box-shadow: var(--glow-purple);
+    }
+    50% { 
+        box-shadow: var(--glow-purple), var(--glow-blue);
+    }
+}
+
+/* ===== 霓虹卡片系统 ===== */
+.card-cyber {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition-cyber);
+    position: relative;
+}
+
+.card-cyber::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-gradient);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    opacity: 0.8;
+}
+
+.card-cyber:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl), var(--glow-blue);
+    border-color: var(--border-glow);
+}
+
+/* 建议卡片特效 */
+.suggestion-card-cyber {
+    background: var(--success-gradient);
+    border: 2px solid var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+    animation: cyber-glow 3s ease-in-out infinite;
+}
+
+@keyframes cyber-glow {
+    0%, 100% { 
+        box-shadow: var(--glow-cyan);
+    }
+    50% { 
+        box-shadow: var(--glow-cyan), var(--glow-blue);
+    }
+}
+
+/* ===== 状态指示器 ===== */
+.indicator-cyber {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-full);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.indicator-dot-cyber {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: var(--transition-glow);
+}
+
+.indicator-dot-cyber.analyzing {
+    background: var(--neon-orange);
+    box-shadow: var(--glow-pink);
+    animation: cyber-dot-pulse 1.5s infinite;
+}
+
+.indicator-dot-cyber.ready {
+    background: var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+@keyframes cyber-dot-pulse {
+    0%, 100% { 
+        opacity: 1; 
+        transform: scale(1);
+        box-shadow: 0 0 5px var(--neon-orange);
+    }
+    50% { 
+        opacity: 0.7; 
+        transform: scale(1.3);
+        box-shadow: 0 0 15px var(--neon-orange);
+    }
+}
+
+/* ===== 格式选择器 ===== */
+.format-option-cyber {
+    position: relative;
+    cursor: pointer;
+}
+
+.format-option-cyber input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.option-content-cyber {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--glass-bg);
+    border: 2px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    transition: var(--transition-cyber);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.format-option-cyber:hover .option-content-cyber {
+    border-color: var(--border-accent);
+    box-shadow: var(--glow-blue);
+    transform: translateY(-2px);
+}
+
+.format-option-cyber input:checked + .option-content-cyber {
+    border-color: var(--neon-cyan);
+    background: rgba(6, 255, 165, 0.1);
+    box-shadow: var(--glow-cyan);
+}
+
+.option-icon-cyber {
+    font-size: var(--text-xl);
+    filter: drop-shadow(0 0 5px currentColor);
+}
+
+/* ===== 头部样式 ===== */
+.app-header-cyber {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-primary);
+    position: relative;
+}
+
+.app-header-cyber::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--primary-gradient);
+    opacity: 0.6;
+}
+
+.app-title-cyber {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+.version-badge-cyber {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--primary-gradient);
+    color: var(--text-primary);
+    border-radius: var(--radius-full);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: var(--glow-blue);
+}
+
+.mode-indicator-cyber {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-full);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: var(--transition-glow);
+}
+
+.mode-indicator-cyber[data-mode="simple"] {
+    color: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(6, 255, 165, 0.3);
+}
+
+.mode-indicator-cyber[data-mode="advanced"] {
+    color: var(--neon-purple);
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+
+/* ===== 底部状态栏 ===== */
+.app-footer-cyber {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-primary);
+    position: relative;
+}
+
+.app-footer-cyber::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--primary-gradient);
+    opacity: 0.6;
+}
+
+/* ===== 消息提示 - 霓虹版本 ===== */
+.message-cyber {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--glass-bg);
+    border: 2px solid;
+    border-radius: var(--radius-lg);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 1000;
+    animation: cyber-slide-in 0.4s ease-out;
+    backdrop-filter: blur(20px);
+}
+
+.message-cyber.success {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+.message-cyber.warning {
+    border-color: var(--neon-orange);
+    color: var(--neon-orange);
+    box-shadow: 0 0 20px rgba(255, 133, 0, 0.5);
+}
+
+.message-cyber.error {
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
+    box-shadow: var(--glow-pink);
+}
+
+.message-cyber.info {
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+    box-shadow: var(--glow-blue);
+}
+
+@keyframes cyber-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(100%) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+/* ===== 滚动条样式 ===== */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-accent);
+    border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-blue);
+    box-shadow: var(--glow-blue);
+}
+
+/* ===== 响应式设计 ===== */
+@media (max-width: 768px) {
+    .app-title-cyber {
+        font-size: var(--text-2xl);
+        letter-spacing: 1px;
+    }
+    
+    .btn-cyber, .btn-primary-cyber {
+        min-height: 48px;
+        font-size: var(--text-base);
+    }
+    
+    .input-cyber {
+        font-size: 16px; /* 防止iOS缩放 */
+    }
+}
