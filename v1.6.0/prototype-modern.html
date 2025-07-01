@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容格式转换工具 v1.6.0 - Modern Glassmorphism</title>
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Modern Glassmorphism 样式 -->
+    <link rel="stylesheet" href="css/modern-glassmorphism.css">
+    
+    <style>
+        /* 页面特定增强样式 */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* 动态背景渐变 */
+        .dynamic-bg {
+            background: linear-gradient(135deg, 
+                hsl(210 40% 98%) 0%, 
+                hsl(220 60% 97%) 25%,
+                hsl(230 50% 96%) 50%,
+                hsl(240 40% 97%) 75%,
+                hsl(210 40% 98%) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        /* 增强的玻璃效果 */
+        .glass-enhanced {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+        
+        /* 现代化按钮增强 */
+        .btn-modern {
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+        
+        .btn-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-modern:hover::before {
+            left: 100%;
+        }
+        
+        /* 智能输入框增强 */
+        .smart-input-enhanced {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .smart-input-enhanced:focus {
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(1.01);
+            box-shadow: 
+                0 0 0 3px rgba(59, 130, 246, 0.1),
+                0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 格式卡片增强 */
+        .format-card-enhanced {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+        }
+        
+        .format-card-enhanced:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* 状态指示器动画 */
+        .status-pulse {
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes statusPulse {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.7; 
+                transform: scale(1.1);
+            }
+        }
+        
+        /* 建议卡片增强 */
+        .suggestion-enhanced {
+            background: linear-gradient(135deg, 
+                hsl(142 76% 36%) 0%, 
+                hsl(158 64% 52%) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .suggestion-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255,255,255,0.1) 50%, 
+                transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* 响应式增强 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .btn-lg {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        /* 暗色主题增强 */
+        .dark .dynamic-bg {
+            background: linear-gradient(135deg, 
+                hsl(222.2 84% 4.9%) 0%, 
+                hsl(217.2 32.6% 17.5%) 25%,
+                hsl(215 28% 17%) 50%,
+                hsl(217.2 32.6% 17.5%) 75%,
+                hsl(222.2 84% 4.9%) 100%);
+        }
+        
+        .dark .glass-enhanced {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark .smart-input-enhanced {
+            background: rgba(255, 255, 255, 0.05);
+            color: hsl(210 40% 98%);
+        }
+        
+        .dark .smart-input-enhanced:focus {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .dark .format-card-enhanced {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .dark .format-card-enhanced:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 加载动画 */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+        
+        .loading-dots span {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: loadingDots 1.4s ease-in-out infinite both;
+        }
+        
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes loadingDots {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* 成功动画 */
+        .success-checkmark {
+            animation: successPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes successPop {
+            0% {
+                transform: scale(0) rotate(45deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(45deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) rotate(45deg);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="dynamic-bg">
+    <div id="app">
+        <!-- 现代化UI将在这里渲染 -->
+    </div>
+
+    <!-- 加载现代化UI组件 -->
+    <script src="js/components/ModernUI.js"></script>
+    
+    <script>
+        // 初始化现代化UI系统
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎨 Modern Glassmorphism UI v1.6.0 启动');
+            
+            // 创建现代化UI控制器
+            const modernUI = new ModernUIController();
+            
+            // 添加一些增强功能
+            enhanceUserExperience();
+            
+            // 添加键盘快捷键
+            setupKeyboardShortcuts();
+            
+            // 添加测试数据
+            setupTestData();
+            
+            console.log('✨ 现代化UI系统初始化完成！');
+        });
+        
+        /**
+         * 增强用户体验
+         */
+        function enhanceUserExperience() {
+            // 添加页面可见性检测
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    // 页面重新可见时的动画
+                    const cards = document.querySelectorAll('.card');
+                    cards.forEach((card, index) => {
+                        card.style.animation = 'none';
+                        setTimeout(() => {
+                            card.style.animation = `fadeIn 0.5s ease ${index * 0.1}s both`;
+                        }, 10);
+                    });
+                }
+            });
+            
+            // 添加滚动增强
+            let ticking = false;
+            function updateScrollEffects() {
+                const scrolled = window.pageYOffset;
+                const header = document.querySelector('header');
+                
+                if (header) {
+                    if (scrolled > 50) {
+                        header.style.background = 'rgba(255, 255, 255, 0.95)';
+                        header.style.backdropFilter = 'blur(20px)';
+                    } else {
+                        header.style.background = 'rgba(255, 255, 255, 0.8)';
+                        header.style.backdropFilter = 'blur(20px)';
+                    }
+                }
+                
+                ticking = false;
+            }
+            
+            window.addEventListener('scroll', function() {
+                if (!ticking) {
+                    requestAnimationFrame(updateScrollEffects);
+                    ticking = true;
+                }
+            });
+        }
+        
+        /**
+         * 设置键盘快捷键
+         */
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + Enter: 智能转换
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    const convertBtn = document.querySelector('.smart-convert-btn');
+                    if (convertBtn && !convertBtn.disabled) {
+                        convertBtn.click();
+                    }
+                }
+                
+                // Ctrl/Cmd + Shift + A: 切换高级选项
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+                    e.preventDefault();
+                    const advancedToggle = document.querySelector('.advanced-toggle');
+                    if (advancedToggle) {
+                        advancedToggle.click();
+                    }
+                }
+                
+                // Ctrl/Cmd + Shift + T: 切换主题
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+                    e.preventDefault();
+                    const themeToggle = document.querySelector('.theme-toggle');
+                    if (themeToggle) {
+                        themeToggle.click();
+                    }
+                }
+                
+                // Escape: 关闭面板
+                if (e.key === 'Escape') {
+                    const closeBtn = document.querySelector('.close-advanced');
+                    if (closeBtn && !document.querySelector('.advanced-panel').classList.contains('hidden')) {
+                        closeBtn.click();
+                    }
+                }
+            });
+        }
+        
+        /**
+         * 设置测试数据
+         */
+        function setupTestData() {
+            window.testData = {
+                conversation: `用户：请帮我分析一下这个销售数据表格
+
+| 产品名称 | Q1销量 | Q2销量 | Q3销量 | Q4销量 | 总计 |
+|---------|--------|--------|--------|--------|------|
+| 产品A   | 120    | 150    | 180    | 200    | 650  |
+| 产品B   | 200    | 180    | 220    | 250    | 850  |
+| 产品C   | 150    | 160    | 140    | 180    | 630  |
+| 产品D   | 80     | 90     | 110    | 130    | 410  |
+
+助手：我来为您分析这个销售数据表格：
+
+## 销售数据分析报告
+
+### 1. 整体销售趋势
+- **总销售量**: 2,540 件
+- **平均季度销量**: 635 件
+- **增长趋势**: 整体呈上升趋势，Q4达到峰值
+
+### 2. 产品表现分析
+**最佳表现**: 产品B (850件，占总销量33.5%)
+**次佳表现**: 产品A (650件，占总销量25.6%)
+**待改进**: 产品D (410件，占总销量16.1%)
+
+### 3. 季度分析
+- Q1: 550件 (基准季度)
+- Q2: 580件 (+5.5%)
+- Q3: 650件 (+18.2%)
+- Q4: 760件 (+38.2%)
+
+### 4. 建议
+1. 加大产品B的市场推广力度
+2. 分析产品D销量偏低的原因
+3. 保持Q4的销售策略`,
+
+                document: `# AI内容格式转换工具使用指南
+
+## 简介
+AI内容格式转换工具是一个强大的智能文档生成平台，支持将AI对话内容转换为多种专业格式。
+
+## 主要功能
+
+### 🚀 智能转换
+- **一键转换**: 自动识别内容类型并推荐最佳格式
+- **多格式支持**: Word、Excel、PDF等主流格式
+- **智能优化**: 根据内容特点自动调整布局和样式
+
+### 📊 格式支持
+1. **Word文档** (.docx)
+   - 适用于文本内容、报告、文档
+   - 支持富文本格式、图表、表格
+
+2. **Excel表格** (.xlsx)
+   - 适用于数据分析、表格内容
+   - 支持公式、图表、数据透视表
+
+3. **PDF文档** (.pdf)
+   - 适用于正式文档、演示材料
+   - 保持格式一致性、支持打印
+
+### ⚙️ 高级功能
+- **模板系统**: 专业、简约、学术、创意模板
+- **自定义设置**: 文件名、格式选项、元数据
+- **批量处理**: 同时处理多个内容片段
+
+## 使用方法
+
+### 简单模式
+1. 粘贴AI对话内容到输入框
+2. 点击"智能转换"按钮
+3. 系统自动分析并生成最佳格式文档
+
+### 高级模式
+1. 粘贴内容后点击"高级选项"
+2. 选择输出格式和模板
+3. 配置文件名和高级设置
+4. 点击"开始转换"
+
+## 技术特性
+- **AI驱动**: 基于先进的内容分析算法
+- **云端处理**: 快速、稳定的转换服务
+- **隐私保护**: 内容不存储、即时处理
+- **跨平台**: 支持所有现代浏览器
+
+## 更新日志
+
+### v1.6.0 "简约革命"
+- 🎨 全新现代化UI设计
+- 🚀 智能内容分析引擎
+- 📱 完美移动端体验
+- ⚡ 性能优化和稳定性提升`,
+
+                code: `// AI内容分析器示例代码
+class ContentAnalyzer {
+    constructor() {
+        this.patterns = {
+            table: /\|.*\|/g,
+            code: /\`\`\`[\s\S]*?\`\`\`/g,
+            list: /^[\s]*[-*+]\s+/gm,
+            heading: /^#{1,6}\s+/gm
+        };
+    }
+    
+    analyze(content) {
+        const analysis = {
+            type: 'unknown',
+            confidence: 0,
+            recommendation: null,
+            features: []
+        };
+        
+        // 检测表格
+        const tableMatches = content.match(this.patterns.table);
+        if (tableMatches && tableMatches.length > 2) {
+            analysis.type = 'table';
+            analysis.confidence = 0.95;
+            analysis.recommendation = {
+                format: 'xlsx',
+                reason: '检测到规整的表格数据'
+            };
+            analysis.features.push('表格数据');
+        }
+        
+        // 检测代码
+        const codeMatches = content.match(this.patterns.code);
+        if (codeMatches && codeMatches.length > 0) {
+            analysis.features.push('代码片段');
+        }
+        
+        // 检测列表
+        const listMatches = content.match(this.patterns.list);
+        if (listMatches && listMatches.length > 3) {
+            analysis.features.push('列表结构');
+        }
+        
+        // 检测标题
+        const headingMatches = content.match(this.patterns.heading);
+        if (headingMatches && headingMatches.length > 2) {
+            analysis.features.push('文档结构');
+            if (analysis.type === 'unknown') {
+                analysis.type = 'document';
+                analysis.confidence = 0.85;
+                analysis.recommendation = {
+                    format: 'docx',
+                    reason: '检测到完整的文档结构'
+                };
+            }
+        }
+        
+        return analysis;
+    }
+}
+
+// 使用示例
+const analyzer = new ContentAnalyzer();
+const result = analyzer.analyze(content);
+console.log('分析结果:', result);`
+            };
+            
+            // 添加快速测试按钮
+            const testBtn = document.createElement('button');
+            testBtn.className = 'fixed bottom-4 left-4 btn btn-secondary btn-sm z-50';
+            testBtn.innerHTML = '📝 快速测试';
+            testBtn.onclick = () => {
+                const input = document.querySelector('.smart-input');
+                if (input) {
+                    input.value = testData.conversation;
+                    input.dispatchEvent(new Event('input'));
+                }
+            };
+            document.body.appendChild(testBtn);
+            
+            console.log('💡 测试数据已准备，点击左下角"快速测试"按钮或使用 testData 对象');
+        }
+        
+        // 添加性能监控
+        if ('performance' in window) {
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    const perfData = performance.getEntriesByType('navigation')[0];
+                    console.log(`⚡ 页面加载性能: ${Math.round(perfData.loadEventEnd - perfData.fetchStart)}ms`);
+                }, 0);
+            });
+        }
+    </script>
+</body>
+</html>
