@@ -1465,14 +1465,23 @@ class AIContentConverter {
     createConversionPlan(strategyResult, userFormat, templateStyle, fileName, formatRecommendations, templateRecommendation) {
         const strategy = strategyResult.strategyInfo;
 
-        // 智能格式选择 - 结合推荐系统
+        // 智能格式选择 - 尊重用户选择
         let finalFormat = userFormat;
         let formatReason = '用户选择';
 
-        // 如果用户选择了auto或者推荐置信度很高，使用推荐格式
-        if (userFormat === 'auto' || formatRecommendations.primary.confidence > 90) {
+        // 只有在用户明确选择auto时，才使用推荐格式
+        if (userFormat === 'auto') {
             finalFormat = formatRecommendations.primary.format;
             formatReason = formatRecommendations.primary.reason;
+        }
+
+        // 记录推荐信息用于日志和调试
+        console.log(`📋 格式选择: 用户选择=${userFormat}, 最终格式=${finalFormat}, 原因=${formatReason}`);
+        console.log(`💡 AI推荐: ${formatRecommendations.primary.format} (置信度: ${formatRecommendations.primary.confidence}%)`);
+
+        // 如果用户选择与推荐不同，记录差异
+        if (userFormat !== 'auto' && userFormat !== formatRecommendations.primary.format) {
+            console.log(`⚠️ 用户选择与AI推荐不同: 用户=${userFormat}, 推荐=${formatRecommendations.primary.format}`);
         }
 
         // 智能模板选择 - 结合推荐系统
@@ -1531,24 +1540,51 @@ class AIContentConverter {
     }
 
     /**
-     * 执行转换计划
+     * 执行转换计划 - 增强版
      */
     async executeConversionPlan(plan, analysisResult) {
         const { format, template, fileName, options } = plan;
 
+        console.log(`🚀 开始执行转换计划:`);
+        console.log(`📄 格式: ${format}`);
+        console.log(`🎨 模板: ${template}`);
+        console.log(`📁 文件名: ${fileName}`);
+        console.log(`⚙️ 选项:`, options);
+
         // 根据策略应用特殊选项
         this.applyStrategyOptions(options);
 
-        if (format === 'docx' || format === 'both' || format === 'all') {
-            await this.generateWordWithStrategy(this.currentContent, plan, analysisResult, fileName);
-        }
+        // 根据格式选择执行相应的生成函数
+        try {
+            if (format === 'docx' || format === 'both' || format === 'all') {
+                console.log(`📄 生成Word文档...`);
+                await this.generateWordWithStrategy(this.currentContent, plan, analysisResult, fileName);
+                console.log(`✅ Word文档生成完成`);
+            }
 
-        if (format === 'xlsx' || format === 'both' || format === 'all') {
-            await this.generateExcelWithStrategy(this.currentContent, plan, analysisResult, fileName);
-        }
+            if (format === 'xlsx' || format === 'both' || format === 'all') {
+                console.log(`📊 生成Excel表格...`);
+                await this.generateExcelWithStrategy(this.currentContent, plan, analysisResult, fileName);
+                console.log(`✅ Excel表格生成完成`);
+            }
 
-        if (format === 'pdf' || format === 'all') {
-            await this.generatePDFWithStrategy(this.currentContent, plan, analysisResult, fileName);
+            if (format === 'pdf' || format === 'all') {
+                console.log(`📄 生成PDF文档...`);
+                await this.generatePDFWithStrategy(this.currentContent, plan, analysisResult, fileName);
+                console.log(`✅ PDF文档生成完成`);
+            }
+
+            // 如果没有匹配的格式，记录错误
+            if (!['docx', 'xlsx', 'pdf', 'both', 'all'].includes(format)) {
+                console.error(`❌ 未知的输出格式: ${format}`);
+                throw new Error(`不支持的输出格式: ${format}`);
+            }
+
+            console.log(`🎉 所有文件生成完成，格式: ${format}`);
+
+        } catch (error) {
+            console.error(`❌ 转换计划执行失败:`, error);
+            throw error;
         }
     }
 
