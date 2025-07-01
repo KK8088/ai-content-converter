@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容格式转换工具 v1.6.0 - Shadcn/UI Standard</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(214.3 31.8% 91.4%)",
+                        input: "hsl(214.3 31.8% 91.4%)",
+                        ring: "hsl(222.2 84% 4.9%)",
+                        background: "hsl(0 0% 100%)",
+                        foreground: "hsl(222.2 84% 4.9%)",
+                        primary: {
+                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(215.4 16.3% 46.9%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        card: {
+                            DEFAULT: "hsl(0 0% 100%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "0.5rem",
+                        md: "calc(0.5rem - 2px)",
+                        sm: "calc(0.5rem - 4px)",
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .animate-in {
+            animation: animateIn 0.5s ease-out;
+        }
+        
+        @keyframes animateIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-background font-sans antialiased">
+    <div class="relative flex min-h-screen flex-col">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div class="container flex h-14 items-center">
+                <div class="mr-4 flex">
+                    <a class="mr-6 flex items-center space-x-2" href="/">
+                        <div class="h-6 w-6 rounded bg-primary flex items-center justify-center">
+                            <i data-lucide="zap" class="h-4 w-4 text-primary-foreground"></i>
+                        </div>
+                        <span class="font-bold">AI内容转换</span>
+                    </a>
+                </div>
+                <div class="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+                    <nav class="flex items-center space-x-2">
+                        <button 
+                            id="theme-toggle"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10"
+                        >
+                            <i data-lucide="sun" class="h-4 w-4"></i>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <div class="container py-6">
+                <!-- Hero Section -->
+                <div class="mx-auto max-w-2xl text-center mb-8 animate-in">
+                    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+                        将AI对话转换为
+                        <span class="text-primary">专业文档</span>
+                    </h1>
+                    <p class="text-lg text-muted-foreground">
+                        支持ChatGPT、Claude等AI工具的对话内容，一键生成Word、Excel、PDF等格式文档
+                    </p>
+                </div>
+
+                <!-- Main Card -->
+                <div class="mx-auto max-w-2xl">
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm animate-in">
+                        <div class="flex flex-col space-y-1.5 p-6">
+                            <h3 class="text-2xl font-semibold leading-none tracking-tight">智能内容转换</h3>
+                            <p class="text-sm text-muted-foreground">
+                                粘贴您的AI对话内容，我们会自动识别最佳格式
+                            </p>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <!-- Input Area -->
+                            <div class="space-y-4">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        内容输入
+                                    </label>
+                                    <textarea 
+                                        id="content-input"
+                                        class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        placeholder="Ctrl+V 粘贴内容，我们会自动识别最佳格式..."
+                                    ></textarea>
+                                </div>
+                                
+                                <!-- Status Indicator -->
+                                <div class="flex items-center justify-between text-sm text-muted-foreground">
+                                    <div class="flex items-center space-x-2">
+                                        <div id="status-dot" class="h-2 w-2 rounded-full bg-muted"></div>
+                                        <span id="status-text">等待输入</span>
+                                    </div>
+                                    <span id="char-count">0 字符</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex items-center p-6 pt-0">
+                            <button 
+                                id="convert-btn"
+                                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 mr-2"
+                            >
+                                <i data-lucide="zap" class="mr-2 h-4 w-4"></i>
+                                智能转换
+                            </button>
+                            <button 
+                                id="advanced-btn"
+                                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                            >
+                                <i data-lucide="settings" class="mr-2 h-4 w-4"></i>
+                                高级选项
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Suggestion Card -->
+                    <div id="suggestion-card" class="mt-4 rounded-lg border bg-card text-card-foreground shadow-sm hidden animate-in">
+                        <div class="p-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
+                                    <i data-lucide="check-circle" class="h-5 w-5 text-green-600"></i>
+                                </div>
+                                <div class="flex-1 space-y-1">
+                                    <h4 id="suggestion-title" class="font-semibold">智能建议</h4>
+                                    <p id="suggestion-description" class="text-sm text-muted-foreground">
+                                        基于内容分析的最佳格式推荐
+                                    </p>
+                                    <div id="suggestion-tags" class="flex space-x-2 mt-2">
+                                        <!-- 动态标签 -->
+                                    </div>
+                                </div>
+                                <button 
+                                    id="apply-suggestion"
+                                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3"
+                                >
+                                    应用建议
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div id="advanced-panel" class="mt-4 rounded-lg border bg-card text-card-foreground shadow-sm hidden animate-in">
+                        <div class="flex flex-col space-y-1.5 p-6">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold">高级选项</h3>
+                                <button 
+                                    id="close-advanced"
+                                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10"
+                                >
+                                    <i data-lucide="x" class="h-4 w-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <div class="space-y-6">
+                                <!-- Format Selection -->
+                                <div class="space-y-3">
+                                    <label class="text-sm font-medium">输出格式</label>
+                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="format" value="docx" class="sr-only" checked>
+                                            <div class="rounded-lg border-2 border-muted p-4 hover:border-primary transition-colors">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded bg-blue-100">
+                                                        <i data-lucide="file-text" class="h-4 w-4 text-blue-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium">Word文档</div>
+                                                        <div class="text-xs text-muted-foreground">适合文本内容</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="format" value="xlsx" class="sr-only">
+                                            <div class="rounded-lg border-2 border-muted p-4 hover:border-primary transition-colors">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded bg-green-100">
+                                                        <i data-lucide="table" class="h-4 w-4 text-green-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium">Excel表格</div>
+                                                        <div class="text-xs text-muted-foreground">适合数据分析</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="format" value="pdf" class="sr-only">
+                                            <div class="rounded-lg border-2 border-muted p-4 hover:border-primary transition-colors">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded bg-red-100">
+                                                        <i data-lucide="file" class="h-4 w-4 text-red-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium">PDF文档</div>
+                                                        <div class="text-xs text-muted-foreground">适合正式文档</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Template Selection -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium">文档模板</label>
+                                    <select class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                        <option value="professional">专业模板</option>
+                                        <option value="simple">简约模板</option>
+                                        <option value="academic">学术模板</option>
+                                        <option value="creative">创意模板</option>
+                                    </select>
+                                </div>
+
+                                <!-- Advanced Settings -->
+                                <div class="space-y-3">
+                                    <label class="text-sm font-medium">高级设置</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="checkbox" class="h-4 w-4 rounded border-input">
+                                            <span class="text-sm">保留原始格式</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="checkbox" class="h-4 w-4 rounded border-input">
+                                            <span class="text-sm">包含元数据</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="checkbox" class="h-4 w-4 rounded border-input">
+                                            <span class="text-sm">移动端优化</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t py-6 md:py-0">
+            <div class="container flex flex-col items-center justify-between gap-4 md:h-14 md:flex-row">
+                <div class="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div class="h-2 w-2 rounded-full bg-green-500"></div>
+                    <span>系统就绪</span>
+                </div>
+                <p class="text-sm text-muted-foreground">
+                    今日转换: <span class="font-medium">0</span> 次
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // App Controller
+        class ShadcnApp {
+            constructor() {
+                this.state = {
+                    theme: 'light',
+                    content: '',
+                    isAnalyzing: false,
+                    suggestion: null
+                };
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setupThemeToggle();
+                console.log('✨ Shadcn/UI App initialized');
+            }
+
+            setupEventListeners() {
+                // Content input
+                const input = document.getElementById('content-input');
+                const statusDot = document.getElementById('status-dot');
+                const statusText = document.getElementById('status-text');
+                const charCount = document.getElementById('char-count');
+
+                input.addEventListener('input', (e) => {
+                    const content = e.target.value;
+                    const length = content.length;
+                    
+                    this.state.content = content;
+                    charCount.textContent = `${length} 字符`;
+                    
+                    if (length === 0) {
+                        statusDot.className = 'h-2 w-2 rounded-full bg-muted';
+                        statusText.textContent = '等待输入';
+                        this.hideSuggestion();
+                    } else if (length < 50) {
+                        statusDot.className = 'h-2 w-2 rounded-full bg-yellow-500';
+                        statusText.textContent = '内容较少';
+                        this.hideSuggestion();
+                    } else {
+                        statusDot.className = 'h-2 w-2 rounded-full bg-blue-500 animate-pulse';
+                        statusText.textContent = '正在分析...';
+                        this.state.isAnalyzing = true;
+                        
+                        setTimeout(() => {
+                            this.analyzeContent(content);
+                        }, 1500);
+                    }
+                });
+
+                // Convert button
+                document.getElementById('convert-btn').addEventListener('click', () => {
+                    this.handleConvert();
+                });
+
+                // Advanced toggle
+                document.getElementById('advanced-btn').addEventListener('click', () => {
+                    this.toggleAdvanced();
+                });
+
+                // Close advanced
+                document.getElementById('close-advanced').addEventListener('click', () => {
+                    this.toggleAdvanced(false);
+                });
+
+                // Apply suggestion
+                document.getElementById('apply-suggestion').addEventListener('click', () => {
+                    this.applySuggestion();
+                });
+
+                // Format selection
+                document.querySelectorAll('input[name="format"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        document.querySelectorAll('input[name="format"]').forEach(r => {
+                            r.closest('label').querySelector('div').className = 'rounded-lg border-2 border-muted p-4 hover:border-primary transition-colors';
+                        });
+                        
+                        if (e.target.checked) {
+                            e.target.closest('label').querySelector('div').className = 'rounded-lg border-2 border-primary p-4 hover:border-primary transition-colors bg-primary/5';
+                        }
+                    });
+                });
+            }
+
+            setupThemeToggle() {
+                const toggle = document.getElementById('theme-toggle');
+                const icon = toggle.querySelector('i');
+                
+                toggle.addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    
+                    if (isDark) {
+                        document.documentElement.classList.remove('dark');
+                        icon.setAttribute('data-lucide', 'sun');
+                        this.state.theme = 'light';
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        icon.setAttribute('data-lucide', 'moon');
+                        this.state.theme = 'dark';
+                    }
+                    
+                    lucide.createIcons();
+                    this.showToast(`已切换到${this.state.theme === 'dark' ? '暗色' : '亮色'}主题`);
+                });
+            }
+
+            analyzeContent(content) {
+                let suggestion = {
+                    format: 'docx',
+                    title: '建议生成Word文档',
+                    description: '检测到完整的文档结构，适合Word格式',
+                    tags: ['文档结构', '85% 匹配']
+                };
+
+                if (content.includes('|') && content.split('\n').filter(line => line.includes('|')).length > 2) {
+                    suggestion = {
+                        format: 'xlsx',
+                        title: '建议生成Excel表格',
+                        description: '检测到规整的表格数据，Excel格式最适合数据展示和分析',
+                        tags: ['表格数据', '95% 匹配']
+                    };
+                }
+
+                this.state.suggestion = suggestion;
+                this.showSuggestion(suggestion);
+                
+                const statusDot = document.getElementById('status-dot');
+                const statusText = document.getElementById('status-text');
+                statusDot.className = 'h-2 w-2 rounded-full bg-green-500';
+                statusText.textContent = '分析完成';
+                this.state.isAnalyzing = false;
+            }
+
+            showSuggestion(suggestion) {
+                const card = document.getElementById('suggestion-card');
+                const title = document.getElementById('suggestion-title');
+                const description = document.getElementById('suggestion-description');
+                const tags = document.getElementById('suggestion-tags');
+
+                title.textContent = suggestion.title;
+                description.textContent = suggestion.description;
+                
+                tags.innerHTML = suggestion.tags.map(tag => 
+                    `<span class="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">${tag}</span>`
+                ).join('');
+                
+                card.classList.remove('hidden');
+            }
+
+            hideSuggestion() {
+                document.getElementById('suggestion-card').classList.add('hidden');
+            }
+
+            toggleAdvanced(show = null) {
+                const panel = document.getElementById('advanced-panel');
+                const isVisible = !panel.classList.contains('hidden');
+                const shouldShow = show !== null ? show : !isVisible;
+                
+                if (shouldShow) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
+            }
+
+            async handleConvert() {
+                if (!this.state.content.trim()) {
+                    this.showToast('请先输入内容', 'warning');
+                    return;
+                }
+                
+                const btn = document.getElementById('convert-btn');
+                const icon = btn.querySelector('i');
+                const originalText = btn.innerHTML;
+                
+                btn.innerHTML = `
+                    <i data-lucide="loader-2" class="mr-2 h-4 w-4 animate-spin"></i>
+                    转换中...
+                `;
+                btn.disabled = true;
+                lucide.createIcons();
+                
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    this.showToast('转换完成！文件已生成', 'success');
+                } catch (error) {
+                    this.showToast('转换失败，请重试', 'error');
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    lucide.createIcons();
+                }
+            }
+
+            applySuggestion() {
+                if (!this.state.suggestion) return;
+                
+                const formatInput = document.querySelector(`input[value="${this.state.suggestion.format}"]`);
+                if (formatInput) {
+                    formatInput.checked = true;
+                    formatInput.dispatchEvent(new Event('change'));
+                }
+                
+                this.showToast(`已应用建议：${this.state.suggestion.title}`, 'success');
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                const colors = {
+                    success: 'bg-green-500',
+                    error: 'bg-red-500',
+                    warning: 'bg-yellow-500',
+                    info: 'bg-blue-500'
+                };
+                
+                toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-4 py-2 rounded-md shadow-lg z-50 animate-in`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            new ShadcnApp();
+        });
+    </script>
+</body>
+</html>
