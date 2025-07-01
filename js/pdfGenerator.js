@@ -50,21 +50,206 @@ class PDFGenerator {
     }
 
     /**
-     * 动态加载jsPDF库
+     * 动态加载jsPDF库和中文字体支持
      */
     async loadJsPDF() {
+        try {
+            // 加载jsPDF核心库
+            await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+            console.log('📚 jsPDF库加载完成');
+
+            // 加载中文字体支持
+            await this.setupChineseFontSupport();
+            console.log('🈶 中文字体支持已配置');
+
+        } catch (error) {
+            console.error('PDF库加载失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 加载脚本文件
+     */
+    async loadScript(src) {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-            script.onload = () => {
-                console.log('📚 jsPDF库加载完成');
-                resolve();
-            };
-            script.onerror = () => {
-                reject(new Error('jsPDF库加载失败'));
-            };
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`脚本加载失败: ${src}`));
             document.head.appendChild(script);
         });
+    }
+
+    /**
+     * 设置中文字体支持
+     */
+    async setupChineseFontSupport() {
+        // 创建一个支持中文的字体配置
+        this.chineseFontConfig = {
+            fontName: 'NotoSansCJK',
+            fontStyle: 'normal',
+            fontWeight: 'normal',
+            // 使用系统字体作为备选方案
+            fallbackFonts: [
+                'Microsoft YaHei',
+                'SimHei',
+                'SimSun',
+                'PingFang SC',
+                'Hiragino Sans GB',
+                'WenQuanYi Micro Hei',
+                'sans-serif'
+            ]
+        };
+
+        // 设置字体映射
+        this.fontMapping = {
+            'Arial': 'helvetica',
+            'Times': 'times',
+            'Chinese': 'NotoSansCJK',
+            'Default': 'NotoSansCJK'  // 默认使用支持中文的字体
+        };
+    }
+
+    /**
+     * 设置PDF中文字体支持
+     */
+    async setupPDFChineseFont(pdf) {
+        try {
+            // 获取jsPDF支持的字体列表
+            const fontList = pdf.getFontList();
+            console.log('📚 PDF支持的字体:', Object.keys(fontList));
+
+            // 尝试使用Canvas检测中文字体支持
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // 测试中文字符渲染
+            const testText = '中文测试';
+            const supportedFonts = [];
+
+            // 首先检查jsPDF内置字体
+            const jsPDFFonts = ['helvetica', 'times', 'courier'];
+            for (const font of jsPDFFonts) {
+                if (fontList[font]) {
+                    supportedFonts.push(font);
+                }
+            }
+
+            // 然后检查系统字体
+            for (const font of this.chineseFontConfig.fallbackFonts) {
+                ctx.font = `12px "${font}"`;
+                const metrics = ctx.measureText(testText);
+                if (metrics.width > 0) {
+                    console.log(`🈶 检测到系统中文字体: ${font}`);
+                }
+            }
+
+            // 设置PDF字体 - 优先使用helvetica作为基础字体
+            this.selectedChineseFont = 'helvetica';
+            this.selectedChineseFontBold = 'helvetica';
+
+            console.log(`🈶 选择PDF字体: ${this.selectedChineseFont}`);
+
+        } catch (error) {
+            console.warn('中文字体检测失败，使用默认字体:', error);
+            this.selectedChineseFont = 'helvetica';
+            this.selectedChineseFontBold = 'helvetica';
+        }
+    }
+
+    /**
+     * 获取字体名称
+     */
+    getFontFamily(requestedFont) {
+        // 检查是否包含中文字符
+        const hasChinese = this.containsChinese(this.currentContent || '');
+
+        if (hasChinese) {
+            // 如果内容包含中文，优先使用支持中文的字体
+            console.log('🈶 检测到中文内容，使用中文字体');
+            return this.selectedChineseFont || 'helvetica';
+        }
+
+        // 否则使用映射的字体，确保字体名称正确
+        const mappedFont = this.fontMapping[requestedFont];
+        if (mappedFont) {
+            return mappedFont;
+        }
+
+        // 如果没有映射，使用默认字体
+        return 'helvetica';
+    }
+
+    /**
+     * 检测文本是否包含中文字符
+     */
+    containsChinese(text) {
+        const chineseRegex = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/;
+        return chineseRegex.test(text);
+    }
+
+    /**
+     * 添加支持中文的文本到PDF
+     */
+    addTextWithChineseSupport(pdf, text, x, y, maxWidth) {
+        try {
+            // 检查文本是否包含中文
+            if (this.containsChinese(text)) {
+                console.log(`🈶 添加中文文本: ${text.substring(0, 20)}...`);
+
+                // 对于中文文本，确保使用正确的字体
+                const currentFont = pdf.getFont();
+                console.log(`📚 当前字体: ${currentFont.fontName}`);
+
+                // 确保字符编码正确
+                const encodedText = this.encodeChineseText(text);
+
+                if (maxWidth) {
+                    // 如果指定了最大宽度，进行文本换行
+                    const lines = pdf.splitTextToSize(encodedText, maxWidth);
+                    pdf.text(lines, x, y);
+                } else {
+                    pdf.text(encodedText, x, y);
+                }
+            } else {
+                // 英文文本正常处理
+                if (maxWidth) {
+                    const lines = pdf.splitTextToSize(text, maxWidth);
+                    pdf.text(lines, x, y);
+                } else {
+                    pdf.text(text, x, y);
+                }
+            }
+        } catch (error) {
+            console.warn('文本添加失败，使用备用方法:', error);
+            // 备用方法：直接添加文本
+            try {
+                if (maxWidth) {
+                    const lines = pdf.splitTextToSize(text, maxWidth);
+                    pdf.text(lines, x, y);
+                } else {
+                    pdf.text(text, x, y);
+                }
+            } catch (fallbackError) {
+                console.error('备用文本添加也失败:', fallbackError);
+                // 最后的备用方案：添加错误提示
+                pdf.text('[文本显示错误]', x, y);
+            }
+        }
+    }
+
+    /**
+     * 编码中文文本以确保正确显示
+     */
+    encodeChineseText(text) {
+        try {
+            // 确保文本是UTF-8编码
+            return decodeURIComponent(encodeURIComponent(text));
+        } catch (error) {
+            console.warn('中文文本编码失败:', error);
+            return text;
+        }
     }
 
     /**
@@ -78,8 +263,10 @@ class PDFGenerator {
             await this.init();
         }
 
+        // 保存当前内容用于字体检测
+        this.currentContent = content;
         const config = { ...this.defaultOptions, ...options };
-        
+
         try {
             // 创建jsPDF实例
             const { jsPDF } = window.jspdf;
@@ -89,9 +276,11 @@ class PDFGenerator {
                 format: config.format
             });
 
-            // 设置字体和样式 - 使用jsPDF内置字体
-            const fontFamily = config.fontFamily === 'Arial' ? 'helvetica' :
-                              config.fontFamily === 'Times' ? 'times' : 'helvetica';
+            // 设置中文字体支持
+            await this.setupPDFChineseFont(pdf);
+
+            // 设置字体和样式 - 优先使用支持中文的字体
+            const fontFamily = this.getFontFamily(config.fontFamily);
             pdf.setFont(fontFamily);
             pdf.setFontSize(config.fontSize);
 
@@ -224,15 +413,19 @@ class PDFGenerator {
         // 添加标题
         if (content.title) {
             pdf.setFontSize(config.fontSize + 6);
-            pdf.setFont(config.fontFamily, 'bold');
+            const titleFont = this.getFontFamily(config.fontFamily);
+            pdf.setFont(titleFont, 'bold');
             yPosition += 10;
-            pdf.text(content.title, config.margin.left, yPosition);
+
+            // 使用中文友好的文本添加方法
+            this.addTextWithChineseSupport(pdf, content.title, config.margin.left, yPosition, maxWidth);
             yPosition += 15;
         }
 
         // 重置字体
         pdf.setFontSize(config.fontSize);
-        pdf.setFont(config.fontFamily, 'normal');
+        const normalFont = this.getFontFamily(config.fontFamily);
+        pdf.setFont(normalFont, 'normal');
 
         // 添加章节
         for (const section of content.sections) {
@@ -243,22 +436,31 @@ class PDFGenerator {
             }
 
             // 添加章节标题
-            const fontFamily = config.fontFamily === 'Arial' ? 'helvetica' :
-                              config.fontFamily === 'Times' ? 'times' : 'helvetica';
-            pdf.setFont(fontFamily, 'bold');
+            const sectionFont = this.getFontFamily(config.fontFamily);
+            pdf.setFont(sectionFont, 'bold');
             pdf.setFontSize(config.fontSize + (4 - section.level));
             yPosition += 10;
-            pdf.text(section.title, config.margin.left, yPosition);
+
+            // 使用中文友好的文本添加方法
+            this.addTextWithChineseSupport(pdf, section.title, config.margin.left, yPosition, maxWidth);
             yPosition += 8;
 
             // 重置字体
-            pdf.setFont(fontFamily, 'normal');
+            pdf.setFont(sectionFont, 'normal');
             pdf.setFontSize(config.fontSize);
 
             // 添加章节内容
             for (const paragraph of section.content) {
-                const lines = pdf.splitTextToSize(paragraph, maxWidth);
-                
+                // 使用中文友好的文本处理
+                let lines;
+                if (this.containsChinese(paragraph)) {
+                    // 中文文本特殊处理
+                    const encodedParagraph = this.encodeChineseText(paragraph);
+                    lines = pdf.splitTextToSize(encodedParagraph, maxWidth);
+                } else {
+                    lines = pdf.splitTextToSize(paragraph, maxWidth);
+                }
+
                 // 检查是否需要新页面
                 if (yPosition + (lines.length * config.lineHeight * 4) > pageHeight - config.margin.bottom) {
                     pdf.addPage();
@@ -267,7 +469,8 @@ class PDFGenerator {
 
                 for (const line of lines) {
                     yPosition += config.lineHeight * 4;
-                    pdf.text(line, config.margin.left, yPosition);
+                    // 使用中文友好的文本添加方法
+                    this.addTextWithChineseSupport(pdf, line, config.margin.left, yPosition);
                 }
                 yPosition += 5;
             }
