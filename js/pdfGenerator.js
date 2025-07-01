@@ -50,7 +50,7 @@ class PDFGenerator {
     }
 
     /**
-     * 动态加载jsPDF库和中文字体支持
+     * 动态加载jsPDF库和html2canvas库
      */
     async loadJsPDF() {
         try {
@@ -58,7 +58,11 @@ class PDFGenerator {
             await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
             console.log('📚 jsPDF库加载完成');
 
-            // 加载中文字体支持
+            // 加载html2canvas库用于中文支持
+            await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+            console.log('🖼️ html2canvas库加载完成');
+
+            // 设置中文支持方案
             await this.setupChineseFontSupport();
             console.log('🈶 中文字体支持已配置');
 
@@ -268,7 +272,49 @@ class PDFGenerator {
         const config = { ...this.defaultOptions, ...options };
 
         try {
-            // 创建jsPDF实例
+            // 检查是否包含中文字符
+            const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+            const hasChinese = this.containsChinese(contentStr);
+
+            console.log(`🔍 中文检测: 内容="${contentStr.substring(0, 50)}...", 包含中文=${hasChinese}`);
+
+            if (hasChinese) {
+                console.log('🈶 检测到中文内容，使用html2canvas方案');
+                return await this.generatePDFWithCanvas(content, config);
+            } else {
+                console.log('🔤 英文内容，使用传统jsPDF方案');
+                return await this.generatePDFTraditional(content, config);
+            }
+
+        } catch (error) {
+            console.error('PDF生成失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 使用html2canvas方案生成PDF（支持中文）
+     */
+    async generatePDFWithCanvas(content, config) {
+        try {
+            // 创建临时HTML容器
+            const htmlContainer = this.createHTMLContainer(content, config);
+            document.body.appendChild(htmlContainer);
+
+            // 使用html2canvas渲染HTML为图片
+            const canvas = await html2canvas(htmlContainer, {
+                scale: 2, // 提高清晰度
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                width: htmlContainer.offsetWidth,
+                height: htmlContainer.offsetHeight
+            });
+
+            // 移除临时容器
+            document.body.removeChild(htmlContainer);
+
+            // 创建PDF并添加图片
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({
                 orientation: config.orientation,
@@ -276,27 +322,124 @@ class PDFGenerator {
                 format: config.format
             });
 
-            // 设置中文字体支持
-            await this.setupPDFChineseFont(pdf);
+            // 计算图片尺寸
+            const imgWidth = pdf.internal.pageSize.getWidth() - (config.margin.left + config.margin.right);
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-            // 设置字体和样式 - 优先使用支持中文的字体
-            const fontFamily = this.getFontFamily(config.fontFamily);
-            pdf.setFont(fontFamily);
-            pdf.setFontSize(config.fontSize);
+            // 添加图片到PDF
+            const imgData = canvas.toDataURL('image/png');
+            pdf.addImage(imgData, 'PNG', config.margin.left, config.margin.top, imgWidth, imgHeight);
 
-            // 处理内容
-            const processedContent = this.preprocessContent(content);
-            
-            // 添加内容到PDF
-            await this.addContentToPDF(pdf, processedContent, config);
+            // 如果内容超过一页，需要分页处理
+            const pageHeight = pdf.internal.pageSize.getHeight() - (config.margin.top + config.margin.bottom);
+            if (imgHeight > pageHeight) {
+                await this.handleMultiPageCanvas(pdf, canvas, config);
+            }
 
-            // 返回PDF Blob
+            console.log('✅ PDF生成完成（html2canvas方案）');
             return pdf.output('blob');
-            
+
         } catch (error) {
-            console.error('PDF生成失败:', error);
-            throw error;
+            console.error('html2canvas PDF生成失败:', error);
+            // 降级到传统方案
+            console.log('🔄 降级到传统PDF生成方案');
+            return await this.generatePDFTraditional(content, config);
         }
+    }
+
+    /**
+     * 传统jsPDF方案生成PDF（英文内容）
+     */
+    async generatePDFTraditional(content, config) {
+        // 创建jsPDF实例
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+            orientation: config.orientation,
+            unit: 'mm',
+            format: config.format
+        });
+
+        // 设置中文字体支持
+        await this.setupPDFChineseFont(pdf);
+
+        // 设置字体和样式 - 优先使用支持中文的字体
+        const fontFamily = this.getFontFamily(config.fontFamily);
+        pdf.setFont(fontFamily);
+        pdf.setFontSize(config.fontSize);
+
+        // 处理内容
+        const processedContent = this.preprocessContent(content);
+
+        // 添加内容到PDF
+        await this.addContentToPDF(pdf, processedContent, config);
+
+        // 返回PDF Blob
+        return pdf.output('blob');
+    }
+
+    /**
+     * 创建HTML容器用于渲染
+     */
+    createHTMLContainer(content, config) {
+        const container = document.createElement('div');
+        container.style.cssText = `
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            width: 800px;
+            background: white;
+            padding: 40px;
+            font-family: 'Microsoft YaHei', 'SimHei', 'SimSun', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        `;
+
+        // 处理内容并转换为HTML
+        const processedContent = this.preprocessContent(content);
+        container.innerHTML = this.contentToHTML(processedContent, config);
+
+        return container;
+    }
+
+    /**
+     * 将内容转换为HTML
+     */
+    contentToHTML(content, config) {
+        let html = '';
+
+        // 添加标题
+        if (content.title) {
+            html += `<h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #333;">${content.title}</h1>`;
+        }
+
+        // 添加章节内容
+        if (content.sections && content.sections.length > 0) {
+            for (const section of content.sections) {
+                // 添加章节标题
+                const headingLevel = Math.min(section.level || 1, 6);
+                const fontSize = 20 - (headingLevel - 1) * 2;
+                html += `<h${headingLevel} style="font-size: ${fontSize}px; font-weight: bold; margin: 20px 0 10px 0; color: #333;">${section.title}</h${headingLevel}>`;
+
+                // 添加章节内容
+                if (section.content && section.content.length > 0) {
+                    for (const paragraph of section.content) {
+                        html += `<p style="margin: 10px 0; line-height: 1.6;">${paragraph}</p>`;
+                    }
+                }
+            }
+        }
+
+        return html;
+    }
+
+    /**
+     * 处理多页Canvas内容
+     */
+    async handleMultiPageCanvas(pdf, canvas, config) {
+        // 简化版本：如果内容太长，暂时只显示第一页
+        // 后续可以实现更复杂的分页逻辑
+        console.log('⚠️ 内容超过一页，当前版本显示第一页内容');
     }
 
     /**
