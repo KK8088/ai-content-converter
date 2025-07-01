@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容格式转换工具 v1.6.0 - Elegant Modern</title>
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- 现代化字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Elegant Modern 样式系统 -->
+    <link rel="stylesheet" href="css/elegant-modern.css">
+    
+    <style>
+        /* 页面特定增强样式 */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* 现代化滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+        
+        /* 现代化选择样式 */
+        ::selection {
+            background: var(--primary-100);
+            color: var(--primary-900);
+        }
+        
+        /* 增强的动画效果 */
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 现代化焦点样式 */
+        .focus-visible:focus-visible {
+            outline: 2px solid var(--primary-500);
+            outline-offset: 2px;
+        }
+        
+        /* 增强的悬停效果 */
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+        
+        /* 现代化加载状态 */
+        .loading-skeleton {
+            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* 现代化状态指示器 */
+        .status-indicator {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-indicator::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .status-indicator.processing::after {
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        /* 现代化表单增强 */
+        .form-group {
+            position: relative;
+        }
+        
+        .form-label {
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+        
+        .input:focus + .form-label,
+        .input:not(:placeholder-shown) + .form-label {
+            transform: translateY(-1.5rem) scale(0.875);
+            color: var(--primary-600);
+        }
+        
+        /* 现代化卡片增强 */
+        .card-interactive {
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+        
+        .card-interactive:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .card-interactive:active {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* 现代化按钮增强 */
+        .btn-enhanced {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        .btn-enhanced:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* 现代化导航增强 */
+        .nav-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        /* 现代化网格动画 */
+        .grid-animate > * {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: gridItemIn var(--duration-slow) var(--spring) forwards;
+        }
+        
+        .grid-animate > *:nth-child(1) { animation-delay: 0ms; }
+        .grid-animate > *:nth-child(2) { animation-delay: 100ms; }
+        .grid-animate > *:nth-child(3) { animation-delay: 200ms; }
+        
+        @keyframes gridItemIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 现代化响应式增强 */
+        @media (max-width: 640px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .text-4xl {
+                font-size: 2rem;
+            }
+            
+            .text-5xl {
+                font-size: 2.5rem;
+            }
+        }
+        
+        /* 现代化暗色主题增强 */
+        [data-theme="dark"] {
+            color-scheme: dark;
+        }
+        
+        [data-theme="dark"] body {
+            background: linear-gradient(to bottom, var(--gray-900), var(--gray-800));
+        }
+        
+        [data-theme="dark"] .nav-blur {
+            background: rgba(17, 24, 39, 0.8);
+        }
+        
+        [data-theme="dark"] .card {
+            background: var(--gray-800);
+            border-color: var(--gray-700);
+        }
+        
+        [data-theme="dark"] .btn-secondary {
+            background: var(--gray-800);
+            border-color: var(--gray-700);
+            color: var(--gray-100);
+        }
+        
+        [data-theme="dark"] .btn-secondary:hover {
+            background: var(--gray-700);
+            border-color: var(--gray-600);
+        }
+        
+        /* 现代化无障碍增强 */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* 现代化打印样式 */
+        @media print {
+            .fixed,
+            .btn,
+            .animate-fade-in,
+            .animate-slide-up,
+            .animate-scale-in {
+                display: none !important;
+            }
+            
+            body {
+                background: white !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Elegant UI 将在这里渲染 -->
+    </div>
+
+    <!-- 加载 Elegant UI 组件 -->
+    <script src="js/components/ElegantUI.js"></script>
+    
+    <script>
+        // 初始化 Elegant UI 系统
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✨ Elegant Modern UI v1.6.0 启动');
+            
+            // 创建 Elegant UI 控制器
+            const elegantUI = new ElegantUIController();
+            
+            // 添加现代化增强功能
+            enhanceModernFeatures();
+            
+            // 添加键盘快捷键
+            setupKeyboardShortcuts();
+            
+            // 添加性能监控
+            setupPerformanceMonitoring();
+            
+            // 添加测试数据
+            setupTestData();
+            
+            console.log('🎯 Elegant UI 系统初始化完成！');
+        });
+        
+        /**
+         * 增强现代化功能
+         */
+        function enhanceModernFeatures() {
+            // 添加平滑滚动
+            document.documentElement.style.scrollBehavior = 'smooth';
+            
+            // 添加视口检测
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('animate-fade-in');
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.card').forEach(card => {
+                    observer.observe(card);
+                });
+            }
+            
+            // 添加触摸增强
+            if ('ontouchstart' in window) {
+                document.body.classList.add('touch-device');
+                
+                // 添加触摸反馈
+                document.addEventListener('touchstart', function(e) {
+                    if (e.target.closest('.btn, .card-interactive')) {
+                        e.target.style.transform = 'scale(0.98)';
+                    }
+                });
+                
+                document.addEventListener('touchend', function(e) {
+                    if (e.target.closest('.btn, .card-interactive')) {
+                        setTimeout(() => {
+                            e.target.style.transform = '';
+                        }, 150);
+                    }
+                });
+            }
+            
+            // 添加网络状态检测
+            if ('navigator' in window && 'onLine' in navigator) {
+                function updateNetworkStatus() {
+                    const isOnline = navigator.onLine;
+                    const statusText = document.querySelector('#status-text');
+                    if (statusText && !isOnline) {
+                        statusText.textContent = '网络离线';
+                        statusText.parentElement.querySelector('.status-dot').className = 'status-dot error';
+                    }
+                }
+                
+                window.addEventListener('online', updateNetworkStatus);
+                window.addEventListener('offline', updateNetworkStatus);
+            }
+        }
+        
+        /**
+         * 设置键盘快捷键
+         */
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + Enter: 智能转换
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    const convertBtn = document.querySelector('.smart-convert-btn');
+                    if (convertBtn && !convertBtn.disabled) {
+                        convertBtn.click();
+                    }
+                }
+                
+                // Ctrl/Cmd + Shift + A: 切换高级选项
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+                    e.preventDefault();
+                    const advancedToggle = document.querySelector('.advanced-toggle');
+                    if (advancedToggle) {
+                        advancedToggle.click();
+                    }
+                }
+                
+                // Ctrl/Cmd + Shift + T: 切换主题
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+                    e.preventDefault();
+                    const themeToggle = document.querySelector('.theme-toggle');
+                    if (themeToggle) {
+                        themeToggle.click();
+                    }
+                }
+                
+                // Escape: 关闭面板
+                if (e.key === 'Escape') {
+                    const closeBtn = document.querySelector('.close-advanced');
+                    const panel = document.querySelector('.advanced-panel');
+                    if (closeBtn && panel && !panel.classList.contains('hidden')) {
+                        closeBtn.click();
+                    }
+                }
+                
+                // / : 聚焦输入框
+                if (e.key === '/' && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    const input = document.querySelector('.smart-input');
+                    if (input) {
+                        input.focus();
+                    }
+                }
+            });
+        }
+        
+        /**
+         * 设置性能监控
+         */
+        function setupPerformanceMonitoring() {
+            // 页面加载性能
+            if ('performance' in window) {
+                window.addEventListener('load', function() {
+                    setTimeout(function() {
+                        const perfData = performance.getEntriesByType('navigation')[0];
+                        const loadTime = Math.round(perfData.loadEventEnd - perfData.fetchStart);
+                        console.log(`⚡ 页面加载时间: ${loadTime}ms`);
+                        
+                        // 如果加载时间过长，显示提示
+                        if (loadTime > 3000) {
+                            console.warn('⚠️ 页面加载较慢，建议优化');
+                        }
+                    }, 0);
+                });
+            }
+            
+            // 内存使用监控
+            if ('memory' in performance) {
+                setInterval(() => {
+                    const memory = performance.memory;
+                    const used = Math.round(memory.usedJSHeapSize / 1048576);
+                    const total = Math.round(memory.totalJSHeapSize / 1048576);
+                    
+                    if (used > 50) { // 超过50MB时警告
+                        console.warn(`🧠 内存使用: ${used}MB / ${total}MB`);
+                    }
+                }, 30000); // 每30秒检查一次
+            }
+        }
+        
+        /**
+         * 设置测试数据
+         */
+        function setupTestData() {
+            window.testData = {
+                conversation: `用户：请帮我分析一下这个销售数据表格
+
+| 产品名称 | Q1销量 | Q2销量 | Q3销量 | Q4销量 | 总计 |
+|---------|--------|--------|--------|--------|------|
+| 产品A   | 120    | 150    | 180    | 200    | 650  |
+| 产品B   | 200    | 180    | 220    | 250    | 850  |
+| 产品C   | 150    | 160    | 140    | 180    | 630  |
+| 产品D   | 80     | 90     | 110    | 130    | 410  |
+
+助手：我来为您分析这个销售数据表格：
+
+## 销售数据分析报告
+
+### 1. 整体销售趋势
+- **总销售量**: 2,540 件
+- **平均季度销量**: 635 件
+- **增长趋势**: 整体呈上升趋势，Q4达到峰值
+
+### 2. 产品表现分析
+**最佳表现**: 产品B (850件，占总销量33.5%)
+**次佳表现**: 产品A (650件，占总销量25.6%)
+**待改进**: 产品D (410件，占总销量16.1%)
+
+### 3. 季度分析
+- Q1: 550件 (基准季度)
+- Q2: 580件 (+5.5%)
+- Q3: 650件 (+18.2%)
+- Q4: 760件 (+38.2%)
+
+### 4. 建议
+1. 加大产品B的市场推广力度
+2. 分析产品D销量偏低的原因
+3. 保持Q4的销售策略`,
+
+                document: `# AI内容格式转换工具使用指南
+
+## 简介
+AI内容格式转换工具是一个现代化的智能文档生成平台，专注于将AI对话内容转换为专业格式文档。
+
+## 核心特性
+
+### 🚀 智能分析
+- **自动识别**: 智能识别内容类型和结构
+- **格式推荐**: 基于内容特征推荐最佳输出格式
+- **实时反馈**: 提供即时的分析结果和建议
+
+### 📊 多格式支持
+1. **Word文档** (.docx)
+   - 适用于文本内容、报告、文档
+   - 支持富文本格式、图表、表格
+
+2. **Excel表格** (.xlsx)
+   - 适用于数据分析、表格内容
+   - 支持公式、图表、数据透视表
+
+3. **PDF文档** (.pdf)
+   - 适用于正式文档、演示材料
+   - 保持格式一致性、支持打印
+
+### ⚙️ 高级功能
+- **模板系统**: 专业、简约、学术、创意模板
+- **自定义设置**: 文件名、格式选项、元数据
+- **批量处理**: 同时处理多个内容片段
+
+## 使用方法
+
+### 简单模式
+1. 在输入框中粘贴AI对话内容
+2. 系统自动分析内容并提供建议
+3. 点击"智能转换"按钮
+4. 下载生成的文档
+
+### 高级模式
+1. 点击"高级选项"展开详细设置
+2. 选择输出格式和模板
+3. 配置文件名和高级设置
+4. 点击"智能转换"开始处理
+
+## 技术特性
+- **现代化UI**: 基于最新设计趋势的优雅界面
+- **智能分析**: 先进的内容识别和分析算法
+- **高性能**: 优化的处理速度和用户体验
+- **响应式**: 完美适配桌面和移动设备
+
+## 更新日志
+
+### v1.6.0 "优雅现代"
+- 🎨 全新现代化UI设计
+- 🧠 增强的智能分析引擎
+- 📱 完美的移动端体验
+- ⚡ 性能优化和稳定性提升
+- 🎯 改进的用户交互体验`,
+
+                code: `// 现代化内容分析器
+class ModernContentAnalyzer {
+    constructor() {
+        this.patterns = {
+            table: /\|.*\|/g,
+            code: /\`\`\`[\s\S]*?\`\`\`/g,
+            list: /^[\s]*[-*+]\s+/gm,
+            heading: /^#{1,6}\s+/gm,
+            link: /\[([^\]]+)\]\(([^)]+)\)/g,
+            bold: /\*\*([^*]+)\*\*/g,
+            italic: /\*([^*]+)\*/g
+        };
+        
+        this.confidence = {
+            high: 0.9,
+            medium: 0.7,
+            low: 0.5
+        };
+    }
+    
+    analyze(content) {
+        const analysis = {
+            type: 'unknown',
+            confidence: 0,
+            recommendation: null,
+            features: [],
+            metadata: {
+                wordCount: this.getWordCount(content),
+                lineCount: this.getLineCount(content),
+                hasStructure: false,
+                hasData: false,
+                hasCode: false
+            }
+        };
+        
+        // 检测表格数据
+        const tableMatches = content.match(this.patterns.table);
+        if (tableMatches && tableMatches.length > 2) {
+            analysis.type = 'table';
+            analysis.confidence = this.confidence.high;
+            analysis.recommendation = {
+                format: 'xlsx',
+                reason: '检测到规整的表格数据，Excel格式最适合数据展示和分析',
+                template: 'data-analysis'
+            };
+            analysis.features.push('表格数据');
+            analysis.metadata.hasData = true;
+        }
+        
+        // 检测代码片段
+        const codeMatches = content.match(this.patterns.code);
+        if (codeMatches && codeMatches.length > 0) {
+            analysis.features.push('代码片段');
+            analysis.metadata.hasCode = true;
+            
+            if (analysis.type === 'unknown') {
+                analysis.type = 'technical';
+                analysis.confidence = this.confidence.medium;
+                analysis.recommendation = {
+                    format: 'docx',
+                    reason: '检测到技术内容，Word格式适合代码文档',
+                    template: 'technical'
+                };
+            }
+        }
+        
+        // 检测文档结构
+        const headingMatches = content.match(this.patterns.heading);
+        if (headingMatches && headingMatches.length > 2) {
+            analysis.features.push('文档结构');
+            analysis.metadata.hasStructure = true;
+            
+            if (analysis.type === 'unknown') {
+                analysis.type = 'document';
+                analysis.confidence = this.confidence.high;
+                analysis.recommendation = {
+                    format: 'docx',
+                    reason: '检测到完整的文档结构，Word格式最适合',
+                    template: 'professional'
+                };
+            }
+        }
+        
+        // 检测列表结构
+        const listMatches = content.match(this.patterns.list);
+        if (listMatches && listMatches.length > 3) {
+            analysis.features.push('列表结构');
+        }
+        
+        // 如果仍然未知，默认为文档
+        if (analysis.type === 'unknown') {
+            analysis.type = 'document';
+            analysis.confidence = this.confidence.low;
+            analysis.recommendation = {
+                format: 'docx',
+                reason: '通用文档格式，适合大多数内容',
+                template: 'simple'
+            };
+        }
+        
+        return analysis;
+    }
+    
+    getWordCount(content) {
+        return content.trim().split(/\s+/).length;
+    }
+    
+    getLineCount(content) {
+        return content.split('\n').length;
+    }
+}
+
+// 使用示例
+const analyzer = new ModernContentAnalyzer();
+const result = analyzer.analyze(content);
+console.log('分析结果:', result);`
+            };
+            
+            // 添加快速测试功能
+            const testBtn = document.createElement('button');
+            testBtn.className = 'fixed bottom-20 left-4 btn btn-secondary btn-sm z-40 shadow-lg';
+            testBtn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+                快速测试
+            `;
+            
+            testBtn.onclick = () => {
+                const input = document.querySelector('.smart-input');
+                if (input) {
+                    input.value = testData.conversation;
+                    input.dispatchEvent(new Event('input'));
+                    input.focus();
+                }
+            };
+            
+            document.body.appendChild(testBtn);
+            
+            console.log('💡 测试数据已准备，点击左下角"快速测试"按钮');
+        }
+        
+        // 添加开发者工具
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('🛠️ 开发模式已启用');
+            console.log('📊 可用测试数据:', Object.keys(window.testData || {}));
+            console.log('⌨️ 快捷键: Ctrl+Enter(转换), Ctrl+Shift+A(高级), Ctrl+Shift+T(主题), /(聚焦)');
+        }
+    </script>
+</body>
+</html>
