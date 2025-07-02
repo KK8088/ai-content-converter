@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI内容格式转换工具 v1.6.0</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        card: {
+                            DEFAULT: 'hsl(var(--card))',
+                            foreground: 'hsl(var(--card-foreground))'
+                        },
+                        primary: {
+                            DEFAULT: 'hsl(var(--primary))',
+                            foreground: 'hsl(var(--primary-foreground))'
+                        },
+                        secondary: {
+                            DEFAULT: 'hsl(var(--secondary))',
+                            foreground: 'hsl(var(--secondary-foreground))'
+                        },
+                        muted: {
+                            DEFAULT: 'hsl(var(--muted))',
+                            foreground: 'hsl(var(--muted-foreground))'
+                        },
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))'
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)',
+                        md: 'calc(var(--radius) - 2px)',
+                        sm: 'calc(var(--radius) - 4px)'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- CSS Variables -->
+    <style>
+        :root {
+            --background: 0 0% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 0 0% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --primary: 0 0% 98%;
+            --primary-foreground: 0 0% 9%;
+            --secondary: 0 0% 14.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 0 0% 14.9%;
+            --muted-foreground: 0 0% 63.9%;
+            --border: 0 0% 14.9%;
+            --input: 0 0% 14.9%;
+            --ring: 0 0% 83.1%;
+            --radius: 0.5rem;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+    <!-- Header -->
+    <header class="border-b border-gray-700 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                            AI内容转换工具
+                        </h1>
+                        <p class="text-sm text-gray-400">智能内容格式转换工具</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 bg-gray-800 text-gray-300 border border-gray-600 px-3 py-1 rounded-full text-sm">
+                    <i data-lucide="zap" class="w-3 h-3"></i>
+                    v1.6.0
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto space-y-8">
+            <!-- Hero Section -->
+            <div class="text-center space-y-4">
+                <h2 class="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    将AI对话转换为专业文档
+                </h2>
+                <p class="text-lg text-gray-400 max-w-2xl mx-auto">
+                    支持ChatGPT、Claude等AI工具的对话内容，一键生成Word、Excel、PDF等格式文档
+                </p>
+            </div>
+
+            <!-- Main Converter -->
+            <div class="shadow-2xl border-0 bg-gray-800/50 backdrop-blur-sm rounded-lg">
+                <div class="text-center pb-6 p-6">
+                    <h3 class="flex items-center justify-center gap-2 text-white text-xl font-semibold">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-blue-400"></i>
+                        智能内容转换
+                    </h3>
+                    <p class="text-gray-400 mt-2">粘贴您的AI对话内容，我们会自动识别最佳格式</p>
+                </div>
+                <div class="p-6 pt-0 space-y-6">
+                    <!-- Format Selection -->
+                    <div class="grid md:grid-cols-3 gap-4 items-center">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-300">输入格式</label>
+                            <select id="input-format" class="h-12 w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white">
+                                <option value="">选择输入格式</option>
+                                <option value="text">AI对话内容</option>
+                                <option value="markdown">Markdown</option>
+                                <option value="html">HTML</option>
+                            </select>
+                        </div>
+
+                        <div class="flex justify-center">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                                <i data-lucide="arrow-right" class="w-5 h-5 text-white"></i>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-300">输出格式</label>
+                            <select id="output-format" class="h-12 w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white">
+                                <option value="">选择输出格式</option>
+                                <option value="docx">Word文档</option>
+                                <option value="xlsx">Excel表格</option>
+                                <option value="pdf">PDF文档</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="h-px bg-gray-600"></div>
+
+                    <!-- Content Input -->
+                    <div class="space-y-4">
+                        <div class="space-y-3">
+                            <label class="text-sm font-medium text-gray-300">粘贴您的AI对话内容</label>
+                            <textarea
+                                id="content-input"
+                                placeholder="Ctrl+V 粘贴内容，我们会自动识别最佳格式..."
+                                class="min-h-[160px] w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder:text-gray-500 resize-none"
+                            ></textarea>
+                            
+                            <!-- Status Indicator -->
+                            <div class="flex items-center justify-between text-sm text-gray-400">
+                                <div class="flex items-center space-x-2">
+                                    <div id="status-dot" class="h-2 w-2 rounded-full bg-gray-500"></div>
+                                    <span id="status-text">等待输入</span>
+                                </div>
+                                <span id="char-count">0 字符</span>
+                            </div>
+                        </div>
+
+                        <!-- Convert Button -->
+                        <div class="flex justify-center pt-4">
+                            <button
+                                id="convert-btn"
+                                class="px-8 py-3 h-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium shadow-lg hover:shadow-xl transition-all rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>
+                                开始转换
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestion Card -->
+            <div id="suggestion-card" class="hidden shadow-2xl border-0 bg-gray-800/50 backdrop-blur-sm rounded-lg">
+                <div class="p-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/20">
+                            <i data-lucide="check-circle" class="h-5 w-5 text-green-400"></i>
+                        </div>
+                        <div class="flex-1 space-y-1">
+                            <h4 id="suggestion-title" class="font-semibold text-green-400">智能建议</h4>
+                            <p id="suggestion-description" class="text-sm text-gray-400">
+                                基于内容分析的最佳格式推荐
+                            </p>
+                            <div id="suggestion-tags" class="flex space-x-2 mt-2">
+                                <!-- 动态标签 -->
+                            </div>
+                        </div>
+                        <button 
+                            id="apply-suggestion"
+                            class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-md text-sm"
+                        >
+                            应用建议
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div id="result-card" class="hidden shadow-2xl border-0 bg-gray-800/50 backdrop-blur-sm rounded-lg">
+                <div class="p-6">
+                    <h3 class="flex items-center gap-2 text-green-400 text-xl font-semibold mb-2">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        转换完成
+                    </h3>
+                    <p class="text-gray-400 mb-4">您的内容已成功转换为目标格式</p>
+                    <div class="bg-gray-700/50 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-medium text-gray-300">转换结果</span>
+                            <button class="flex items-center gap-2 px-3 py-1 bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 rounded text-sm">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                下载
+                            </button>
+                        </div>
+                        <div class="bg-gray-800 rounded border border-gray-600 p-4 min-h-[100px] text-sm text-gray-400">
+                            这里显示转换后的内容预览...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="text-center p-6 border-0 bg-gray-800/30 backdrop-blur-sm rounded-lg">
+                    <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="zap" class="w-6 h-6 text-blue-400"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2 text-white">AI智能转换</h3>
+                    <p class="text-sm text-gray-400">采用先进AI算法，确保转换质量和准确性</p>
+                </div>
+
+                <div class="text-center p-6 border-0 bg-gray-800/30 backdrop-blur-sm rounded-lg">
+                    <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="clock" class="w-6 h-6 text-green-400"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2 text-white">快速处理</h3>
+                    <p class="text-sm text-gray-400">秒级转换速度，大幅提升工作效率</p>
+                </div>
+
+                <div class="text-center p-6 border-0 bg-gray-800/30 backdrop-blur-sm rounded-lg">
+                    <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="file-text" class="w-6 h-6 text-purple-400"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2 text-white">多格式支持</h3>
+                    <p class="text-sm text-gray-400">支持文档、图片、音视频等多种格式转换</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-700 bg-gray-900/80 backdrop-blur-sm mt-16">
+        <div class="container mx-auto px-4 py-8">
+            <div class="text-center text-sm text-gray-500">
+                <p>© 2024 AI内容转换工具. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // App functionality
+        class AIConverter {
+            constructor() {
+                this.state = {
+                    inputFormat: '',
+                    outputFormat: '',
+                    content: '',
+                    isConverting: false,
+                    isCompleted: false,
+                    suggestion: null
+                };
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                console.log('✨ AI Converter initialized');
+            }
+
+            setupEventListeners() {
+                // Content input
+                const input = document.getElementById('content-input');
+                const statusDot = document.getElementById('status-dot');
+                const statusText = document.getElementById('status-text');
+                const charCount = document.getElementById('char-count');
+
+                input.addEventListener('input', (e) => {
+                    const content = e.target.value;
+                    const length = content.length;
+                    
+                    this.state.content = content;
+                    charCount.textContent = `${length} 字符`;
+                    
+                    if (length === 0) {
+                        statusDot.className = 'h-2 w-2 rounded-full bg-gray-500';
+                        statusText.textContent = '等待输入';
+                        this.hideSuggestion();
+                    } else if (length < 50) {
+                        statusDot.className = 'h-2 w-2 rounded-full bg-yellow-500';
+                        statusText.textContent = '内容较少';
+                        this.hideSuggestion();
+                    } else {
+                        statusDot.className = 'h-2 w-2 rounded-full bg-blue-500 animate-pulse';
+                        statusText.textContent = '正在分析...';
+                        
+                        setTimeout(() => {
+                            this.analyzeContent(content);
+                        }, 1500);
+                    }
+                });
+
+                // Convert button
+                document.getElementById('convert-btn').addEventListener('click', () => {
+                    this.handleConvert();
+                });
+
+                // Apply suggestion
+                document.getElementById('apply-suggestion').addEventListener('click', () => {
+                    this.applySuggestion();
+                });
+            }
+
+            analyzeContent(content) {
+                let suggestion = {
+                    format: 'docx',
+                    title: '建议生成Word文档',
+                    description: '检测到完整的文档结构，适合Word格式',
+                    tags: ['文档结构', '85% 匹配']
+                };
+
+                if (content.includes('|') && content.split('\n').filter(line => line.includes('|')).length > 2) {
+                    suggestion = {
+                        format: 'xlsx',
+                        title: '建议生成Excel表格',
+                        description: '检测到规整的表格数据，Excel格式最适合数据展示和分析',
+                        tags: ['表格数据', '95% 匹配']
+                    };
+                }
+
+                this.state.suggestion = suggestion;
+                this.showSuggestion(suggestion);
+                
+                const statusDot = document.getElementById('status-dot');
+                const statusText = document.getElementById('status-text');
+                statusDot.className = 'h-2 w-2 rounded-full bg-green-500';
+                statusText.textContent = '分析完成';
+            }
+
+            showSuggestion(suggestion) {
+                const card = document.getElementById('suggestion-card');
+                const title = document.getElementById('suggestion-title');
+                const description = document.getElementById('suggestion-description');
+                const tags = document.getElementById('suggestion-tags');
+
+                title.textContent = suggestion.title;
+                description.textContent = suggestion.description;
+                
+                tags.innerHTML = suggestion.tags.map(tag => 
+                    `<span class="inline-flex items-center rounded-md bg-blue-500/20 px-2 py-1 text-xs font-medium text-blue-400">${tag}</span>`
+                ).join('');
+                
+                card.classList.remove('hidden');
+            }
+
+            hideSuggestion() {
+                document.getElementById('suggestion-card').classList.add('hidden');
+            }
+
+            async handleConvert() {
+                if (!this.state.content.trim()) {
+                    this.showToast('请先输入内容');
+                    return;
+                }
+                
+                const btn = document.getElementById('convert-btn');
+                const originalHTML = btn.innerHTML;
+                
+                btn.innerHTML = `
+                    <i data-lucide="clock" class="w-4 h-4 mr-2 animate-spin"></i>
+                    转换中...
+                `;
+                btn.disabled = true;
+                lucide.createIcons();
+                
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    btn.innerHTML = `
+                        <i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>
+                        转换完成
+                    `;
+                    lucide.createIcons();
+                    
+                    document.getElementById('result-card').classList.remove('hidden');
+                    
+                } catch (error) {
+                    this.showToast('转换失败，请重试');
+                } finally {
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                        lucide.createIcons();
+                    }, 2000);
+                }
+            }
+
+            applySuggestion() {
+                if (!this.state.suggestion) return;
+                
+                const outputSelect = document.getElementById('output-format');
+                outputSelect.value = this.state.suggestion.format;
+                
+                this.showToast(`已应用建议：${this.state.suggestion.title}`);
+            }
+
+            showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            new AIConverter();
+        });
+    </script>
+</body>
+</html>
